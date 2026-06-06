@@ -20,7 +20,6 @@ class _LessonScreenState extends State<LessonScreen> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppDataProvider>().loadLessons();
     });
@@ -30,15 +29,13 @@ class _LessonScreenState extends State<LessonScreen> {
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
     final auth = context.watch<AuthProvider>();
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     final lessons = [...data.lessons]
       ..sort((a, b) => a.scheduleTime.compareTo(b.scheduleTime));
 
-    final nextLesson = _findNextLesson(
-      lessons: lessons,
-      isTutor: auth.isTutor,
-    );
-
+    final nextLesson = _findNextLesson(lessons: lessons, isTutor: auth.isTutor);
     final overdueSessions = auth.isTutor
         ? _findOverdueTutorSessions(lessons)
         : <_TutorSessionInfo>[];
@@ -47,71 +44,115 @@ class _LessonScreenState extends State<LessonScreen> {
     final tutorGrouped = _groupTutorLessonsByAvailability(lessons);
 
     return Scaffold(
+      backgroundColor: colors.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text('Lessons'),
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        titleSpacing: 20,
+        title: Text(
+          'Lessons',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
+          ),
+        ),
         actions: [
-          IconButton(
-            onPressed: data.loading ? null : data.loadLessons,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: IconButton.outlined(
+              onPressed: data.loading ? null : data.loadLessons,
+              tooltip: 'Refresh',
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              style: IconButton.styleFrom(
+                side: BorderSide(color: colors.outlineVariant, width: 0.5),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                minimumSize: const Size(36, 36),
+                padding: EdgeInsets.zero,
+              ),
+            ),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(0.5),
+          child: Divider(
+              height: 0.5,
+              thickness: 0.5,
+              color: colors.outlineVariant.withValues(alpha: 0.5)),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: data.loadLessons,
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
           children: [
             ErrorBanner(data.error),
 
-            if (auth.isTutor && overdueSessions.isNotEmpty)
+            if (auth.isTutor && overdueSessions.isNotEmpty) ...[
               _TutorReminderBox(sessions: overdueSessions),
+              const SizedBox(height: 10),
+            ],
 
-            if (nextLesson != null)
-              _NextLessonBox(
-                info: nextLesson,
-                isTutor: auth.isTutor,
-              ),
+            if (nextLesson != null) ...[
+              _NextLessonBox(info: nextLesson, isTutor: auth.isTutor),
+              const SizedBox(height: 10),
+            ],
 
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding: const EdgeInsets.only(bottom: 8),
               child: Text(
                 auth.isTutor ? 'My teaching lessons' : 'My learning lessons',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurface,
+                  letterSpacing: -0.1,
                 ),
               ),
             ),
 
             if (data.loading && lessons.isEmpty)
               const Padding(
-                padding: EdgeInsets.all(32),
+                padding: EdgeInsets.symmetric(vertical: 48),
                 child: Center(child: CircularProgressIndicator()),
               ),
 
             if (!data.loading && lessons.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('No lessons yet. Pay a booking first.'),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 48),
+                child: Column(
+                  children: [
+                    Icon(Icons.school_outlined,
+                        size: 40,
+                        color: colors.onSurface.withValues(alpha: 0.3)),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No lessons yet. Pay a booking first.',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colors.onSurface.withValues(alpha: 0.5)),
+                    ),
+                  ],
+                ),
               ),
 
             if (auth.isTutor)
-              ...tutorGrouped.values.map((availabilityLessons) {
-                return _TutorAvailabilityCard(
-                  lessons: availabilityLessons,
-                );
-              })
+              ...tutorGrouped.values.map((availabilityLessons) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _TutorAvailabilityCard(lessons: availabilityLessons),
+                  ))
             else
-              ...learnerGrouped.values.map((availabilityGroups) {
-                return _LearnerTutorCard(
-                  availabilityGroups: availabilityGroups,
-                );
-              }),
+              ...learnerGrouped.values.map((availabilityGroups) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child:
+                        _LearnerTutorCard(availabilityGroups: availabilityGroups),
+                  )),
           ],
         ),
       ),
     );
   }
+
+  // ── Logic preserved from original ──────────────────────────
 
   _NextLessonInfo? _findNextLesson({
     required List<LessonModel> lessons,
@@ -120,100 +161,75 @@ class _LessonScreenState extends State<LessonScreen> {
     final now = DateTime.now();
 
     if (isTutor) {
-      final sessions = _groupLessonsBySession(lessons).values
-          .map((sessionLessons) => _TutorSessionInfo.fromLessons(sessionLessons))
-          .where((session) {
-        final status = session.status.toLowerCase();
-
-        return status != 'completed' && session.endTime.isAfter(now);
-      }).toList()
+      final sessions = _groupLessonsBySession(lessons)
+          .values
+          .map((s) => _TutorSessionInfo.fromLessons(s))
+          .where((s) =>
+              s.status.toLowerCase() != 'completed' &&
+              s.endTime.isAfter(now))
+          .toList()
         ..sort((a, b) => a.startTime.compareTo(b.startTime));
-
       if (sessions.isEmpty) return null;
-
       final next = sessions.first;
-
       return _NextLessonInfo(
-        lesson: next.mainLesson,
-        studentCount: next.studentCount,
-      );
+          lesson: next.mainLesson, studentCount: next.studentCount);
     }
 
     final upcoming = lessons.where((lesson) {
-      final status = lesson.status.toLowerCase();
-      final endTime = lesson.scheduleTime
-          .toLocal()
-          .add(Duration(minutes: lesson.duration));
-
-      return status != 'completed' && endTime.isAfter(now);
+      final end =
+          lesson.scheduleTime.toLocal().add(Duration(minutes: lesson.duration));
+      return lesson.status.toLowerCase() != 'completed' && end.isAfter(now);
     }).toList()
       ..sort((a, b) => a.scheduleTime.compareTo(b.scheduleTime));
 
     if (upcoming.isEmpty) return null;
-
-    return _NextLessonInfo(
-      lesson: upcoming.first,
-      studentCount: 1,
-    );
+    return _NextLessonInfo(lesson: upcoming.first, studentCount: 1);
   }
 
   List<_TutorSessionInfo> _findOverdueTutorSessions(
-      List<LessonModel> lessons,
-      ) {
+      List<LessonModel> lessons) {
     final now = DateTime.now();
-
-    final sessions = _groupLessonsBySession(lessons).values
-        .map((sessionLessons) => _TutorSessionInfo.fromLessons(sessionLessons))
-        .where((session) {
-      final status = session.status.toLowerCase();
-
-      return status != 'completed' && !session.endTime.isAfter(now);
-    }).toList()
+    return _groupLessonsBySession(lessons)
+        .values
+        .map((s) => _TutorSessionInfo.fromLessons(s))
+        .where((s) =>
+            s.status.toLowerCase() != 'completed' &&
+            !s.endTime.isAfter(now))
+        .toList()
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
-
-    return sessions;
   }
 
   Map<int, Map<int, List<LessonModel>>>
-  _groupLearnerLessonsByTutorThenAvailability(
-      List<LessonModel> lessons,
-      ) {
+      _groupLearnerLessonsByTutorThenAvailability(
+          List<LessonModel> lessons) {
     final grouped = <int, Map<int, List<LessonModel>>>{};
-
-    for (final lesson in lessons) {
-      grouped.putIfAbsent(lesson.tutorId, () => <int, List<LessonModel>>{});
-      grouped[lesson.tutorId]!.putIfAbsent(
-        lesson.availabilityId,
-            () => <LessonModel>[],
-      );
-      grouped[lesson.tutorId]![lesson.availabilityId]!.add(lesson);
+    for (final l in lessons) {
+      grouped.putIfAbsent(l.tutorId, () => {});
+      grouped[l.tutorId]!.putIfAbsent(l.availabilityId, () => []);
+      grouped[l.tutorId]![l.availabilityId]!.add(l);
     }
-
     return grouped;
   }
 
   Map<int, List<LessonModel>> _groupTutorLessonsByAvailability(
-      List<LessonModel> lessons,
-      ) {
+      List<LessonModel> lessons) {
     final grouped = <int, List<LessonModel>>{};
-
-    for (final lesson in lessons) {
-      grouped.putIfAbsent(lesson.availabilityId, () => <LessonModel>[]);
-      grouped[lesson.availabilityId]!.add(lesson);
+    for (final l in lessons) {
+      grouped.putIfAbsent(l.availabilityId, () => []);
+      grouped[l.availabilityId]!.add(l);
     }
-
     return grouped;
   }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Data classes (unchanged)
+// ─────────────────────────────────────────────────────────────────
+
 class _NextLessonInfo {
   final LessonModel lesson;
   final int studentCount;
-
-  const _NextLessonInfo({
-    required this.lesson,
-    required this.studentCount,
-  });
+  const _NextLessonInfo({required this.lesson, required this.studentCount});
 }
 
 class _TutorSessionInfo {
@@ -234,11 +250,9 @@ class _TutorSessionInfo {
   factory _TutorSessionInfo.fromLessons(List<LessonModel> lessons) {
     final sorted = [...lessons]
       ..sort((a, b) => a.scheduleTime.compareTo(b.scheduleTime));
-
     final first = sorted.first;
     final start = first.scheduleTime.toLocal();
     final end = start.add(Duration(minutes: first.duration));
-
     return _TutorSessionInfo(
       mainLesson: first,
       studentCount: sorted.length,
@@ -249,74 +263,105 @@ class _TutorSessionInfo {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Reminder Box
+// ─────────────────────────────────────────────────────────────────
+
 class _TutorReminderBox extends StatelessWidget {
   final List<_TutorSessionInfo> sessions;
+  const _TutorReminderBox({required this.sessions});
 
-  const _TutorReminderBox({
-    required this.sessions,
-  });
+  static const _red50 = Color(0xFFFCEBEB);
+  static const _red200 = Color(0xFFF7C1C1);
+  static const _red800 = Color(0xFFA32D2D);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final shown = sessions.take(3).toList();
     final hiddenCount = sessions.length - shown.length;
 
-    return Card(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _red200, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            decoration: const BoxDecoration(
+              color: _red50,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15.5)),
+              border: Border(
+                  bottom: BorderSide(color: _red200, width: 0.5)),
+            ),
+            child: Row(
               children: [
-                const Icon(Icons.notification_important_outlined),
+                const Icon(Icons.notifications_outlined,
+                    size: 20, color: _red800),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Attendance reminder',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
+                Text('Attendance reminder',
+                    style: theme.textTheme.bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.w600, color: _red800)),
               ],
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'These lessons have ended but are not completed yet. Open the detail page, take attendance, then complete the lesson.',
-            ),
-            const SizedBox(height: 12),
-            ...shown.map((session) {
-              final lesson = session.mainLesson;
+          ),
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+          // Description
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: Text(
+              'These lessons have ended but are not completed yet. Open the detail page, take attendance, then complete the lesson.',
+              style: theme.textTheme.bodyLarge
+                  ?.copyWith(color: colors.onSurface.withValues(alpha: 0.6), height: 1.6),
+            ),
+          ),
+
+          Divider(height: 0.5, thickness: 0.5,
+              color: colors.outlineVariant.withValues(alpha: 0.4)),
+
+          // Session rows
+          ...shown.map((session) {
+            final lesson = session.mainLesson;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
                   child: Row(
                     children: [
-                      const Icon(Icons.pending_actions_outlined),
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: _red50,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.pending_actions_outlined,
+                            size: 20, color: _red800),
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _subjectName(lesson),
-                              style:
-                              const TextStyle(fontWeight: FontWeight.w800),
-                            ),
+                            Text(_subjectName(lesson),
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis),
                             const SizedBox(height: 2),
-                            Text(_lessonTimeText(lesson)),
                             Text(
-                              '${session.studentCount} student${session.studentCount == 1 ? '' : 's'} • ${session.status}',
+                              '${_lessonTimeText(lesson)} · '
+                              '${session.studentCount} student${session.studentCount == 1 ? '' : 's'} · ${session.status}',
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: colors.onSurface
+                                      .withValues(alpha: 0.55)),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
@@ -325,143 +370,232 @@ class _TutorReminderBox extends StatelessWidget {
                       FilledButton(
                         onPressed: () =>
                             context.push('/lessons/${lesson.lessonId}'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(60, 32),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 14),
+                          textStyle: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w500),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
                         child: const Text('Open'),
                       ),
                     ],
                   ),
                 ),
-              );
-            }),
-            if (hiddenCount > 0)
-              Text(
-                '+$hiddenCount more lesson session${hiddenCount == 1 ? '' : 's'} need attention.',
-                style: Theme.of(context).textTheme.bodySmall,
+                if (shown.indexOf(session) < shown.length - 1 || hiddenCount > 0)
+                  Divider(
+                      height: 0.5,
+                      thickness: 0.5,
+                      color:
+                          colors.outlineVariant.withValues(alpha: 0.4)),
+              ],
+            );
+          }),
+
+          if (hiddenCount > 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+              child: Text(
+                '+$hiddenCount more session${hiddenCount == 1 ? '' : 's'} need attention.',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colors.onSurface.withValues(alpha: 0.5)),
               ),
-          ],
-        ),
+            )
+          else
+            const SizedBox(height: 4),
+        ],
       ),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Next Lesson Box
+// ─────────────────────────────────────────────────────────────────
 
 class _NextLessonBox extends StatelessWidget {
   final _NextLessonInfo info;
   final bool isTutor;
+  const _NextLessonBox({required this.info, required this.isTutor});
 
-  const _NextLessonBox({
-    required this.info,
-    required this.isTutor,
-  });
+  static const _green50 = Color(0xFFEAF3DE);
+  static const _green200 = Color(0xFFC0DD97);
+  static const _green800 = Color(0xFF3B6D11);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final lesson = info.lesson;
-    final subjectName = _subjectName(lesson);
 
-    return Card(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              child: Icon(
-                isTutor
-                    ? Icons.event_available_outlined
-                    : Icons.school_outlined,
-              ),
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.5), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Label header
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: const BoxDecoration(
+              color: _green50,
+              borderRadius:
+                  BorderRadius.vertical(top: Radius.circular(15.5)),
+              border: Border(
+                  bottom: BorderSide(color: _green200, width: 0.5)),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Next lesson',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subjectName,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(_lessonTimeText(lesson)),
-                  const SizedBox(height: 4),
-                  Text(
-                    isTutor
-                        ? '${info.studentCount} student${info.studentCount == 1 ? '' : 's'}'
-                        : 'Tutor: ${lesson.tutorName}',
-                  ),
-                  const SizedBox(height: 10),
-                  if (isTutor)
-                    FilledButton.icon(
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined,
+                    size: 19, color: _green800),
+                const SizedBox(width: 8),
+                Text('Next lesson',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: _green800,
+                        letterSpacing: 0.5)),
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _subjectName(lesson),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600, letterSpacing: -0.2),
+                ),
+                const SizedBox(height: 10),
+
+                // Meta rows
+                _MetaRow(
+                    icon: Icons.access_time_outlined,
+                    label: _lessonTimeText(lesson)),
+                const SizedBox(height: 4),
+                _MetaRow(
+                  icon: isTutor
+                      ? Icons.people_outline_rounded
+                      : Icons.person_outline_rounded,
+                  label: isTutor
+                      ? '${info.studentCount} student${info.studentCount == 1 ? '' : 's'}'
+                      : 'Tutor: ${lesson.tutorName}',
+                ),
+
+                const SizedBox(height: 14),
+
+                if (isTutor)
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
                       onPressed: () =>
                           context.push('/lessons/${lesson.lessonId}'),
-                      icon: const Icon(Icons.people_outline),
+                      icon: const Icon(Icons.people_outline, size: 16),
                       label: const Text('Open lesson detail'),
-                    )
-                  else
-                    OutlinedButton.icon(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 40),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        textStyle: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
                       onPressed: lesson.meetingLink != null &&
-                          lesson.meetingLink!.trim().isNotEmpty
+                              lesson.meetingLink!.trim().isNotEmpty
                           ? () => _openMeetingLink(
-                        context,
-                        lesson.meetingLink!.trim(),
-                      )
+                              context, lesson.meetingLink!.trim())
                           : null,
-                      icon: const Icon(Icons.video_call_outlined),
+                      icon: const Icon(Icons.video_call_outlined, size: 16),
                       label: Text(
                         lesson.meetingLink != null &&
-                            lesson.meetingLink!.trim().isNotEmpty
+                                lesson.meetingLink!.trim().isNotEmpty
                             ? 'Open meeting'
                             : 'Meeting link not added yet',
                       ),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 40),
+                        side: BorderSide(
+                            color: colors.outlineVariant, width: 0.5),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        textStyle: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w500),
+                      ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Learner: Tutor Card → Availability Groups → Lesson Tiles
+// ─────────────────────────────────────────────────────────────────
+
 class _LearnerTutorCard extends StatelessWidget {
   final Map<int, List<LessonModel>> availabilityGroups;
-
-  const _LearnerTutorCard({
-    required this.availabilityGroups,
-  });
+  const _LearnerTutorCard({required this.availabilityGroups});
 
   @override
   Widget build(BuildContext context) {
     final allLessons = availabilityGroups.values.expand((x) => x).toList();
-
     if (allLessons.isEmpty) return const SizedBox.shrink();
 
     final first = allLessons.first;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
-    return Card(
-      child: ExpansionTile(
-        leading: const CircleAvatar(
-          child: Icon(Icons.person_outline),
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.5), width: 0.5),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          leading: CircleAvatar(
+            radius: 19,
+            backgroundColor: colors.surfaceContainerHighest,
+            child: Icon(Icons.person_outline_rounded,
+                size: 20, color: colors.onSurfaceVariant),
+          ),
+          title: Text(
+            first.tutorName,
+            style:
+                theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            '${allLessons.length} lesson${allLessons.length == 1 ? '' : 's'} '
+            'in ${availabilityGroups.length} course${availabilityGroups.length == 1 ? '' : 's'}',
+            style: theme.textTheme.bodyLarge
+                ?.copyWith(color: colors.onSurface.withValues(alpha: 0.55)),
+          ),
+          children: availabilityGroups.values
+              .map((lessons) => _LearnerAvailabilityGroup(lessons: lessons))
+              .toList(),
         ),
-        title: Text(
-          first.tutorName,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        subtitle: Text(
-          '${allLessons.length} lesson${allLessons.length == 1 ? '' : 's'} '
-              'in ${availabilityGroups.length} course${availabilityGroups.length == 1 ? '' : 's'}',
-        ),
-        children: availabilityGroups.values.map((lessons) {
-          return _LearnerAvailabilityGroup(lessons: lessons);
-        }).toList(),
       ),
     );
   }
@@ -469,10 +603,7 @@ class _LearnerTutorCard extends StatelessWidget {
 
 class _LearnerAvailabilityGroup extends StatelessWidget {
   final List<LessonModel> lessons;
-
-  const _LearnerAvailabilityGroup({
-    required this.lessons,
-  });
+  const _LearnerAvailabilityGroup({required this.lessons});
 
   @override
   Widget build(BuildContext context) {
@@ -480,42 +611,52 @@ class _LearnerAvailabilityGroup extends StatelessWidget {
 
     final sorted = [...lessons]
       ..sort((a, b) => a.scheduleTime.compareTo(b.scheduleTime));
-
     final first = sorted.first;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
       child: Container(
         decoration: BoxDecoration(
+          color: colors.surfaceContainerLowest,
           border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-          borderRadius: BorderRadius.circular(16),
+              color: colors.outlineVariant.withValues(alpha: 0.5), width: 0.5),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: ExpansionTile(
-          title: Text(
-            _subjectName(first),
-            style: const TextStyle(fontWeight: FontWeight.w800),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+            title: Text(
+              _subjectName(first),
+              style: theme.textTheme.bodyLarge
+                  ?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              'Availability #${first.availabilityId} · '
+              '${sorted.length} lesson${sorted.length == 1 ? '' : 's'}',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colors.onSurface.withValues(alpha: 0.5)),
+            ),
+            children: sorted
+                .map((lesson) => _LessonTile(lesson: lesson))
+                .toList(),
           ),
-          subtitle: Text(
-            'Availability #${first.availabilityId} • '
-                '${sorted.length} lesson${sorted.length == 1 ? '' : 's'}',
-          ),
-          children: sorted.map((lesson) {
-            return _LessonTile(lesson: lesson);
-          }).toList(),
         ),
       ),
     );
   }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Tutor: Availability Card → Session Tiles
+// ─────────────────────────────────────────────────────────────────
+
 class _TutorAvailabilityCard extends StatelessWidget {
   final List<LessonModel> lessons;
-
-  const _TutorAvailabilityCard({
-    required this.lessons,
-  });
+  const _TutorAvailabilityCard({required this.lessons});
 
   @override
   Widget build(BuildContext context) {
@@ -524,26 +665,44 @@ class _TutorAvailabilityCard extends StatelessWidget {
     final first = lessons.first;
     final sessions = _groupLessonsBySession(lessons).values.toList()
       ..sort((a, b) => a.first.scheduleTime.compareTo(b.first.scheduleTime));
-
     final totalStudents = lessons.length;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
-    return Card(
-      child: ExpansionTile(
-        leading: const CircleAvatar(
-          child: Icon(Icons.event_note_outlined),
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.5), width: 0.5),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          leading: CircleAvatar(
+            radius: 19,
+            backgroundColor: colors.surfaceContainerHighest,
+            child: Icon(Icons.event_note_outlined,
+                size: 20, color: colors.onSurfaceVariant),
+          ),
+          title: Text(
+            _subjectName(first),
+            style:
+                theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            'Availability #${first.availabilityId} · '
+            '${sessions.length} session${sessions.length == 1 ? '' : 's'} · '
+            '$totalStudents student rows',
+            style: theme.textTheme.bodyLarge
+                ?.copyWith(color: colors.onSurface.withValues(alpha: 0.55)),
+          ),
+          children: sessions
+              .map((s) => _TutorSessionTile(lessons: s))
+              .toList(),
         ),
-        title: Text(
-          _subjectName(first),
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        subtitle: Text(
-          'Availability #${first.availabilityId}\n'
-              '${sessions.length} session${sessions.length == 1 ? '' : 's'} • '
-              '$totalStudents student lesson rows',
-        ),
-        children: sessions.map((sessionLessons) {
-          return _TutorSessionTile(lessons: sessionLessons);
-        }).toList(),
       ),
     );
   }
@@ -551,10 +710,14 @@ class _TutorAvailabilityCard extends StatelessWidget {
 
 class _TutorSessionTile extends StatelessWidget {
   final List<LessonModel> lessons;
+  const _TutorSessionTile({required this.lessons});
 
-  const _TutorSessionTile({
-    required this.lessons,
-  });
+  static const _amber50 = Color(0xFFFAEEDA);
+  static const _amber200 = Color(0xFFFAC775);
+  static const _amber800 = Color(0xFF633806);
+  static const _green50 = Color(0xFFEAF3DE);
+  static const _green200 = Color(0xFFC0DD97);
+  static const _green800 = Color(0xFF3B6D11);
 
   @override
   Widget build(BuildContext context) {
@@ -563,186 +726,354 @@ class _TutorSessionTile extends StatelessWidget {
     final session = _TutorSessionInfo.fromLessons(lessons);
     final first = session.mainLesson;
     final status = session.status;
-
     final now = DateTime.now();
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
-    String helper;
+    String helperText;
+    bool isOverdue = false;
+    bool isDone = false;
 
     if (status.toLowerCase() == 'completed') {
-      helper = 'Completed';
+      helperText = 'Completed';
+      isDone = true;
     } else if (!session.endTime.isAfter(now)) {
-      helper = 'Ended. Take attendance and complete this lesson.';
+      helperText = 'Ended. Take attendance and complete this lesson.';
+      isOverdue = true;
     } else if (!session.startTime.isAfter(now)) {
-      helper = 'Lesson started. Completion unlocks after end time.';
+      helperText = 'Lesson started. Completion unlocks after end time.';
     } else {
-      helper = 'Starts later';
+      helperText = 'Starts later';
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
       child: Container(
         decoration: BoxDecoration(
+          color: colors.surfaceContainerLowest,
           border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-          borderRadius: BorderRadius.circular(16),
+              color: colors.outlineVariant.withValues(alpha: 0.5),
+              width: 0.5),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.all(12),
-          title: Text(
-            _lessonTimeText(first),
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-          subtitle: Text(
-            '${session.studentCount} student${session.studentCount == 1 ? '' : 's'}\n'
-                'Status: $status\n'
-                '$helper',
-          ),
-          trailing: FilledButton.icon(
-            onPressed: () => context.push('/lessons/${first.lessonId}'),
-            icon: const Icon(Icons.people_outline),
-            label: const Text('Detail'),
-          ),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Time + status chip row
+            Row(
+              children: [
+                Expanded(
+                  child: Text(_lessonTimeText(first),
+                      style: theme.textTheme.bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600)),
+                ),
+                _StatusChip(status: status),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${session.studentCount} student${session.studentCount == 1 ? '' : 's'}',
+              style: theme.textTheme.bodyLarge
+                  ?.copyWith(color: colors.onSurface.withValues(alpha: 0.55)),
+            ),
+            const SizedBox(height: 10),
+
+            // Helper text
+            Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: isDone
+                    ? _green50
+                    : isOverdue
+                        ? _amber50
+                        : colors.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: isDone
+                        ? _green200
+                        : isOverdue
+                            ? _amber200
+                            : colors.outlineVariant.withValues(alpha: 0.4),
+                    width: 0.5),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    isDone
+                        ? Icons.check_circle_outline_rounded
+                        : isOverdue
+                            ? Icons.warning_amber_rounded
+                            : Icons.schedule_outlined,
+                    size: 20,
+                    color: isDone
+                        ? _green800
+                        : isOverdue
+                            ? _amber800
+                            : colors.onSurface.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      helperText,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDone
+                            ? _green800
+                            : isOverdue
+                                ? _amber800
+                                : colors.onSurface.withValues(alpha: 0.55),
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () =>
+                    context.push('/lessons/${first.lessonId}'),
+                icon: const Icon(Icons.people_outline, size: 16),
+                label: const Text('Open detail'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 38),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  textStyle: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Lesson Tile (learner row)
+// ─────────────────────────────────────────────────────────────────
+
 class _LessonTile extends StatelessWidget {
   final LessonModel lesson;
-
-  const _LessonTile({
-    required this.lesson,
-  });
+  const _LessonTile({required this.lesson});
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      leading: lesson.meetingLink != null &&
-          lesson.meetingLink!.trim().isNotEmpty
-          ? IconButton(
-        icon: const Icon(Icons.video_call_outlined),
-        onPressed: () => _openMeetingLink(
-          context,
-          lesson.meetingLink!.trim(),
+    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final hasLink = lesson.meetingLink != null &&
+        lesson.meetingLink!.trim().isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
+      child: Row(
+        children: [
+          // Icon / link button
+          hasLink
+              ? InkWell(
+                  onTap: () => _openMeetingLink(
+                      context, lesson.meetingLink!.trim()),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                          color: colors.outlineVariant, width: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.video_call_outlined,
+                        size: 19,
+                        color: colors.onSurface.withValues(alpha: 0.6)),
+                  ),
+                )
+              : Container(
+                  width: 32,
+                  height: 32,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.schedule_outlined,
+                      size: 19,
+                      color: colors.onSurface.withValues(alpha: 0.35)),
+                ),
+
+          const SizedBox(width: 10),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _lessonTimeText(lesson),
+                  style: theme.textTheme.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Booking #${lesson.bookingId} · ${lesson.duration} min',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colors.onSurface.withValues(alpha: 0.5)),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+          _StatusChip(status: lesson.status),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Shared helpers
+// ─────────────────────────────────────────────────────────────────
+
+class _MetaRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _MetaRow({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon,
+            size: 20, color: colors.onSurface.withValues(alpha: 0.4)),
+        const SizedBox(width: 7),
+        Flexible(
+          child: Text(label,
+              style: TextStyle(
+                  fontSize: 15,
+                  color: colors.onSurface.withValues(alpha: 0.6))),
         ),
-      )
-          : const Icon(Icons.schedule_outlined),
-      title: Text(
-        _lessonTimeText(lesson),
-        style: const TextStyle(fontWeight: FontWeight.w700),
-      ),
-      subtitle: Text(
-        'Booking #${lesson.bookingId} • ${lesson.duration} minutes',
-      ),
-      trailing: _StatusChip(status: lesson.status),
+      ],
     );
   }
 }
 
 class _StatusChip extends StatelessWidget {
   final String status;
-
-  const _StatusChip({
-    required this.status,
-  });
+  const _StatusChip({required this.status});
 
   @override
   Widget build(BuildContext context) {
-    final color = _statusColor(status);
-
-    return Chip(
-      label: Text(status),
-      backgroundColor: color.withValues(alpha: 0.15),
-      side: BorderSide(
-        color: color.withValues(alpha: 0.4),
+    final (bg, fg, border) = _colors(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(color: border, width: 0.5),
       ),
+      child: Text(status,
+          style: TextStyle(
+              fontSize: 15, fontWeight: FontWeight.w500, color: fg)),
     );
   }
 
-  Color _statusColor(String value) {
+  (Color, Color, Color) _colors(String value) {
     switch (value.toLowerCase()) {
       case 'completed':
-        return Colors.green;
+        return (
+          const Color(0xFFEAF3DE),
+          const Color(0xFF3B6D11),
+          const Color(0xFFC0DD97)
+        );
       case 'cancelled':
       case 'expired':
       case 'failed':
-        return Colors.red;
+        return (
+          const Color(0xFFFCEBEB),
+          const Color(0xFFA32D2D),
+          const Color(0xFFF7C1C1)
+        );
       case 'scheduled':
       default:
-        return Colors.orange;
+        return (
+          const Color(0xFFFAEEDA),
+          const Color(0xFF854F0B),
+          const Color(0xFFFAC775)
+        );
     }
   }
 }
 
-Map<String, List<LessonModel>> _groupLessonsBySession(
-    List<LessonModel> lessons,
-    ) {
-  final grouped = <String, List<LessonModel>>{};
+// ─────────────────────────────────────────────────────────────────
+// Module-level helpers (unchanged logic from original)
+// ─────────────────────────────────────────────────────────────────
 
+Map<String, List<LessonModel>> _groupLessonsBySession(
+    List<LessonModel> lessons) {
+  final grouped = <String, List<LessonModel>>{};
   for (final lesson in lessons) {
     final key = _sessionKey(lesson);
-    grouped.putIfAbsent(key, () => <LessonModel>[]);
+    grouped.putIfAbsent(key, () => []);
     grouped[key]!.add(lesson);
   }
-
   return grouped;
 }
 
 String _subjectName(LessonModel lesson) {
   final name = lesson.subjectName;
-
-  if (name != null && name.trim().isNotEmpty) {
-    return name;
-  }
-
+  if (name != null && name.trim().isNotEmpty) return name;
   return 'Subject #${lesson.subjectId ?? '-'}';
 }
 
 String _lessonTimeText(LessonModel lesson) {
   final start = lesson.scheduleTime.toLocal();
   final end = start.add(Duration(minutes: lesson.duration));
-
   return '${DateFormat('dd/MM/yyyy HH:mm').format(start)} - '
       '${DateFormat('HH:mm').format(end)}';
 }
 
-String _sessionKey(LessonModel lesson) {
-  return '${lesson.availabilityId}-${lesson.scheduleTime.toUtc().toIso8601String()}';
-}
+String _sessionKey(LessonModel lesson) =>
+    '${lesson.availabilityId}-${lesson.scheduleTime.toUtc().toIso8601String()}';
 
 String _groupStatus(List<LessonModel> lessons) {
   if (lessons.every((x) => x.status.toLowerCase() == 'completed')) {
     return 'Completed';
   }
-
   if (lessons.any((x) => x.status.toLowerCase() == 'scheduled')) {
     return 'Scheduled';
   }
-
   return lessons.first.status;
 }
 
 Future<void> _openMeetingLink(BuildContext context, String link) async {
   final uri = Uri.tryParse(link);
-
   if (uri == null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Invalid meeting link')),
+      SnackBar(
+        content: const Text('Invalid meeting link'),
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
     );
     return;
   }
-
-  final opened = await launchUrl(
-    uri,
-    mode: LaunchMode.externalApplication,
-  );
-
+  final opened =
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
   if (!opened && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Could not open meeting link')),
+      SnackBar(
+        content: const Text('Could not open meeting link'),
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
     );
   }
 }

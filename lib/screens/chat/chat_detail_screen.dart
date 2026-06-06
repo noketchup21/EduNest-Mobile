@@ -120,13 +120,37 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final messages = data.messages[widget.conversationId] ?? [];
     final formatter = DateFormat('HH:mm');
 
+    final theme = Theme.of(context);
+          final colors = theme.colorScheme;
+
     return Scaffold(
+      backgroundColor: colors.surfaceContainerLowest,
+
       appBar: AppBar(
-        title: Text('Conversation #${widget.conversationId}'),
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        titleSpacing: 20,
+        title: Text(
+          'Conversation #${widget.conversationId}',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
+          ),
+        ),
         actions: [
-          IconButton(
-            onPressed: data.loading ? null : () => _loadMessages(),
-            icon: const Icon(Icons.refresh),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: IconButton.outlined(
+              onPressed: data.loading ? null : () => _loadMessages(),
+              icon: const Icon(Icons.refresh_rounded),
+              style: IconButton.styleFrom(
+                side: BorderSide(
+                  color: colors.outlineVariant,
+                  width: 0.5,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -140,10 +164,38 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               child: messages.isEmpty
                   ? ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                children: const [
-                  SizedBox(height: 160),
-                  Center(
-                    child: Text('No messages yet. Say hello!'),
+                children: [
+                  const SizedBox(height: 160),
+                  Column(
+                    children: [
+                      const SizedBox(height: 120),
+
+                      Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 56,
+                        color: colors.onSurface.withValues(
+                          alpha: 0.25,
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      Text(
+                        'No messages yet',
+                        style: theme.textTheme.titleMedium,
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      Text(
+                        'Start the conversation 👋',
+                        style:
+                            theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.onSurface
+                              .withValues(alpha: 0.45),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               )
@@ -162,33 +214,59 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         ? Alignment.centerRight
                         : Alignment.centerLeft,
                     child: Container(
-                      constraints: const BoxConstraints(
-                        maxWidth: 320,
-                      ),
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: mine
-                            ? Theme.of(context)
-                            .colorScheme
-                            .primaryContainer
-                            : Theme.of(context).colorScheme.surface,
-                        border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outlineVariant,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                             constraints: const BoxConstraints(
+                               maxWidth: 340,
+                             ),
+                             margin: const EdgeInsets.symmetric(
+                               vertical: 5,
+                             ),
+                             padding: const EdgeInsets.fromLTRB(
+                               14,
+                               12,
+                               14,
+                               10,
+                             ),
+                             decoration: BoxDecoration(
+                               color: mine
+                                   ? const Color(0xFFEAF3DE)
+                                   : colors.surface,
+                               borderRadius: BorderRadius.only(
+                                 topLeft: const Radius.circular(18),
+                                 topRight: const Radius.circular(18),
+                                 bottomLeft: Radius.circular(
+                                   mine ? 18 : 6,
+                                 ),
+                                 bottomRight: Radius.circular(
+                                   mine ? 6 : 18,
+                                 ),
+                               ),
+                               border: Border.all(
+                                 color: mine
+                                     ? const Color(0xFFC0DD97)
+                                     : colors.outlineVariant.withValues(
+                                         alpha: 0.5,
+                                       ),
+                                 width: 0.5,
+                               ),
+                             ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(message.content),
+                          Text(
+                            message.content,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              height: 1.4,
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           Text(
                             '${mine ? 'You' : 'User #${message.userId}'} • '
-                                '${formatter.format(message.createdAt.toLocal())}',
-                            style: Theme.of(context).textTheme.bodySmall,
+                            '${formatter.format(message.createdAt.toLocal())}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colors.onSurface.withValues(
+                                alpha: 0.55,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -200,8 +278,24 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           ),
 
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: colors.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: colors.outlineVariant.withValues(
+                      alpha: 0.5,
+                    ),
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(
+                12,
+                10,
+                12,
+                12,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -211,23 +305,59 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       maxLines: 4,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _sendMessage(),
-                      decoration: const InputDecoration(
-                        hintText: 'Message',
+                      decoration: InputDecoration(
+                        hintText: 'Type a message...',
+                        filled: true,
+                        fillColor:
+                            colors.surfaceContainerLowest,
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(14),
+                          borderSide: BorderSide(
+                            color: colors.outlineVariant,
+                            width: 0.5,
+                          ),
+                        ),
+                        enabledBorder:
+                            OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(14),
+                          borderSide: BorderSide(
+                            color:
+                                colors.outlineVariant,
+                            width: 0.5,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton.filled(
-                    onPressed: sending ? null : _sendMessage,
-                    icon: sending
-                        ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
+
+                  const SizedBox(width: 10),
+
+                  FilledButton(
+                    onPressed:
+                        sending ? null : _sendMessage,
+                    style: FilledButton.styleFrom(
+                      minimumSize:
+                          const Size(50, 50),
+                      shape:
+                          RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(14),
                       ),
-                    )
-                        : const Icon(Icons.send),
+                    ),
+                    child: sending
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child:
+                                CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.send_rounded,
+                          ),
                   ),
                 ],
               ),

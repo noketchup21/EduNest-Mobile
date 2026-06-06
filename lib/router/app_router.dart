@@ -308,7 +308,7 @@ class MainShell extends StatelessWidget {
           Icons.home,
           'Home',
         ),
-      if (!auth.isAdmin)
+      if (!auth.isAdmin && !auth.isTutor)
         const _NavItem(
           '/bookings',
           Icons.event_note_outlined,
