@@ -798,6 +798,11 @@ class ApiService {
     return TutorVerificationModel.fromJson(_asMap(res.data));
   }
 
+  Future<Map<String, dynamic>> getUserById(int userId) async {
+    final response = await dio.get('/api/User/$userId');
+    return response.data as Map<String, dynamic>;
+  }
+
   static Map<String, dynamic> _asMap(dynamic data) {
     if (data == null) {
       return <String, dynamic>{};

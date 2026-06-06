@@ -38,6 +38,16 @@ class AppDataProvider extends ChangeNotifier {
   List<TutorReportModel> adminReports = [];
   TutorReportModel? adminReportDetail;
 
+  // Add this field near the top with other fields
+  final Map<int, String> _userNameCache = {};
+  // Add this helper method
+  String userName(int userId) => _userNameCache[userId] ?? 'User #$userId';
+
+// Add this to cache a name
+  void cacheUserName(int userId, String name) {
+    _userNameCache[userId] = name;
+    notifyListeners();
+  }
 
   ProfileModel? profile;
 
@@ -150,10 +160,42 @@ class AppDataProvider extends ChangeNotifier {
     });
   }
 
+
+
   Future<void> loadConversations() async {
     await _guard(() async {
       conversations = await api.getConversations();
+
+      // Cache own name
+      if (profile != null) {
+        _userNameCache[profile!.userId] = profile!.name;
+      }
+
+      // Fire-and-forget name loading for all participants
+      final allUserIds = conversations
+          .expand((c) => c.userIds)
+          .toSet()
+          .where((id) => !_userNameCache.containsKey(id));
+
+      for (final id in allUserIds) {
+        loadUserName(id); // no await — resolves in background
+      }
     });
+  }
+
+  Future<void> loadUserName(int userId) async {
+    if (_userNameCache.containsKey(userId)) return;
+    try {
+      final user = await api.getUserById(userId);
+      // adjust the key to match your actual API response field
+      final name = (user['fullName'] ?? user['name'] ?? '').toString().trim();
+      if (name.isNotEmpty) {
+        _userNameCache[userId] = name;
+        notifyListeners();
+      }
+    } catch (_) {
+      // silently fail — fallback stays as "User #id"
+    }
   }
 
   Future<ConversationModel> startConversation(int otherUserId) async {
@@ -162,6 +204,16 @@ class AppDataProvider extends ChangeNotifier {
     await _guard(() async {
       conversation = await api.startConversation(otherUserId);
       conversations = await api.getConversations();
+
+      // Cache own name
+      if (profile != null) {
+        _userNameCache[profile!.userId] = profile!.name;
+      }
+
+      // Load name for the new participant if not cached yet
+      if (!_userNameCache.containsKey(otherUserId)) {
+        loadUserName(otherUserId); // no await
+      }
     });
 
     return conversation;
@@ -460,6 +512,10 @@ class AppDataProvider extends ChangeNotifier {
   Future<void> loadProfile() async {
     await _guard(() async {
       profile = await api.getMyProfile();
+      // cache own name so "You" fallback works correctly
+      if (profile != null) {
+        _userNameCache[profile!.userId] = profile!.name;
+      }
     });
   }
 

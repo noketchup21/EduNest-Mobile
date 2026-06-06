@@ -199,49 +199,10 @@ class _WalletScreenState extends State<WalletScreen> {
             if (data.walletTransactions.isEmpty)
               _buildEmptyCard(Icons.receipt_long_outlined, 'No transactions yet')
             else
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: data.walletTransactions.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 60, endIndent: 16),
-                  itemBuilder: (context, index) {
-                    final t = data.walletTransactions[index];
-                    final isPositive = t.amount >= 0;
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      leading: CircleAvatar(
-                        backgroundColor: isPositive
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
-                        child: Icon(
-                          isPositive ? Icons.add_rounded : Icons.remove_rounded,
-                          color: isPositive ? Colors.green : Colors.red,
-                        ),
-                      ),
-                      title: Text(
-                        t.type,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        '${t.description ?? ''}\n${dateFormatter.format(t.createdAt.toLocal())}',
-                        style: const TextStyle(height: 1.3),
-                      ),
-                      trailing: Text(
-                        '${isPositive ? "+" : ""}${currencyFormatter.format(t.amount)}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: isPositive ? Colors.green : Colors.red,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+              _PaginatedTransactions(
+                transactions: data.walletTransactions,
+                dateFormatter: dateFormatter,
+                currencyFormatter: currencyFormatter,
               ),
 
             // --- SECTION 4: PAYOUTS LIST ---
@@ -249,43 +210,10 @@ class _WalletScreenState extends State<WalletScreen> {
             if (data.payouts.isEmpty)
               _buildEmptyCard(Icons.payments_outlined, 'No payout requests yet')
             else
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: data.payouts.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 60, endIndent: 16),
-                  itemBuilder: (context, index) {
-                    final p = data.payouts[index];
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      leading: _PayoutStatusIcon(status: p.status),
-                      title: Text(
-                        'Request ID: #${p.payoutId}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        dateFormatter.format(p.requestedAt.toLocal()),
-                      ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          MoneyText(
-                            p.amount,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                          ),
-                          const SizedBox(height: 2),
-                          _buildStatusBadge(p.status),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+              _PaginatedPayouts(
+                payouts: data.payouts,
+                dateFormatter: dateFormatter,
+                currencyFormatter: currencyFormatter,
               ),
             const SizedBox(height: 24),
           ],
@@ -399,6 +327,345 @@ class _PayoutStatusIcon extends StatelessWidget {
     return CircleAvatar(
       backgroundColor: Colors.orange.withOpacity(0.1),
       child: const Icon(Icons.timelapse_rounded, color: Colors.orange),
+    );
+  }
+}
+
+class _PaginatedTransactions extends StatefulWidget {
+  final List transactions;
+  final DateFormat dateFormatter;
+  final NumberFormat currencyFormatter;
+
+  const _PaginatedTransactions({
+    required this.transactions,
+    required this.dateFormatter,
+    required this.currencyFormatter,
+  });
+
+  @override
+  State<_PaginatedTransactions> createState() => _PaginatedTransactionsState();
+}
+
+class _PaginatedTransactionsState extends State<_PaginatedTransactions> {
+  static const int _pageSize = 5;
+  int _page = 0;
+
+  int get _totalPages => ((widget.transactions.length - 1) ~/ _pageSize) + 1;
+
+  List get _currentItems {
+    final start = _page * _pageSize;
+    final end = (start + _pageSize).clamp(0, widget.transactions.length);
+    return widget.transactions.sublist(start, end);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: colors.outlineVariant.withOpacity(0.5)),
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _currentItems.length,
+            separatorBuilder: (_, __) => Divider(
+              height: 1,
+              indent: 60,
+              endIndent: 16,
+              color: colors.outlineVariant.withOpacity(0.4),
+            ),
+            itemBuilder: (context, index) {
+              final t = _currentItems[index];
+              final isPositive = (t.amount as double) >= 0;
+              final color = isPositive ? Colors.green : Colors.red;
+
+              return ListTile(
+                contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                leading: CircleAvatar(
+                  backgroundColor: color.withOpacity(0.1),
+                  child: Icon(
+                    isPositive ? Icons.add_rounded : Icons.remove_rounded,
+                    color: color,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  t.type as String,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+                subtitle: Text(
+                  '${(t.description as String?) ?? ''}\n${widget.dateFormatter.format((t.createdAt as DateTime).toLocal())}',
+                  style: TextStyle(
+                    height: 1.35,
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                isThreeLine: true,
+                trailing: Text(
+                  '${isPositive ? "+" : ""}${widget.currencyFormatter.format(t.amount)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: color,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+        _PageControls(
+          page: _page,
+          totalPages: _totalPages,
+          total: widget.transactions.length,
+          pageSize: _pageSize,
+          onPrev: _page > 0 ? () => setState(() => _page--) : null,
+          onNext: _page < _totalPages - 1 ? () => setState(() => _page++) : null,
+        ),
+      ],
+    );
+  }
+}
+
+class _PaginatedPayouts extends StatefulWidget {
+  final List payouts;
+  final DateFormat dateFormatter;
+  final NumberFormat currencyFormatter;
+
+  const _PaginatedPayouts({
+    required this.payouts,
+    required this.dateFormatter,
+    required this.currencyFormatter,
+  });
+
+  @override
+  State<_PaginatedPayouts> createState() => _PaginatedPayoutsState();
+}
+
+class _PaginatedPayoutsState extends State<_PaginatedPayouts> {
+  static const int _pageSize = 5;
+  int _page = 0;
+
+  int get _totalPages => ((widget.payouts.length - 1) ~/ _pageSize) + 1;
+
+  List get _currentItems {
+    final start = _page * _pageSize;
+    final end = (start + _pageSize).clamp(0, widget.payouts.length);
+    return widget.payouts.sublist(start, end);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: colors.outlineVariant.withOpacity(0.5)),
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _currentItems.length,
+            separatorBuilder: (_, __) => Divider(
+              height: 1,
+              indent: 60,
+              endIndent: 16,
+              color: colors.outlineVariant.withOpacity(0.4),
+            ),
+            itemBuilder: (context, index) {
+              final p = _currentItems[index];
+              final status = (p.status as String).toLowerCase();
+              final Color color;
+              if (status == 'paid') {
+                color = Colors.green;
+              } else if (status == 'failed' || status == 'rejected') {
+                color = Colors.red;
+              } else {
+                color = Colors.orange;
+              }
+
+              return ListTile(
+                contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                leading: _PayoutStatusIcon(status: p.status as String),
+                title: Text(
+                  'Request #${p.payoutId}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+                subtitle: Text(
+                  widget.dateFormatter
+                      .format((p.requestedAt as DateTime).toLocal()),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    MoneyText(
+                      p.amount as double,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: color.withOpacity(0.25)),
+                      ),
+                      child: Text(
+                        p.status as String,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+        _PageControls(
+          page: _page,
+          totalPages: _totalPages,
+          total: widget.payouts.length,
+          pageSize: _pageSize,
+          onPrev: _page > 0 ? () => setState(() => _page--) : null,
+          onNext: _page < _totalPages - 1 ? () => setState(() => _page++) : null,
+        ),
+      ],
+    );
+  }
+}
+
+class _PageControls extends StatelessWidget {
+  final int page;
+  final int totalPages;
+  final int total;
+  final int pageSize;
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+
+  const _PageControls({
+    required this.page,
+    required this.totalPages,
+    required this.total,
+    required this.pageSize,
+    required this.onPrev,
+    required this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final start = page * pageSize + 1;
+    final end = ((page + 1) * pageSize).clamp(0, total);
+
+    return Row(
+      children: [
+        // Range label
+        Expanded(
+          child: Text(
+            '$start–$end of $total',
+            style: TextStyle(
+              fontSize: 12,
+              color: colors.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+
+        // Page indicator pills
+        ...List.generate(totalPages, (i) {
+          final isActive = i == page;
+          return GestureDetector(
+            onTap: () {
+              // handled via prev/next but dots give visual reference
+            },
+            child: Container(
+              width: isActive ? 18 : 7,
+              height: 7,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? colors.primary
+                    : colors.onSurfaceVariant.withOpacity(0.25),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          );
+        }),
+
+        const SizedBox(width: 10),
+
+        // Prev button
+        SizedBox(
+          width: 34,
+          height: 34,
+          child: IconButton.outlined(
+            padding: EdgeInsets.zero,
+            onPressed: onPrev,
+            icon: const Icon(Icons.chevron_left_rounded, size: 18),
+            style: IconButton.styleFrom(
+              side: BorderSide(
+                color: onPrev != null
+                    ? colors.outlineVariant
+                    : colors.outlineVariant.withOpacity(0.3),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+
+        // Next button
+        SizedBox(
+          width: 34,
+          height: 34,
+          child: IconButton.outlined(
+            padding: EdgeInsets.zero,
+            onPressed: onNext,
+            icon: const Icon(Icons.chevron_right_rounded, size: 18),
+            style: IconButton.styleFrom(
+              side: BorderSide(
+                color: onNext != null
+                    ? colors.outlineVariant
+                    : colors.outlineVariant.withOpacity(0.3),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

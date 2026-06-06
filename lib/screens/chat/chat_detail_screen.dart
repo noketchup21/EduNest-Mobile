@@ -35,6 +35,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _loadMessages();
       _scrollToBottom();
+
+      final conv = context.read<AppDataProvider>().conversations
+          .where((c) => c.conversationId == widget.conversationId)
+          .firstOrNull;
+      if (conv != null && context.mounted) {
+        for (final id in conv.userIds) {
+          context.read<AppDataProvider>().loadUserName(id);
+        }
+      }
     });
 
     timer = Timer.periodic(const Duration(seconds: 3), (_) async {
@@ -131,13 +140,34 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         titleSpacing: 20,
-        title: Text(
-          'Conversation #${widget.conversationId}',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.3,
-          ),
+
+        title: Builder(
+          builder: (context) {
+            final data = context.watch<AppDataProvider>();
+
+            final conv = data.conversations
+                .where((c) => c.conversationId == widget.conversationId)
+                .firstOrNull;
+
+            final otherIds = conv?.userIds
+                .where((id) => id != data.profile?.userId)
+                .toList() ??
+                [];
+
+            final titleName = otherIds.isEmpty
+                ? 'Conversation #${widget.conversationId}'
+                : otherIds.map((id) => data.userName(id)).join(', ');
+
+            return Text(
+              titleName,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.3,
+              ),
+            );
+          },
         ),
+
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -252,6 +282,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (!mine) ...[
+                            Text(
+                              data.userName(message.userId),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: const Color(0xFF3B6D11),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                          ],
                           Text(
                             message.content,
                             style: theme.textTheme.bodyLarge?.copyWith(
@@ -260,12 +300,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${mine ? 'You' : 'User #${message.userId}'} • '
-                            '${formatter.format(message.createdAt.toLocal())}',
+                            '${mine ? 'You' : data.userName(message.userId)} • '
+                                '${formatter.format(message.createdAt.toLocal())}',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: colors.onSurface.withValues(
-                                alpha: 0.55,
-                              ),
+                              color: colors.onSurface.withValues(alpha: 0.55),
                             ),
                           ),
                         ],

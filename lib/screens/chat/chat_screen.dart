@@ -150,8 +150,24 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
 
           // Conversation list
-          ...data.conversations.map(
-            (c) => Container(
+          ...data.conversations.map((c) {
+            final otherIds = c.userIds
+                .where((id) => id != data.profile?.userId)
+                .toList();
+            final displayName = otherIds.isEmpty
+                ? 'Conversation #${c.conversationId}'
+                : otherIds.map((id) => data.userName(id)).join(', ');
+            final initials = displayName.trim().isEmpty
+                ? '?'
+                : displayName
+                .trim()
+                .split(' ')
+                .where((w) => w.isNotEmpty)
+                .take(2)
+                .map((w) => w[0].toUpperCase())
+                .join();
+
+            return Container(
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
                 color: colors.surface,
@@ -164,9 +180,8 @@ class _ChatScreenState extends State<ChatScreen> {
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 6,
+                  vertical: 8,
                 ),
-
                 leading: Container(
                   width: 48,
                   height: 48,
@@ -174,72 +189,42 @@ class _ChatScreenState extends State<ChatScreen> {
                     color: const Color(0xFFEAF3DE),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    color: Color(0xFF3B6D11),
+                  child: Center(
+                    child: Text(
+                      initials,
+                      style: const TextStyle(
+                        color: Color(0xFF3B6D11),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ),
-
                 title: Text(
-                  'Conversation #${c.conversationId}',
+                  displayName,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-
                 subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Users: ${c.userIds.join(', ')}',
-                        style: TextStyle(
-                          color: colors.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFAEEDA),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: const Color(0xFFFAC775),
-                            width: 0.5,
-                          ),
-                        ),
-                        child: Text(
-                          formatter.format(
-                            c.lastMessageAt.toLocal(),
-                          ),
-                          style: const TextStyle(
-                            color: Color(0xFF854F0B),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                    formatter.format(c.lastMessageAt.toLocal()),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurface.withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
-
                 trailing: Icon(
                   Icons.chevron_right_rounded,
                   color: colors.onSurface.withValues(alpha: 0.4),
                 ),
-
-                onTap: () {
-                  context.push('/chat/${c.conversationId}');
-                },
+                onTap: () => context.push('/chat/${c.conversationId}'),
               ),
-            ),
-          ),
+            );
+          }),
 
           if (!data.loading && data.conversations.isEmpty)
             Padding(
