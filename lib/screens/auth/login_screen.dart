@@ -24,6 +24,31 @@ class LoginScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Center(
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/images/Logo.png',
+                        height: 100,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.school, size: 80, color: Colors.blue),
+                      ),
+                      const SizedBox(height: 12),
+                      Image.asset(
+                        'assets/images/Chữ Logo.png',
+                        height: 40,
+                        errorBuilder: (context, error, stackTrace) => Text(
+                          'EduNest',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
                 Text(
                   'Welcome back',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -47,7 +72,7 @@ class LoginScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 _AuthChoiceCard(
                   icon: Icons.family_restroom,
-                  title: 'Parent / Student login',
+                  title: 'Student login',
                   subtitle: 'Book tutors, pay by QR, view lessons, and chat.',
                   onTap: () => context.push('/login/learner'),
                 ),

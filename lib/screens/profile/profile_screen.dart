@@ -33,7 +33,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppDataProvider>().loadProfile();
     });
@@ -59,41 +58,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final data = context.watch<AppDataProvider>();
     final auth = context.watch<AuthProvider>();
     final profile = data.profile;
+    final theme = Theme.of(context);
 
     _fillOnce(profile);
 
     final isTutor = auth.isTutor || profile?.role == 'Tutor';
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surfaceContainerLow,
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('Personal Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: false,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
         actions: [
           IconButton(
             onPressed: data.loading
                 ? null
                 : () async {
-              setState(() => initialized = false);
-              await context.read<AppDataProvider>().loadProfile();
-            },
-            icon: const Icon(Icons.refresh),
+                    setState(() => initialized = false);
+                    await context.read<AppDataProvider>().loadProfile();
+                  },
+            icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: data.loadProfile,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           children: [
             ErrorBanner(data.error),
 
             if (data.loading && profile == null)
               const Padding(
-                padding: EdgeInsets.all(32),
+                padding: EdgeInsets.all(48),
                 child: Center(child: CircularProgressIndicator()),
               )
             else ...[
               _HeaderCard(profile: profile, auth: auth),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
+
               _ProfileForm(
                 formKey: profileFormKey,
                 profile: profile,
@@ -104,8 +109,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 loading: data.loading,
                 onSave: _saveProfile,
               ),
+
               if (isTutor) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 20),
                 _BankForm(
                   formKey: bankFormKey,
                   bankName: bankName,
@@ -117,18 +123,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onSave: _saveBank,
                 ),
               ],
-              const SizedBox(height: 20),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  await context.read<AuthProvider>().logout();
 
-                  if (!context.mounted) return;
-
-                  context.go('/login');
-                },
-                icon: const Icon(Icons.logout),
-                label: const Text('Logout'),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                    side: BorderSide(color: theme.colorScheme.error.withOpacity(0.5)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: () async {
+                    await context.read<AuthProvider>().logout();
+                    if (!context.mounted) return;
+                    context.go('/login');
+                  },
+                  icon: const Icon(Icons.logout_rounded),
+                  label: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
               ),
+              const SizedBox(height: 32),
             ],
           ],
         ),
@@ -157,15 +172,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       await context.read<AppDataProvider>().updateProfile(
-        name: name.text.trim(),
-        phone: phone.text.trim(),
-        tutorBio: tutorBio.text.trim(),
-      );
+            name: name.text.trim(),
+            phone: phone.text.trim(),
+            tutorBio: tutorBio.text.trim(),
+          );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated')),
+        const SnackBar(content: Text('Profile updated successfully')),
       );
     } catch (_) {}
   }
@@ -175,17 +190,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       await context.read<AppDataProvider>().updateTutorBankAccount(
-        bankName: bankName.text.trim(),
-        bankBin: bankBin.text.trim(),
-        accountNumber: accountNumber.text.trim(),
-        accountHolderName: accountHolderName.text.trim(),
-        branchName: branchName.text.trim(),
-      );
+            bankName: bankName.text.trim(),
+            bankBin: bankBin.text.trim(),
+            accountNumber: accountNumber.text.trim(),
+            accountHolderName: accountHolderName.text.trim(),
+            branchName: branchName.text.trim(),
+          );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bank account updated')),
+        const SnackBar(content: Text('Bank account updated successfully')),
       );
     } catch (_) {}
   }
@@ -202,44 +217,123 @@ class _HeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final displayName = profile?.name ?? auth.email ?? 'User';
     final role = profile?.role ?? auth.role ?? '';
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 36,
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 4),
+            ),
+            child: CircleAvatar(
+              radius: 42,
+              backgroundColor: theme.colorScheme.primaryContainer,
               child: Text(
                 displayName.isEmpty ? '?' : displayName[0].toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w900,
-                  fontSize: 28,
+                  fontSize: 32,
+                  color: theme.colorScheme.onPrimaryContainer,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              displayName,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            displayName,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 4),
-            Text(profile?.email ?? auth.email ?? ''),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            profile?.email ?? auth.email ?? '',
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 12),
+
+          Chip(
+            label: Text(
+              _roleTranslation(role),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+            backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+            side: BorderSide.none,
+            labelStyle: TextStyle(color: theme.colorScheme.primary),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+          ),
+
+          if (profile?.role == 'Tutor') ...[
             const SizedBox(height: 8),
-            Chip(label: Text(role.isEmpty ? 'User' : role)),
-            if (profile?.role == 'Tutor') ...[
-              const SizedBox(height: 8),
-              Text(
-                'Verification: ${profile?.verificationStatus ?? 'NotSubmitted'}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+            _buildVerificationBadge(context, profile?.verificationStatus),
           ],
-        ),
+        ],
+      ),
+    );
+  }
+
+  String _roleTranslation(String role) {
+    switch (role.toLowerCase()) {
+      case 'tutor': return 'TUTOR';
+      case 'learner': return 'LEARNER';
+      case 'admin': return 'ADMIN';
+      default: return role.isEmpty ? 'USER' : role.toUpperCase();
+    }
+  }
+
+  Widget _buildVerificationBadge(BuildContext context, String? status) {
+    final norm = (status ?? 'NotSubmitted').toLowerCase();
+    Color baseColor = Colors.orange;
+    String text = 'Not Submitted';
+
+    if (norm == 'verified' || norm == 'approved') {
+      baseColor = Colors.green;
+      text = 'Verified';
+    } else if (norm == 'pending') {
+      baseColor = Colors.blue;
+      text = 'Pending Review';
+    } else if (norm == 'rejected' || norm == 'failed') {
+      baseColor = Colors.red;
+      text = 'Rejected';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: baseColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: baseColor, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(color: baseColor, fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }
@@ -268,72 +362,82 @@ class _ProfileForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: formKey,
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Personal information',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                initialValue: profile?.email ?? '',
-                enabled: false,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: name,
-                decoration: const InputDecoration(
-                  labelText: 'Full name',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                validator: _required,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: phone,
-                decoration: const InputDecoration(
-                  labelText: 'Phone',
-                  prefixIcon: Icon(Icons.phone_outlined),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-              if (isTutor) ...[
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: tutorBio,
-                  decoration: const InputDecoration(
-                    labelText: 'Tutor bio',
-                    prefixIcon: Icon(Icons.description_outlined),
-                  ),
-                  minLines: 3,
-                  maxLines: 5,
+    final theme = Theme.of(context);
+
+    InputDecoration inputStyle(String label, IconData icon, {bool enabled = true}) {
+      return InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: enabled ? theme.colorScheme.primary : Colors.grey),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        filled: true,
+        fillColor: enabled
+            ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.2)
+            : theme.colorScheme.surfaceContainerHighest.withOpacity(0.6),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.person_pin_rounded, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  'Personal Information',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
+            ),
+            const Divider(height: 24),
+            TextFormField(
+              initialValue: profile?.email ?? '',
+              enabled: false,
+              decoration: inputStyle('Email Address', Icons.email_outlined, enabled: false),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: name,
+              decoration: inputStyle('Full Name', Icons.person_outline),
+              validator: _required,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: phone,
+              decoration: inputStyle('Phone Number', Icons.phone_outlined),
+              keyboardType: TextInputType.phone,
+            ),
+            if (isTutor) ...[
               const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: loading ? null : onSave,
-                  icon: const Icon(Icons.save_outlined),
-                  label: const Text('Save profile'),
-                ),
+              TextFormField(
+                controller: tutorBio,
+                decoration: inputStyle('Biography / Introduction (Tutor)', Icons.description_outlined),
+                minLines: 3,
+                maxLines: 5,
               ),
             ],
-          ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: loading ? null : onSave,
+                icon: const Icon(Icons.save_rounded),
+                label: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -363,83 +467,105 @@ class _BankForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: formKey,
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Tutor bank account',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
+    final theme = Theme.of(context);
+
+    InputDecoration inputStyle(String label, IconData icon, {String? hint}) {
+      return InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon, color: theme.colorScheme.secondary),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        filled: true,
+        fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.account_balance_rounded, color: theme.colorScheme.secondary),
+                const SizedBox(width: 8),
+                Text(
+                  'Bank Account Details',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondaryContainer.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 18, color: theme.colorScheme.onSecondaryContainer),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Bank BIN code is optional. Providing it helps generate a quick payout QR code when administrators transfer funds.',
+                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSecondaryContainer),
+                    ),
                   ),
+                ],
+              ),
+            ),
+            const Divider(height: 24),
+            TextFormField(
+              controller: bankName,
+              decoration: inputStyle('Bank Name', Icons.account_balance_outlined),
+              validator: _required,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: bankBin,
+              decoration: inputStyle('Bank BIN Code (Optional)', Icons.qr_code_2_outlined, hint: 'e.g., 970422'),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: accountNumber,
+              decoration: inputStyle('Account Number', Icons.numbers_outlined),
+              keyboardType: TextInputType.number,
+              validator: _required,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: accountHolderName,
+              decoration: inputStyle('Account Holder Name', Icons.person_pin_outlined),
+              validator: _required,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: branchName,
+              decoration: inputStyle('Bank Branch (Optional)', Icons.location_city_outlined),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.secondary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
+                onPressed: loading ? null : onSave,
+                icon: const Icon(Icons.save_rounded),
+                label: const Text('Save Bank Information', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Bank BIN is optional. Enter it to enable quick payout QR for admin transfer.',
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: bankName,
-                decoration: const InputDecoration(
-                  labelText: 'Bank name',
-                  prefixIcon: Icon(Icons.account_balance_outlined),
-                ),
-                validator: _required,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: bankBin,
-                decoration: const InputDecoration(
-                  labelText: 'Bank BIN optional',
-                  hintText: 'Example: 970422',
-                  prefixIcon: Icon(Icons.qr_code_2_outlined),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: accountNumber,
-                decoration: const InputDecoration(
-                  labelText: 'Account number',
-                  prefixIcon: Icon(Icons.numbers_outlined),
-                ),
-                keyboardType: TextInputType.number,
-                validator: _required,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: accountHolderName,
-                decoration: const InputDecoration(
-                  labelText: 'Account holder name',
-                  prefixIcon: Icon(Icons.person_pin_outlined),
-                ),
-                validator: _required,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: branchName,
-                decoration: const InputDecoration(
-                  labelText: 'Branch name optional',
-                  prefixIcon: Icon(Icons.location_city_outlined),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: loading ? null : onSave,
-                  icon: const Icon(Icons.save_outlined),
-                  label: const Text('Save bank account'),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -450,6 +576,5 @@ String? _required(String? value) {
   if (value == null || value.trim().isEmpty) {
     return 'This field is required';
   }
-
   return null;
 }
