@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -18,23 +18,19 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final profileFormKey = GlobalKey<FormState>();
   final bankFormKey = GlobalKey<FormState>();
-
   final name = TextEditingController();
   final phone = TextEditingController();
   final tutorBio = TextEditingController();
-
   final bankName = TextEditingController();
   final bankBin = TextEditingController();
   final accountNumber = TextEditingController();
   final accountHolderName = TextEditingController();
   final branchName = TextEditingController();
-
   bool initialized = false;
 
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppDataProvider>().loadProfile();
     });
@@ -45,13 +41,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     name.dispose();
     phone.dispose();
     tutorBio.dispose();
-
     bankName.dispose();
     bankBin.dispose();
     accountNumber.dispose();
     accountHolderName.dispose();
     branchName.dispose();
-
     super.dispose();
   }
 
@@ -61,9 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = context.watch<AuthProvider>();
     final profile = data.profile;
     final theme = Theme.of(context);
-
     _fillOnce(profile);
-
     final isTutor = auth.isTutor || profile?.role == 'Tutor';
 
     return Scaffold(
@@ -94,16 +86,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           children: [
             ErrorBanner(data.error),
-
             if (data.loading && profile == null)
               const Padding(
                 padding: EdgeInsets.all(48),
                 child: Center(child: CircularProgressIndicator()),
               )
             else ...[
-              _HeaderCard(profile: profile, auth: auth),
+              _HeaderCard(
+                profile: profile,
+                auth: auth,
+                loading: data.loading,
+                onUploadAvatar: _pickAndUploadAvatar,
+                onDeleteAvatar: _deleteAvatar,
+              ),
               const SizedBox(height: 20),
-
               _ProfileForm(
                 formKey: profileFormKey,
                 profile: profile,
@@ -114,7 +110,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 loading: data.loading,
                 onSave: _saveProfile,
               ),
-
               if (isTutor) ...[
                 const SizedBox(height: 20),
                 _BankForm(
@@ -128,12 +123,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onSave: _saveBank,
                 ),
               ],
-
               const SizedBox(height: 20),
-              const _LegalAndReportsCard(),
-
+              _LegalAndReportsCard(isTutor: isTutor),
               const SizedBox(height: 24),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: OutlinedButton.icon(
@@ -149,9 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   onPressed: () async {
                     await context.read<AuthProvider>().logout();
-
                     if (!context.mounted) return;
-
                     context.go('/login');
                   },
                   icon: const Icon(Icons.logout_rounded),
@@ -164,7 +154,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 32),
             ],
           ],
@@ -175,32 +164,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _fillOnce(ProfileModel? profile) {
     if (initialized || profile == null) return;
-
     name.text = profile.name;
     phone.text = profile.phone ?? '';
     tutorBio.text = profile.tutorBio ?? '';
-
     bankName.text = profile.bankName ?? '';
     bankBin.text = profile.bankBin ?? '';
     accountNumber.text = profile.accountNumber ?? '';
     accountHolderName.text = profile.accountHolderName ?? '';
     branchName.text = profile.branchName ?? '';
-
     initialized = true;
   }
 
   Future<void> _saveProfile() async {
     if (!profileFormKey.currentState!.validate()) return;
-
     try {
       await context.read<AppDataProvider>().updateProfile(
         name: name.text.trim(),
         phone: phone.text.trim(),
         tutorBio: tutorBio.text.trim(),
       );
-
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully')),
       );
@@ -209,7 +192,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _saveBank() async {
     if (!bankFormKey.currentState!.validate()) return;
-
     try {
       await context.read<AppDataProvider>().updateTutorBankAccount(
         bankName: bankName.text.trim(),
@@ -218,23 +200,92 @@ class _ProfileScreenState extends State<ProfileScreen> {
         accountHolderName: accountHolderName.text.trim(),
         branchName: branchName.text.trim(),
       );
-
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Bank account updated successfully')),
       );
     } catch (_) {}
   }
+
+  Future<void> _pickAndUploadAvatar() async {
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 900,
+      );
+      if (picked == null) return;
+      await context.read<AppDataProvider>().uploadAvatar(picked.path);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Avatar updated successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not upload avatar: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteAvatar() async {
+    final profile = context.read<AppDataProvider>().profile;
+    final avatarUrl = profile?.avatarUrl?.trim() ?? '';
+    if (avatarUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No avatar to delete')),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete avatar?'),
+          content: const Text('Your profile image will be removed.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) return;
+    try {
+      await context.read<AppDataProvider>().deleteAvatar();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Avatar deleted')),
+      );
+    } catch (_) {}
+  }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Header Card
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _HeaderCard extends StatelessWidget {
   final ProfileModel? profile;
   final AuthProvider auth;
+  final bool loading;
+  final VoidCallback onUploadAvatar;
+  final VoidCallback onDeleteAvatar;
 
   const _HeaderCard({
     required this.profile,
     required this.auth,
+    required this.loading,
+    required this.onUploadAvatar,
+    required this.onDeleteAvatar,
   });
 
   @override
@@ -242,6 +293,8 @@ class _HeaderCard extends StatelessWidget {
     final theme = Theme.of(context);
     final displayName = profile?.name ?? auth.email ?? 'User';
     final role = profile?.role ?? auth.role ?? '';
+    final avatarUrl = profile?.avatarUrl?.trim() ?? '';
+    final hasAvatar = avatarUrl.isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -259,26 +312,88 @@ class _HeaderCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.2),
-                width: 4,
-              ),
-            ),
-            child: CircleAvatar(
-              radius: 42,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Text(
-                displayName.isEmpty ? '?' : displayName[0].toUpperCase(),
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 32,
-                  color: theme.colorScheme.onPrimaryContainer,
+          Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withOpacity(0.2),
+                    width: 4,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 44,
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  backgroundImage:
+                  hasAvatar ? NetworkImage(avatarUrl) : null,
+                  child: hasAvatar
+                      ? null
+                      : Text(
+                    displayName.isEmpty
+                        ? '?'
+                        : displayName[0].toUpperCase(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 32,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: PopupMenuButton<String>(
+                  enabled: !loading,
+                  onSelected: (value) {
+                    if (value == 'upload') onUploadAvatar();
+                    if (value == 'delete') onDeleteAvatar();
+                  },
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(
+                      value: 'upload',
+                      child: Row(
+                        children: [
+                          Icon(Icons.upload_outlined),
+                          SizedBox(width: 10),
+                          Text('Upload / Update avatar'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      enabled: hasAvatar,
+                      child: const Row(
+                        children: [
+                          Icon(Icons.delete_outline),
+                          SizedBox(width: 10),
+                          Text('Delete avatar'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: theme.colorScheme.primary,
+                    child: loading
+                        ? SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: theme.colorScheme.onPrimary,
+                      ),
+                    )
+                        : Icon(
+                      Icons.camera_alt_outlined,
+                      size: 17,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Text(
@@ -330,10 +445,8 @@ class _HeaderCard extends StatelessWidget {
 
   Widget _buildVerificationBadge(BuildContext context, String? status) {
     final norm = (status ?? 'NotSubmitted').toLowerCase();
-
     Color baseColor = Colors.orange;
     String text = 'Not Submitted';
-
     if (norm == 'verified' || norm == 'approved') {
       baseColor = Colors.green;
       text = 'Verified';
@@ -344,7 +457,6 @@ class _HeaderCard extends StatelessWidget {
       baseColor = Colors.red;
       text = 'Rejected';
     }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
@@ -376,6 +488,10 @@ class _HeaderCard extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Profile Form
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _ProfileForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -468,7 +584,8 @@ class _ProfileForm extends StatelessWidget {
             const SizedBox(height: 16),
             TextFormField(
               controller: phone,
-              decoration: inputStyle('Phone Number', Icons.phone_outlined),
+              decoration:
+              inputStyle('Phone Number', Icons.phone_outlined),
               keyboardType: TextInputType.phone,
             ),
             if (isTutor) ...[
@@ -508,6 +625,10 @@ class _ProfileForm extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Bank Form
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _BankForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController bankName;
@@ -546,7 +667,8 @@ class _BankForm extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
         ),
         filled: true,
-        fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
+        fillColor:
+        theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
       );
     }
 
@@ -613,9 +735,7 @@ class _BankForm extends StatelessWidget {
               validator: _required,
             ),
             const SizedBox(height: 16),
-
             BankBinField(controller: bankBin),
-
             const SizedBox(height: 16),
             TextFormField(
               controller: accountNumber,
@@ -669,8 +789,14 @@ class _BankForm extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Legal & Reports Card
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _LegalAndReportsCard extends StatelessWidget {
-  const _LegalAndReportsCard();
+  final bool isTutor;
+
+  const _LegalAndReportsCard({required this.isTutor});
 
   @override
   Widget build(BuildContext context) {
@@ -684,27 +810,94 @@ class _LegalAndReportsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 8,
+          if (isTutor) ...[
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
+              leading: _TileIcon(
+                icon: Icons.verified_user_outlined,
+                color: theme.colorScheme.errorContainer,
+                iconColor: theme.colorScheme.onErrorContainer,
+              ),
+              title: const Text(
+                'Reports About Me',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: const Text(
+                'View reports submitted about your tutoring sessions and admin progress.',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push('/tutor-reports'),
             ),
-            leading: _TileIcon(
-              icon: Icons.report_gmailerrorred_outlined,
-              color: theme.colorScheme.secondaryContainer,
-              iconColor: theme.colorScheme.onSecondaryContainer,
+            const Divider(height: 1),
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
+              leading: _TileIcon(
+                icon: Icons.support_agent_outlined,
+                color: theme.colorScheme.primaryContainer,
+                iconColor: theme.colorScheme.onPrimaryContainer,
+              ),
+              title: const Text(
+                'Report an Issue to Admin',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: const Text(
+                'Missing payment, slow payout, wallet issue, app bug, booking problem...',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push('/support-report/create'),
             ),
-            title: const Text(
-              'My Reports',
-              style: TextStyle(fontWeight: FontWeight.w800),
+            const Divider(height: 1),
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
+              leading: _TileIcon(
+                icon: Icons.manage_search_outlined,
+                color: theme.colorScheme.secondaryContainer,
+                iconColor: theme.colorScheme.onSecondaryContainer,
+              ),
+              title: const Text(
+                'My Admin Support Reports',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: const Text(
+                'View progress and admin notes for your submitted issues.',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push('/support-reports/me'),
             ),
-            subtitle: const Text(
-              'Track tutor reports you submitted and view admin progress.',
+            const Divider(height: 1),
+          ],
+          if (!isTutor) ...[
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
+              leading: _TileIcon(
+                icon: Icons.report_gmailerrorred_outlined,
+                color: theme.colorScheme.secondaryContainer,
+                iconColor: theme.colorScheme.onSecondaryContainer,
+              ),
+              title: const Text(
+                'My Reports',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: const Text(
+                'Track tutor reports you submitted and view admin progress.',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push('/my-reports'),
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push('/my-reports'),
-          ),
-          const Divider(height: 1),
+            const Divider(height: 1),
+          ],
           ListTile(
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
@@ -731,6 +924,10 @@ class _LegalAndReportsCard extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Tile Icon helper
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _TileIcon extends StatelessWidget {
   final IconData icon;
   final Color color;
@@ -751,18 +948,18 @@ class _TileIcon extends StatelessWidget {
         color: color.withOpacity(0.65),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(
-        icon,
-        color: iconColor,
-      ),
+      child: Icon(icon, color: iconColor),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared validator
+// ─────────────────────────────────────────────────────────────────────────────
 
 String? _required(String? value) {
   if (value == null || value.trim().isEmpty) {
     return 'This field is required';
   }
-
   return null;
 }

@@ -8,6 +8,8 @@ import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/money_text.dart';
+import 'admin_reports_screen.dart';
+import 'admin_support_reports_screen.dart';
 
 const double _cardRadius = 22;
 
@@ -36,7 +38,7 @@ class _AdminScreenState extends State<AdminScreen> {
     final colors = theme.colorScheme;
 
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         backgroundColor: colors.surface,
         appBar: AppBar(
@@ -72,7 +74,7 @@ class _AdminScreenState extends State<AdminScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: TabBar(
-                  isScrollable: false,
+                  isScrollable: true,
                   dividerColor: Colors.transparent,
                   indicator: BoxDecoration(
                     color: colors.surface,
@@ -109,6 +111,10 @@ class _AdminScreenState extends State<AdminScreen> {
                     Tab(
                         icon: Icon(Icons.report_outlined, size: 18),
                         text: 'Reports'),
+                    Tab(
+                      icon: Icon(Icons.support_agent_outlined, size: 18),
+                      text: 'Support',
+                    ),
                   ],
                 ),
               ),
@@ -286,6 +292,7 @@ class _AdminScreenState extends State<AdminScreen> {
             const _TutorsTab(),
             const _PayoutsTab(),
             const _ReportsTab(),
+            const AdminSupportReportsPanel(),
           ],
         ),
       ),
@@ -1052,227 +1059,16 @@ class _PayoutItem extends StatelessWidget {
   }
 }
 
-class _ReportsTab extends StatefulWidget {
+class _ReportsTab extends StatelessWidget {
   const _ReportsTab();
 
   @override
-  State<_ReportsTab> createState() => _ReportsTabState();
-}
-
-class _ReportsTabState extends State<_ReportsTab> {
-  String _statusFilter = 'All';
-
-  @override
   Widget build(BuildContext context) {
-    final data = context.watch<AppDataProvider>();
-    final reports = data.adminReports;
-    final visibleReports = _filteredReports(reports);
-    final groupedReports = _groupByCategory(visibleReports);
-
-    return RefreshIndicator(
-      onRefresh: () => data.adminLoadReports(
-        status: _statusFilter == 'All' ? null : _statusFilter,
-      ),
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          ErrorBanner(data.error),
-          _AdminHeroCard(
-            title: 'Tutor reports',
-            subtitle:
-                'Review complaints, proof images, tutor details, and resolution status.',
-            icon: Icons.report_outlined,
-            trailing: _CountBadge(count: reports.length, label: 'reports'),
-          ),
-          const SizedBox(height: 16),
-          _ReportManagementOverview(reports: reports),
-          const SizedBox(height: 14),
-          _AdminReportStatusFilter(
-            selected: _statusFilter,
-            reports: reports,
-            onChanged: (status) async {
-              setState(() => _statusFilter = status);
-              await context.read<AppDataProvider>().adminLoadReports(
-                    status: status == 'All' ? null : status,
-                  );
-            },
-          ),
-          const SizedBox(height: 16),
-          if (data.loading && reports.isEmpty)
-            const _LoadingCard()
-          else if (reports.isEmpty && !data.loading)
-            const _EmptyStateCard(
-              icon: Icons.report_outlined,
-              title: 'No reports',
-              subtitle: 'Tutor reports will appear here.',
-            )
-          else if (visibleReports.isEmpty)
-            _EmptyStateCard(
-              icon: Icons.filter_alt_off_outlined,
-              title: 'No $_statusFilter reports',
-              subtitle: 'Choose another status to continue triage.',
-            )
-          else
-            ...groupedReports.entries.map((entry) {
-              return _AdminReportCategorySection(
-                category: entry.key,
-                reports: entry.value,
-              );
-            }),
-        ],
-      ),
-    );
-  }
-
-  List<TutorReportModel> _filteredReports(List<TutorReportModel> reports) {
-    if (_statusFilter == 'All') return reports;
-
-    return reports.where((report) {
-      return report.status.toLowerCase() == _statusFilter.toLowerCase();
-    }).toList();
-  }
-
-  Map<String, List<TutorReportModel>> _groupByCategory(
-    List<TutorReportModel> reports,
-  ) {
-    final grouped = <String, List<TutorReportModel>>{};
-
-    for (final report in reports) {
-      final category =
-          report.category.trim().isEmpty ? 'Other' : report.category;
-      grouped.putIfAbsent(category, () => []).add(report);
-    }
-
-    return grouped;
+    return const AdminReportsPanel();
   }
 }
 
-class _ReportManagementOverview extends StatelessWidget {
-  final List<TutorReportModel> reports;
 
-  const _ReportManagementOverview({required this.reports});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final pending = _countStatus('Pending');
-    final reviewing = _countStatus('Reviewing');
-    final resolved = _countStatus('Resolved');
-    final rejected = _countStatus('Rejected');
-    final open = pending + reviewing;
-
-    return _PanelCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _SectionTitle(
-            title: 'Report triage',
-            subtitle:
-                'Categorized queue for complaint handling and account decisions',
-            icon: Icons.manage_search_outlined,
-          ),
-          const SizedBox(height: 14),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: 1.75,
-            children: [
-              _ReportMetricTile(
-                label: 'Open',
-                value: open,
-                icon: Icons.warning_amber_outlined,
-                color: open > 0 ? Colors.orange : colors.primary,
-              ),
-              _ReportMetricTile(
-                label: 'Reviewing',
-                value: reviewing,
-                icon: Icons.rate_review_outlined,
-                color: Colors.blue,
-              ),
-              _ReportMetricTile(
-                label: 'Resolved',
-                value: resolved,
-                icon: Icons.check_circle_outline,
-                color: Colors.green,
-              ),
-              _ReportMetricTile(
-                label: 'Rejected',
-                value: rejected,
-                icon: Icons.cancel_outlined,
-                color: Colors.red,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  int _countStatus(String status) {
-    return reports.where((report) {
-      return report.status.toLowerCase() == status.toLowerCase();
-    }).length;
-  }
-}
-
-class _ReportMetricTile extends StatelessWidget {
-  final String label;
-  final int value;
-  final IconData icon;
-  final Color color;
-
-  const _ReportMetricTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          _SoftIcon(icon: icon, color: color, size: 38),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  value.toString(),
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: color.withOpacity(0.85),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _AdminReportStatusFilter extends StatelessWidget {
   final String selected;

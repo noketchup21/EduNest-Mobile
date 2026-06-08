@@ -552,6 +552,130 @@ class ApiService {
     return PayoutModel.fromJson(_asMap(res.data));
   }
 
+  Future<List<TutorReportModel>> getTutorReports({String? status}) async {
+    final res = await dio.get(
+      '/api/report/tutor/me',
+      queryParameters: {
+        if (status != null && status.trim().isNotEmpty)
+          'status': status.trim(),
+      },
+    );
+
+    return _list(res.data)
+        .map((e) => TutorReportModel.fromJson(e))
+        .toList();
+  }
+
+  Future<SupportReportModel> createSupportReport({
+    required String category,
+    required String title,
+    required String description,
+    int? payoutId,
+    int? bookingId,
+    int? lessonId,
+    required List<String> proofImagePaths,
+  }) async {
+    final formData = FormData.fromMap({
+      'category': category,
+      'title': title,
+      'description': description,
+      if (payoutId != null) 'payoutId': payoutId,
+      if (bookingId != null) 'bookingId': bookingId,
+      if (lessonId != null) 'lessonId': lessonId,
+      'proofImages': [
+        for (final path in proofImagePaths)
+          await MultipartFile.fromFile(path),
+      ],
+    });
+
+    final res = await dio.post(
+      '/api/support-report',
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+
+    return SupportReportModel.fromJson(_asMap(res.data));
+  }
+
+  Future<List<SupportReportModel>> getMySupportReports() async {
+    final res = await dio.get('/api/support-report/me');
+
+    return _list(res.data)
+        .map((e) => SupportReportModel.fromJson(e))
+        .toList();
+  }
+
+
+  Future<List<SupportReportModel>> adminGetSupportReports({
+    String? role,
+    String? status,
+  }) async {
+    final res = await dio.get(
+      '/api/support-report/admin',
+      queryParameters: {
+        if (role != null && role.trim().isNotEmpty) 'role': role.trim(),
+        if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
+      },
+    );
+
+    return _list(res.data)
+        .map((e) => SupportReportModel.fromJson(e))
+        .toList();
+  }
+
+  Future<SupportReportModel> adminUpdateSupportReportStatus({
+    required int supportReportId,
+    required String status,
+    String? adminNote,
+  }) async {
+    final res = await dio.patch(
+      '/api/support-report/admin/$supportReportId/status',
+      data: {
+        'status': status,
+        if (adminNote != null && adminNote.trim().isNotEmpty)
+          'adminNote': adminNote.trim(),
+      },
+    );
+
+    return SupportReportModel.fromJson(_asMap(res.data));
+  }
+
+  Future<SupportReportModel> adminGetSupportReportDetail(
+      int supportReportId,
+      ) async {
+    final res = await dio.get(
+      '/api/support-report/admin/$supportReportId',
+    );
+
+    return SupportReportModel.fromJson(_asMap(res.data));
+  }
+
+  Future<String?> uploadAvatar(String imagePath) async {
+    final formData = FormData.fromMap({
+      'avatar': await MultipartFile.fromFile(imagePath),
+    });
+
+    final res = await dio.put(
+      '/api/profile/avatar',
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+
+    final map = _asMap(res.data);
+
+    return map['avatarUrl']?.toString();
+  }
+
+  Future<void> deleteAvatar() async {
+    await dio.delete('/api/profile/avatar');
+  }
+
+  Future<ProfileModel> getProfile() async {
+    final res = await dio.get('/api/profile/me');
+
+    return ProfileModel.fromJson(_asMap(res.data));
+  }
+
   Future<TutorVerificationModel> getMyTutorVerification() async {
     final res = await dio.get('/api/tutor/verification/me');
     return TutorVerificationModel.fromJson(_asMap(res.data));

@@ -24,6 +24,11 @@ import '../screens/admin/report_tutor_screen.dart';
 import '../screens/admin/admin_report_detail_screen.dart';
 import '../screens/profile/terms_of_service_screen.dart'  as legal;
 import '../screens/report/my_reports_screen.dart';
+import '../screens/report/tutor_reports_screen.dart';
+import '../screens/admin/admin_reports_screen.dart';
+import '../screens/support/create_support_report_screen.dart';
+import '../screens/support/my_support_reports_screen.dart';
+import '../screens/admin/admin_support_reports_screen.dart';
 
 class AppRouter {
   static GoRouter build(AuthProvider auth) {
@@ -266,6 +271,26 @@ class AppRouter {
         GoRoute(
           path: '/my-reports',
           builder: (_, __) => const MyReportsScreen(),
+        ),
+
+        GoRoute(
+          path: '/tutor-reports',
+          builder: (_, __) => const TutorReportsScreen(),
+        ),
+
+        GoRoute(
+          path: '/admin/reports',
+          builder: (_, __) => const AdminReportsScreen(),
+        ),
+
+        GoRoute(
+          path: '/support-report/create',
+          builder: (_, __) => const CreateSupportReportScreen(),
+        ),
+
+        GoRoute(
+          path: '/support-reports/me',
+          builder: (_, __) => const MySupportReportsScreen(),
         ),
 
         GoRoute(

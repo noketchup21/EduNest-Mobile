@@ -8,6 +8,7 @@ import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/user_avatar.dart';
 
 class LessonScreen extends StatefulWidget {
   const LessonScreen({super.key});
@@ -575,11 +576,10 @@ class _LearnerTutorCard extends StatelessWidget {
         child: ExpansionTile(
           tilePadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-          leading: CircleAvatar(
-            radius: 19,
-            backgroundColor: colors.surfaceContainerHighest,
-            child: Icon(Icons.person_outline_rounded,
-                size: 20, color: colors.onSurfaceVariant),
+          leading: UserAvatar(
+            imageUrl: first.tutorAvatarUrl,
+            name: first.tutorName,
+            radius: 22,
           ),
           title: Text(
             first.tutorName,

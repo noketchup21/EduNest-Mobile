@@ -38,6 +38,7 @@ class AvailabilityModel {
   final int tutorUserId;
   final String tutorName;
   final bool hasBookings;
+  final String? tutorAvatarUrl;
 
   AvailabilityModel({
     required this.availabilityId,
@@ -59,6 +60,7 @@ class AvailabilityModel {
     required this.tutorUserId,
     required this.tutorName,
     required this.hasBookings,
+    this.tutorAvatarUrl,
   });
 
   factory AvailabilityModel.fromJson(Map<String, dynamic> json) {
@@ -83,12 +85,18 @@ class AvailabilityModel {
             (_asDouble(json['pricePerSlot']) * _asInt(json['slot'])),
       ),
       tutorUserId: _asInt(
-        json['tutorUserId'] ??
-            json['tutor']?['userId'] ??
-            json['tutorId'],
+        json['tutorUserId'] ?? json['tutor']?['userId'] ?? json['tutorId'],
       ),
-      tutorName: json['tutorName']?.toString() ?? 'Tutor #${_asInt(json['tutorId'])}',
+      tutorName:
+          json['tutorName']?.toString() ?? 'Tutor #${_asInt(json['tutorId'])}',
       hasBookings: json['hasBookings'] == true,
+      tutorAvatarUrl: _avatarUrl(
+        json['tutorAvatarUrl'] ??
+            json['avatarUrl'] ??
+            json['tutor']?['avatarUrl'] ??
+            json['tutor']?['user']?['avatarUrl'] ??
+            json['tutor']?['user']?['AvatarUrl'],
+      ),
     );
   }
 }
@@ -179,6 +187,7 @@ class LessonModel {
   final String tutorName;
   final int? subjectId;
   final String? subjectName;
+  final String? tutorAvatarUrl;
 
   LessonModel({
     required this.lessonId,
@@ -193,6 +202,7 @@ class LessonModel {
     required this.tutorName,
     required this.subjectId,
     required this.subjectName,
+    this.tutorAvatarUrl,
   });
 
   factory LessonModel.fromJson(Map<String, dynamic> json) {
@@ -206,9 +216,11 @@ class LessonModel {
       availabilityId: _asInt(json['availabilityId']),
       tutorId: _asInt(json['tutorId']),
       tutorUserId: _asInt(json['tutorUserId']),
-      tutorName: json['tutorName']?.toString() ?? 'Tutor #${_asInt(json['tutorId'])}',
+      tutorName:
+          json['tutorName']?.toString() ?? 'Tutor #${_asInt(json['tutorId'])}',
       subjectId: json['subjectId'] == null ? null : _asInt(json['subjectId']),
       subjectName: json['subjectName']?.toString(),
+      tutorAvatarUrl: json['tutorAvatarUrl']?.toString(),
     );
   }
 }
@@ -299,12 +311,20 @@ class ConversationModel {
   final DateTime lastMessageAt;
   final bool isActive;
   final List<int> userIds;
+  final int otherUserId;
+  final String otherUserName;
+  final String otherUserRole;
+  final String? otherUserAvatarUrl;
 
   ConversationModel({
     required this.conversationId,
     required this.lastMessageAt,
     required this.isActive,
     required this.userIds,
+    required this.otherUserId,
+    required this.otherUserName,
+    required this.otherUserRole,
+    this.otherUserAvatarUrl,
   });
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
@@ -313,6 +333,10 @@ class ConversationModel {
       lastMessageAt: _asDate(json['lastMessageAt']),
       isActive: json['isActive'] == true,
       userIds: (json['userIds'] as List? ?? []).map(_asInt).toList(),
+      otherUserId: _asInt(json['otherUserId']),
+      otherUserName: json['otherUserName']?.toString() ?? 'User',
+      otherUserRole: json['otherUserRole']?.toString() ?? '',
+      otherUserAvatarUrl: json['otherUserAvatarUrl']?.toString(),
     );
   }
 }
@@ -552,7 +576,8 @@ class TutorVerificationModel {
       tutorName: json['tutorName']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
       isVerified: json['isVerified'] == true,
-      verificationStatus: json['verificationStatus']?.toString() ?? 'NotSubmitted',
+      verificationStatus:
+          json['verificationStatus']?.toString() ?? 'NotSubmitted',
       nationalIdNumber: json['nationalIdNumber']?.toString(),
       cccdFrontImageUrl: json['cccdFrontImageUrl']?.toString(),
       cccdBackImageUrl: json['cccdBackImageUrl']?.toString(),
@@ -649,6 +674,7 @@ class ProfileModel {
   final String? accountNumber;
   final String? accountHolderName;
   final String? branchName;
+  final String? avatarUrl;
 
   ProfileModel({
     required this.userId,
@@ -665,6 +691,7 @@ class ProfileModel {
     this.accountNumber,
     this.accountHolderName,
     this.branchName,
+    this.avatarUrl,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
@@ -676,13 +703,15 @@ class ProfileModel {
       role: json['role']?.toString() ?? '',
       tutorId: json['tutorId'] == null ? null : _asInt(json['tutorId']),
       tutorBio: json['tutorBio']?.toString(),
-      isVerified: json['isVerified'] == null ? null : json['isVerified'] == true,
+      isVerified:
+          json['isVerified'] == null ? null : json['isVerified'] == true,
       verificationStatus: json['verificationStatus']?.toString(),
       bankName: json['bankName']?.toString(),
       bankBin: json['bankBin']?.toString(),
       accountNumber: json['accountNumber']?.toString(),
       accountHolderName: json['accountHolderName']?.toString(),
       branchName: json['branchName']?.toString(),
+      avatarUrl: json['avatarUrl']?.toString(),
     );
   }
 }
@@ -756,7 +785,8 @@ class TutorReportModel {
       status: json['status']?.toString() ?? '',
       adminNote: json['adminNote']?.toString(),
       createdAt: _asDate(json['createdAt']),
-      reviewedAt: json['reviewedAt'] == null ? null : _asDate(json['reviewedAt']),
+      reviewedAt:
+          json['reviewedAt'] == null ? null : _asDate(json['reviewedAt']),
       tutorEmail: json['tutorEmail']?.toString(),
       tutorPhone: json['tutorPhone']?.toString(),
       tutorIsActive: json['tutorIsActive'] as bool?,
@@ -767,6 +797,118 @@ class TutorReportModel {
           .toList(),
     );
   }
+}
+
+class SupportReportModel {
+  final int supportReportId;
+  final int userId;
+  final String userName;
+  final String userEmail;
+  final String role;
+  final String category;
+  final String title;
+  final String description;
+  final int? payoutId;
+  final int? bookingId;
+  final int? lessonId;
+  final String status;
+  final String? adminNote;
+  final DateTime createdAt;
+  final DateTime? reviewedAt;
+  final List<SupportReportProofImageModel> proofImages;
+
+  SupportReportModel({
+    required this.supportReportId,
+    required this.userId,
+    required this.userName,
+    required this.userEmail,
+    required this.role,
+    required this.category,
+    required this.title,
+    required this.description,
+    this.payoutId,
+    this.bookingId,
+    this.lessonId,
+    required this.status,
+    this.adminNote,
+    required this.createdAt,
+    this.reviewedAt,
+    required this.proofImages,
+  });
+
+  factory SupportReportModel.fromJson(Map<String, dynamic> json) {
+    return SupportReportModel(
+      supportReportId: _supportAsInt(json['supportReportId']),
+      userId: _supportAsInt(json['userId']),
+      userName: json['userName']?.toString() ?? '',
+      userEmail: json['userEmail']?.toString() ?? '',
+      role: json['role']?.toString() ?? '',
+      category: json['category']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      payoutId: _supportAsNullableInt(json['payoutId']),
+      bookingId: _supportAsNullableInt(json['bookingId']),
+      lessonId: _supportAsNullableInt(json['lessonId']),
+      status: json['status']?.toString() ?? '',
+      adminNote: json['adminNote']?.toString(),
+      createdAt: _supportAsDate(json['createdAt']),
+      reviewedAt: json['reviewedAt'] == null
+          ? null
+          : _supportAsDate(json['reviewedAt']),
+      proofImages: (json['proofImages'] as List? ?? [])
+          .map(
+            (item) => SupportReportProofImageModel.fromJson(
+              _supportAsMap(item),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class SupportReportProofImageModel {
+  final int supportReportProofImageId;
+  final String imageUrl;
+
+  SupportReportProofImageModel({
+    required this.supportReportProofImageId,
+    required this.imageUrl,
+  });
+
+  factory SupportReportProofImageModel.fromJson(Map<String, dynamic> json) {
+    return SupportReportProofImageModel(
+      supportReportProofImageId:
+          _supportAsInt(json['supportReportProofImageId']),
+      imageUrl: json['imageUrl']?.toString() ?? '',
+    );
+  }
+}
+
+Map<String, dynamic> _supportAsMap(Object? value) {
+  if (value is Map<String, dynamic>) return value;
+  if (value is Map) return Map<String, dynamic>.from(value);
+  return <String, dynamic>{};
+}
+
+int _supportAsInt(Object? value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+int? _supportAsNullableInt(Object? value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+
+  final text = value.toString().trim();
+  if (text.isEmpty) return null;
+
+  return int.tryParse(text);
+}
+
+DateTime _supportAsDate(Object? value) {
+  return DateTime.tryParse(value?.toString() ?? '') ?? DateTime.now();
 }
 
 class TutorReportProofImageModel {
@@ -799,7 +941,8 @@ double _asDouble(dynamic value) {
 }
 
 DateTime _asDate(dynamic value) {
-  return DateTime.tryParse(value?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+  return DateTime.tryParse(value?.toString() ?? '') ??
+      DateTime.fromMillisecondsSinceEpoch(0);
 }
 
 String _timeString(dynamic value) {
@@ -842,4 +985,9 @@ Map<String, dynamic> _asMap(dynamic value) {
   }
 
   return <String, dynamic>{};
+}
+
+String? _avatarUrl(dynamic value) {
+  final text = value?.toString().trim() ?? '';
+  return text.isEmpty ? null : text;
 }

@@ -37,6 +37,11 @@ class AppDataProvider extends ChangeNotifier {
   List<TutorReportModel> myReports = [];
   List<TutorReportModel> adminReports = [];
   TutorReportModel? adminReportDetail;
+  List<TutorReportModel> tutorReports = [];
+
+  List<SupportReportModel> supportReports = [];
+  List<SupportReportModel> adminSupportReports = [];
+  SupportReportModel? adminSupportReportDetail;
 
   // Add this field near the top with other fields
   final Map<int, String> _userNameCache = {};
@@ -629,6 +634,91 @@ class AppDataProvider extends ChangeNotifier {
       pendingTutors = adminTutors
           .where((t) => t.verificationStatus.toLowerCase() == 'pending')
           .toList();
+    });
+  }
+
+  Future<void> loadTutorReports({String? status}) async {
+    await _guard(() async {
+      tutorReports = await api.getTutorReports(status: status);
+    });
+  }
+
+  Future<void> createSupportReport({
+    required String category,
+    required String title,
+    required String description,
+    int? payoutId,
+    int? bookingId,
+    int? lessonId,
+    required List<String> proofImagePaths,
+  }) async {
+    await _guard(() async {
+      await api.createSupportReport(
+        category: category,
+        title: title,
+        description: description,
+        payoutId: payoutId,
+        bookingId: bookingId,
+        lessonId: lessonId,
+        proofImagePaths: proofImagePaths,
+      );
+
+      supportReports = await api.getMySupportReports();
+    });
+  }
+
+  Future<void> loadMySupportReports() async {
+    await _guard(() async {
+      supportReports = await api.getMySupportReports();
+    });
+  }
+
+  Future<void> adminLoadSupportReports({
+    String? role,
+    String? status,
+  }) async {
+    await _guard(() async {
+      adminSupportReports = await api.adminGetSupportReports(
+        role: role,
+        status: status,
+      );
+    });
+  }
+
+  Future<void> adminLoadSupportReportDetail(int supportReportId) async {
+    await _guard(() async {
+      adminSupportReportDetail =
+      await api.adminGetSupportReportDetail(supportReportId);
+    });
+  }
+
+  Future<void> adminUpdateSupportReportStatus({
+    required int supportReportId,
+    required String status,
+    String? adminNote,
+  }) async {
+    await _guard(() async {
+      adminSupportReportDetail = await api.adminUpdateSupportReportStatus(
+        supportReportId: supportReportId,
+        status: status,
+        adminNote: adminNote,
+      );
+
+      adminSupportReports = await api.adminGetSupportReports();
+    });
+  }
+
+  Future<void> uploadAvatar(String imagePath) async {
+    await _guard(() async {
+      await api.uploadAvatar(imagePath);
+      profile = await api.getProfile();
+    });
+  }
+
+  Future<void> deleteAvatar() async {
+    await _guard(() async {
+      await api.deleteAvatar();
+      profile = await api.getProfile();
     });
   }
 

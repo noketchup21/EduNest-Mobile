@@ -7,6 +7,7 @@ import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/money_text.dart';
+import '../../widgets/user_avatar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -61,7 +62,8 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.only(right: 4),
               child: IconButton(
                 onPressed: () => context.push('/availability/create'),
-                icon: Icon(Icons.add_circle_rounded, size: 28, color: theme.colorScheme.primary),
+                icon: Icon(Icons.add_circle_rounded,
+                    size: 28, color: theme.colorScheme.primary),
               ),
             ),
           Padding(
@@ -109,7 +111,8 @@ class _TutorCourseList extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(Icons.menu_book_rounded, size: 48, color: Colors.grey[400]),
+                Icon(Icons.menu_book_rounded,
+                    size: 48, color: Colors.grey[400]),
                 const SizedBox(height: 12),
                 const Text(
                   'No Courses Available',
@@ -124,7 +127,8 @@ class _TutorCourseList extends StatelessWidget {
               ],
             ),
           ),
-        ...courses.map((availability) => _TutorCourseCard(availability: availability)),
+        ...courses.map(
+            (availability) => _TutorCourseCard(availability: availability)),
       ],
     );
   }
@@ -156,7 +160,8 @@ class _TutorCourseCard extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
+        border: Border.all(
+            color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -177,16 +182,21 @@ class _TutorCourseCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isActive ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                    color: isActive
+                        ? Colors.green.withOpacity(0.1)
+                        : Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isActive ? Icons.check_circle_rounded : Icons.pause_circle_rounded,
+                        isActive
+                            ? Icons.check_circle_rounded
+                            : Icons.pause_circle_rounded,
                         size: 14,
                         color: isActive ? Colors.green : Colors.orange,
                       ),
@@ -211,10 +221,14 @@ class _TutorCourseCard extends StatelessWidget {
               spacing: 12,
               runSpacing: 8,
               children: [
-                _buildInfoTag(theme, Icons.calendar_today_rounded, availability.dayOfWeek),
-                _buildInfoTag(theme, Icons.access_time_rounded, '${availability.startTime} - ${availability.endTime}'),
-                _buildInfoTag(theme, Icons.layers_rounded, '${availability.mode} • ${availability.level}'),
-                _buildInfoTag(theme, Icons.list_alt_rounded, '${availability.slot} lessons'),
+                _buildInfoTag(theme, Icons.calendar_today_rounded,
+                    availability.dayOfWeek),
+                _buildInfoTag(theme, Icons.access_time_rounded,
+                    '${availability.startTime} - ${availability.endTime}'),
+                _buildInfoTag(theme, Icons.layers_rounded,
+                    '${availability.mode} • ${availability.level}'),
+                _buildInfoTag(theme, Icons.list_alt_rounded,
+                    '${availability.slot} lessons'),
               ],
             ),
             const SizedBox(height: 16),
@@ -226,11 +240,14 @@ class _TutorCourseCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start, // Đã sửa lỗi tại đây
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start, // Đã sửa lỗi tại đây
                     children: [
                       Text(
                         'Total Tuition',
-                        style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: theme.colorScheme.onSurfaceVariant),
                       ),
                       MoneyText(
                         total,
@@ -238,29 +255,31 @@ class _TutorCourseCard extends StatelessWidget {
                           fontWeight: FontWeight.w900,
                           fontSize: 20,
                           color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    FilledButton.tonal(
-                      onPressed: data.loading || availability.hasBookings
-                          ? null
-                          : () => _toggleStatus(context, availability),
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        backgroundColor: isActive
-                            ? theme.colorScheme.errorContainer.withOpacity(0.6)
-                            : theme.colorScheme.secondaryContainer,
-                        foregroundColor: isActive
-                            ? theme.colorScheme.error
-                            : theme.colorScheme.onSecondaryContainer,
-                      ),
-                      child: Text(isActive ? 'Hide' : 'Publish', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 12),
+                FilledButton.tonal(
+                  onPressed: data.loading || availability.hasBookings
+                      ? null
+                      : () => _toggleStatus(context, availability),
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: isActive
+                        ? theme.colorScheme.errorContainer.withOpacity(0.6)
+                        : theme.colorScheme.secondaryContainer,
+                    foregroundColor: isActive
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSecondaryContainer,
+                  ),
+                  child: Text(isActive ? 'Hide' : 'Publish',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -281,14 +300,18 @@ class _TutorCourseCard extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             text,
-            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+            style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _toggleStatus(BuildContext context, AvailabilityModel availability) async {
+  Future<void> _toggleStatus(
+      BuildContext context, AvailabilityModel availability) async {
     final isActive = availability.status.toLowerCase() == 'active';
     final newStatus = isActive ? 'Inactive' : 'Active';
     final confirmed = await showDialog<bool>(
@@ -300,11 +323,14 @@ class _TutorCourseCard extends StatelessWidget {
             ? 'Students will no longer be able to find or book this course.'
             : 'Students will be able to find and book this course open for registration.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: FilledButton.styleFrom(
-              backgroundColor: isActive ? Theme.of(context).colorScheme.error : null,
+              backgroundColor:
+                  isActive ? Theme.of(context).colorScheme.error : null,
             ),
             child: Text(isActive ? 'Hide' : 'Publish'),
           ),
@@ -314,11 +340,12 @@ class _TutorCourseCard extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
     try {
       await context.read<AppDataProvider>().toggleAvailabilityStatus(
-        availabilityId: availability.availabilityId,
-        status: newStatus,
-      );
+            availabilityId: availability.availabilityId,
+            status: newStatus,
+          );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Course status updated successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Course status updated successfully')));
       }
     } catch (_) {}
   }
@@ -345,14 +372,16 @@ class _LearnerTutorList extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(40),
             alignment: Alignment.center,
-            child: const Text('No tutors are currently available.', style: TextStyle(color: Colors.grey)),
+            child: const Text('No tutors are currently available.',
+                style: TextStyle(color: Colors.grey)),
           ),
         ...groups.values.map((courses) => _TutorGroupCard(courses: courses)),
       ],
     );
   }
 
-  Map<int, List<AvailabilityModel>> _groupByTutor(List<AvailabilityModel> availabilities) {
+  Map<int, List<AvailabilityModel>> _groupByTutor(
+      List<AvailabilityModel> availabilities) {
     final result = <int, List<AvailabilityModel>>{};
     for (final availability in availabilities) {
       result.putIfAbsent(availability.tutorId, () => []);
@@ -370,7 +399,8 @@ class _TutorGroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final first = courses.first;
-    final tutorName = first.tutorName.isEmpty ? 'Tutor #${first.tutorId}' : first.tutorName;
+    final tutorName =
+        first.tutorName.isEmpty ? 'Tutor #${first.tutorId}' : first.tutorName;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -384,7 +414,8 @@ class _TutorGroupCard extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+        border: Border.all(
+            color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Theme(
@@ -397,14 +428,13 @@ class _TutorGroupCard extends StatelessWidget {
           leading: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 3),
+              border: Border.all(
+                  color: theme.colorScheme.primary.withOpacity(0.2), width: 3),
             ),
-            child: CircleAvatar(
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Text(
-                tutorName.isEmpty ? '?' : tutorName[0].toUpperCase(),
-                style: TextStyle(color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
-              ),
+            child: UserAvatar(
+              imageUrl: first.tutorAvatarUrl,
+              name: tutorName,
+              radius: 24,
             ),
           ),
           title: Text(
@@ -413,14 +443,18 @@ class _TutorGroupCard extends StatelessWidget {
           ),
           subtitle: Text(
             '${courses.length} active courses open',
-            style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
+            style: TextStyle(
+                fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                onPressed: first.tutorUserId <= 0 ? null : () => _startChat(context, first.tutorUserId),
-                icon: Icon(Icons.chat_bubble_rounded, color: theme.colorScheme.primary, size: 22),
+                onPressed: first.tutorUserId <= 0
+                    ? null
+                    : () => _startChat(context, first.tutorUserId),
+                icon: Icon(Icons.chat_bubble_rounded,
+                    color: theme.colorScheme.primary, size: 22),
                 style: IconButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                   padding: const EdgeInsets.all(8),
@@ -432,7 +466,8 @@ class _TutorGroupCard extends StatelessWidget {
           ),
           children: [
             const Divider(height: 1, indent: 16, endIndent: 16),
-            ...courses.map((availability) => _LearnerCourseTile(availability: availability)),
+            ...courses.map((availability) =>
+                _LearnerCourseTile(availability: availability)),
           ],
         ),
       ),
@@ -441,7 +476,8 @@ class _TutorGroupCard extends StatelessWidget {
 
   Future<void> _startChat(BuildContext context, int tutorUserId) async {
     try {
-      final conversation = await context.read<AppDataProvider>().startConversation(tutorUserId);
+      final conversation =
+          await context.read<AppDataProvider>().startConversation(tutorUserId);
       if (context.mounted) context.push('/chat/${conversation.conversationId}');
     } catch (_) {}
   }
@@ -476,18 +512,23 @@ class _LearnerCourseTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     _subjectText(context, availability),
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.secondary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     '${availability.mode}',
-                    style: TextStyle(fontSize: 11, color: theme.colorScheme.secondary, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.secondary,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -495,9 +536,11 @@ class _LearnerCourseTile extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                _buildSmallInfo(theme, Icons.event_rounded, availability.dayOfWeek),
+                _buildSmallInfo(
+                    theme, Icons.event_rounded, availability.dayOfWeek),
                 const SizedBox(width: 16),
-                _buildSmallInfo(theme, Icons.schedule_rounded, '${availability.startTime} - ${availability.endTime}'),
+                _buildSmallInfo(theme, Icons.schedule_rounded,
+                    '${availability.startTime} - ${availability.endTime}'),
               ],
             ),
             const SizedBox(height: 14),
@@ -507,7 +550,10 @@ class _LearnerCourseTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Full Tuition Package', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+                      Text('Full Tuition Package',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: theme.colorScheme.onSurfaceVariant)),
                       MoneyText(
                         total,
                         style: TextStyle(
@@ -520,12 +566,15 @@ class _LearnerCourseTile extends StatelessWidget {
                   ),
                 ),
                 FilledButton(
-                  onPressed: data.loading ? null : () => _book(context, availability),
+                  onPressed:
+                      data.loading ? null : () => _book(context, availability),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Enroll Now', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text('Enroll Now',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -541,10 +590,11 @@ class _LearnerCourseTile extends StatelessWidget {
       children: [
         Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
         const SizedBox(width: 6),
-        Text(
-          text,
-          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500)
-        ),
+        Text(text,
+            style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -553,7 +603,8 @@ class _LearnerCourseTile extends StatelessWidget {
     try {
       await context.read<AppDataProvider>().book(availability.availabilityId);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enrolled in class successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Enrolled in class successfully!')));
         context.go('/bookings');
       }
     } catch (_) {}
@@ -562,6 +613,7 @@ class _LearnerCourseTile extends StatelessWidget {
 
 String _subjectText(BuildContext context, AvailabilityModel availability) {
   final data = context.read<AppDataProvider>();
-  if ((availability.subjectName ?? '').isNotEmpty) return availability.subjectName!;
+  if ((availability.subjectName ?? '').isNotEmpty)
+    return availability.subjectName!;
   return data.availabilitySubjectName(availability);
 }
