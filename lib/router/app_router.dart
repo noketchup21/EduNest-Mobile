@@ -22,6 +22,8 @@ import '../screens/admin/admin_tutor_detail_screen.dart';
 import '../screens/admin/admin_payout_detail_screen.dart';
 import '../screens/admin/report_tutor_screen.dart';
 import '../screens/admin/admin_report_detail_screen.dart';
+import '../screens/profile/terms_of_service_screen.dart'  as legal;
+import '../screens/report/my_reports_screen.dart';
 
 class AppRouter {
   static GoRouter build(AuthProvider auth) {
@@ -254,6 +256,16 @@ class AppRouter {
 
             return AdminReportDetailScreen(reportId: reportId);
           },
+        ),
+
+        GoRoute(
+          path: '/terms-of-service',
+          builder: (_, __) => const legal.TermsOfServiceScreen(),
+        ),
+
+        GoRoute(
+          path: '/my-reports',
+          builder: (_, __) => const MyReportsScreen(),
         ),
 
         GoRoute(

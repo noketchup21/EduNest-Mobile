@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/bank_bin_field.dart';
 import '../../widgets/error_banner.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -33,6 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppDataProvider>().loadProfile();
     });
@@ -67,7 +69,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLow,
       appBar: AppBar(
-        title: const Text('Personal Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Personal Profile',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: false,
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -76,9 +81,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: data.loading
                 ? null
                 : () async {
-                    setState(() => initialized = false);
-                    await context.read<AppDataProvider>().loadProfile();
-                  },
+              setState(() => initialized = false);
+              await context.read<AppDataProvider>().loadProfile();
+            },
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
@@ -124,25 +129,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
 
+              const SizedBox(height: 20),
+              const _LegalAndReportsCard(),
+
               const SizedBox(height: 24),
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
-                    side: BorderSide(color: theme.colorScheme.error.withOpacity(0.5)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    side: BorderSide(
+                      color: theme.colorScheme.error.withOpacity(0.5),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   onPressed: () async {
                     await context.read<AuthProvider>().logout();
+
                     if (!context.mounted) return;
+
                     context.go('/login');
                   },
                   icon: const Icon(Icons.logout_rounded),
-                  label: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  label: const Text(
+                    'Log Out',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
               ),
+
               const SizedBox(height: 32),
             ],
           ],
@@ -172,10 +194,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       await context.read<AppDataProvider>().updateProfile(
-            name: name.text.trim(),
-            phone: phone.text.trim(),
-            tutorBio: tutorBio.text.trim(),
-          );
+        name: name.text.trim(),
+        phone: phone.text.trim(),
+        tutorBio: tutorBio.text.trim(),
+      );
 
       if (!mounted) return;
 
@@ -190,12 +212,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       await context.read<AppDataProvider>().updateTutorBankAccount(
-            bankName: bankName.text.trim(),
-            bankBin: bankBin.text.trim(),
-            accountNumber: accountNumber.text.trim(),
-            accountHolderName: accountHolderName.text.trim(),
-            branchName: branchName.text.trim(),
-          );
+        bankName: bankName.text.trim(),
+        bankBin: bankBin.text.trim(),
+        accountNumber: accountNumber.text.trim(),
+        accountHolderName: accountHolderName.text.trim(),
+        branchName: branchName.text.trim(),
+      );
 
       if (!mounted) return;
 
@@ -240,7 +262,10 @@ class _HeaderCard extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 4),
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.2),
+                width: 4,
+              ),
             ),
             child: CircleAvatar(
               radius: 42,
@@ -268,18 +293,19 @@ class _HeaderCard extends StatelessWidget {
             style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
-
           Chip(
             label: Text(
               _roleTranslation(role),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
             backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
             side: BorderSide.none,
             labelStyle: TextStyle(color: theme.colorScheme.primary),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
           ),
-
           if (profile?.role == 'Tutor') ...[
             const SizedBox(height: 8),
             _buildVerificationBadge(context, profile?.verificationStatus),
@@ -291,15 +317,20 @@ class _HeaderCard extends StatelessWidget {
 
   String _roleTranslation(String role) {
     switch (role.toLowerCase()) {
-      case 'tutor': return 'TUTOR';
-      case 'learner': return 'LEARNER';
-      case 'admin': return 'ADMIN';
-      default: return role.isEmpty ? 'USER' : role.toUpperCase();
+      case 'tutor':
+        return 'TUTOR';
+      case 'learner':
+        return 'LEARNER';
+      case 'admin':
+        return 'ADMIN';
+      default:
+        return role.isEmpty ? 'USER' : role.toUpperCase();
     }
   }
 
   Widget _buildVerificationBadge(BuildContext context, String? status) {
     final norm = (status ?? 'NotSubmitted').toLowerCase();
+
     Color baseColor = Colors.orange;
     String text = 'Not Submitted';
 
@@ -326,12 +357,19 @@ class _HeaderCard extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(color: baseColor, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: baseColor,
+              shape: BoxShape.circle,
+            ),
           ),
           const SizedBox(width: 6),
           Text(
             text,
-            style: TextStyle(color: baseColor, fontSize: 12, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: baseColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -364,11 +402,20 @@ class _ProfileForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    InputDecoration inputStyle(String label, IconData icon, {bool enabled = true}) {
+    InputDecoration inputStyle(
+        String label,
+        IconData icon, {
+          bool enabled = true,
+        }) {
       return InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: enabled ? theme.colorScheme.primary : Colors.grey),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        prefixIcon: Icon(
+          icon,
+          color: enabled ? theme.colorScheme.primary : Colors.grey,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         filled: true,
         fillColor: enabled
             ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.2)
@@ -389,11 +436,16 @@ class _ProfileForm extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.person_pin_rounded, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.person_pin_rounded,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Personal Information',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -401,7 +453,11 @@ class _ProfileForm extends StatelessWidget {
             TextFormField(
               initialValue: profile?.email ?? '',
               enabled: false,
-              decoration: inputStyle('Email Address', Icons.email_outlined, enabled: false),
+              decoration: inputStyle(
+                'Email Address',
+                Icons.email_outlined,
+                enabled: false,
+              ),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -419,7 +475,10 @@ class _ProfileForm extends StatelessWidget {
               const SizedBox(height: 16),
               TextFormField(
                 controller: tutorBio,
-                decoration: inputStyle('Biography / Introduction (Tutor)', Icons.description_outlined),
+                decoration: inputStyle(
+                  'Biography / Introduction (Tutor)',
+                  Icons.description_outlined,
+                ),
                 minLines: 3,
                 maxLines: 5,
               ),
@@ -430,11 +489,16 @@ class _ProfileForm extends StatelessWidget {
               height: 48,
               child: FilledButton.icon(
                 style: FilledButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 onPressed: loading ? null : onSave,
                 icon: const Icon(Icons.save_rounded),
-                label: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'Save Changes',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -469,12 +533,18 @@ class _BankForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    InputDecoration inputStyle(String label, IconData icon, {String? hint}) {
+    InputDecoration inputStyle(
+        String label,
+        IconData icon, {
+          String? hint,
+        }) {
       return InputDecoration(
         labelText: label,
         hintText: hint,
         prefixIcon: Icon(icon, color: theme.colorScheme.secondary),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         filled: true,
         fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
       );
@@ -493,11 +563,16 @@ class _BankForm extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.account_balance_rounded, color: theme.colorScheme.secondary),
+                Icon(
+                  Icons.account_balance_rounded,
+                  color: theme.colorScheme.secondary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Bank Account Details',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -510,12 +585,19 @@ class _BankForm extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 18, color: theme.colorScheme.onSecondaryContainer),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    size: 18,
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Bank BIN code is optional. Providing it helps generate a quick payout QR code when administrators transfer funds.',
-                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSecondaryContainer),
+                      'Bank BIN is required for automatic payout, VietQR transfer, and bank account validation.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
                     ),
                   ),
                 ],
@@ -524,32 +606,42 @@ class _BankForm extends StatelessWidget {
             const Divider(height: 24),
             TextFormField(
               controller: bankName,
-              decoration: inputStyle('Bank Name', Icons.account_balance_outlined),
+              decoration: inputStyle(
+                'Bank Name',
+                Icons.account_balance_outlined,
+              ),
               validator: _required,
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: bankBin,
-              decoration: inputStyle('Bank BIN Code (Optional)', Icons.qr_code_2_outlined, hint: 'e.g., 970422'),
-              keyboardType: TextInputType.number,
-            ),
+
+            BankBinField(controller: bankBin),
+
             const SizedBox(height: 16),
             TextFormField(
               controller: accountNumber,
-              decoration: inputStyle('Account Number', Icons.numbers_outlined),
+              decoration: inputStyle(
+                'Account Number',
+                Icons.numbers_outlined,
+              ),
               keyboardType: TextInputType.number,
               validator: _required,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: accountHolderName,
-              decoration: inputStyle('Account Holder Name', Icons.person_pin_outlined),
+              decoration: inputStyle(
+                'Account Holder Name',
+                Icons.person_pin_outlined,
+              ),
               validator: _required,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: branchName,
-              decoration: inputStyle('Bank Branch (Optional)', Icons.location_city_outlined),
+              decoration: inputStyle(
+                'Bank Branch (Optional)',
+                Icons.location_city_outlined,
+              ),
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -558,11 +650,16 @@ class _BankForm extends StatelessWidget {
               child: FilledButton.icon(
                 style: FilledButton.styleFrom(
                   backgroundColor: theme.colorScheme.secondary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 onPressed: loading ? null : onSave,
                 icon: const Icon(Icons.save_rounded),
-                label: const Text('Save Bank Information', style: TextStyle(fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'Save Bank Information',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -572,9 +669,100 @@ class _BankForm extends StatelessWidget {
   }
 }
 
+class _LegalAndReportsCard extends StatelessWidget {
+  const _LegalAndReportsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 8,
+            ),
+            leading: _TileIcon(
+              icon: Icons.report_gmailerrorred_outlined,
+              color: theme.colorScheme.secondaryContainer,
+              iconColor: theme.colorScheme.onSecondaryContainer,
+            ),
+            title: const Text(
+              'My Reports',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+            subtitle: const Text(
+              'Track tutor reports you submitted and view admin progress.',
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push('/my-reports'),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 8,
+            ),
+            leading: _TileIcon(
+              icon: Icons.description_outlined,
+              color: theme.colorScheme.primaryContainer,
+              iconColor: theme.colorScheme.onPrimaryContainer,
+            ),
+            title: const Text(
+              'Terms of Service',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+            subtitle: const Text(
+              'Read EduNest rules for payments, reports, wallet, tutors, and account policies.',
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push('/terms-of-service'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TileIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final Color iconColor;
+
+  const _TileIcon({
+    required this.icon,
+    required this.color,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.65),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(
+        icon,
+        color: iconColor,
+      ),
+    );
+  }
+}
+
 String? _required(String? value) {
   if (value == null || value.trim().isEmpty) {
     return 'This field is required';
   }
+
   return null;
 }

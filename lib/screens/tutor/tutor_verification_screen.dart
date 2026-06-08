@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/bank_bin_field.dart';
 
 class TutorVerificationScreen extends StatefulWidget {
   const TutorVerificationScreen({super.key});
@@ -226,15 +227,19 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             validator: _requiredValidator,
           ),
           const SizedBox(height: 12),
+
+          BankBinField(controller: _bankBin),
+
+          const SizedBox(height: 12),
+
           TextFormField(
-            controller: _bankBin,
+            controller: _accountNumber,
             decoration: const InputDecoration(
-              labelText: 'Bank BIN optional',
-              hintText: 'Example: 970422',
-              helperText: 'Used to generate quick VietQR payout transfer for admin. Look up Google if you dont know',
-              prefixIcon: Icon(Icons.qr_code_2_outlined),
+              labelText: 'Account number',
+              prefixIcon: Icon(Icons.numbers_outlined),
             ),
             keyboardType: TextInputType.number,
+            validator: _requiredValidator,
           ),
           const SizedBox(height: 12),
           TextFormField(

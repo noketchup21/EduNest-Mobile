@@ -54,7 +54,8 @@ class _AdminScreenState extends State<AdminScreen> {
               child: IconButton.filledTonal(
                 onPressed: data.loading
                     ? null
-                    : () => context.read<AppDataProvider>().adminLoadDashboard(),
+                    : () =>
+                        context.read<AppDataProvider>().adminLoadDashboard(),
                 icon: const Icon(Icons.refresh),
               ),
             ),
@@ -88,14 +89,26 @@ class _AdminScreenState extends State<AdminScreen> {
                   indicatorSize: TabBarIndicatorSize.tab,
                   labelColor: colors.primary,
                   unselectedLabelColor: colors.onSurfaceVariant,
-                  labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                  unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                  labelStyle: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w700),
+                  unselectedLabelStyle: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w500),
                   tabs: const [
-                    Tab(icon: Icon(Icons.dashboard_outlined, size: 18), text: 'Dashboard'),
-                    Tab(icon: Icon(Icons.menu_book_outlined, size: 18), text: 'Subjects'),
-                    Tab(icon: Icon(Icons.school_outlined, size: 18), text: 'Tutors'),
-                    Tab(icon: Icon(Icons.payments_outlined, size: 18), text: 'Payouts'),
-                    Tab(icon: Icon(Icons.report_outlined, size: 18), text: 'Reports'),
+                    Tab(
+                        icon: Icon(Icons.dashboard_outlined, size: 18),
+                        text: 'Dashboard'),
+                    Tab(
+                        icon: Icon(Icons.menu_book_outlined, size: 18),
+                        text: 'Subjects'),
+                    Tab(
+                        icon: Icon(Icons.school_outlined, size: 18),
+                        text: 'Tutors'),
+                    Tab(
+                        icon: Icon(Icons.payments_outlined, size: 18),
+                        text: 'Payouts'),
+                    Tab(
+                        icon: Icon(Icons.report_outlined, size: 18),
+                        text: 'Reports'),
                   ],
                 ),
               ),
@@ -139,7 +152,9 @@ class _AdminScreenState extends State<AdminScreen> {
                             iconBg: const Color(0xFFFAEEDA),
                             label: 'Pending tutors',
                             value: dashboard.pendingTutors.toString(),
-                            badge: dashboard.pendingTutors > 0 ? 'Needs review' : null,
+                            badge: dashboard.pendingTutors > 0
+                                ? 'Needs review'
+                                : null,
                             badgeColor: const Color(0xFF854F0B),
                             badgeBg: const Color(0xFFFAEEDA),
                           ),
@@ -149,7 +164,9 @@ class _AdminScreenState extends State<AdminScreen> {
                             iconBg: const Color(0xFFFCEBEB),
                             label: 'Pending payouts',
                             value: dashboard.pendingPayouts.toString(),
-                            badge: dashboard.pendingPayouts > 0 ? 'Action needed' : null,
+                            badge: dashboard.pendingPayouts > 0
+                                ? 'Action needed'
+                                : null,
                             badgeColor: const Color(0xFFA32D2D),
                             badgeBg: const Color(0xFFFCEBEB),
                           ),
@@ -159,7 +176,8 @@ class _AdminScreenState extends State<AdminScreen> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: metricCards.length,
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             mainAxisExtent: 148,
                             crossAxisSpacing: 10,
@@ -306,9 +324,11 @@ class _SubjectsTabState extends State<_SubjectsTab> {
           ErrorBanner(data.error),
           _AdminHeroCard(
             title: 'Subject management',
-            subtitle: 'Create and review subjects that tutors can teach on the platform.',
+            subtitle:
+                'Create and review subjects that tutors can teach on the platform.',
             icon: Icons.menu_book_outlined,
-            trailing: _CountBadge(count: data.subjects.length, label: 'subjects'),
+            trailing:
+                _CountBadge(count: data.subjects.length, label: 'subjects'),
           ),
           const SizedBox(height: 16),
           _PanelCard(
@@ -352,10 +372,10 @@ class _SubjectsTabState extends State<_SubjectsTab> {
                     ),
                     icon: data.loading
                         ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Icon(Icons.add),
                     label: const Text(
                       'Add subject',
@@ -389,7 +409,8 @@ class _SubjectsTabState extends State<_SubjectsTab> {
                 side: BorderSide(color: colors.outlineVariant),
               ),
               child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 leading: _SoftIcon(icon: Icons.menu_book_outlined),
                 title: Text(
                   subject.name,
@@ -398,7 +419,9 @@ class _SubjectsTabState extends State<_SubjectsTab> {
                 subtitle: Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    subject.description.isEmpty ? 'No description' : subject.description,
+                    subject.description.isEmpty
+                        ? 'No description'
+                        : subject.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -424,9 +447,9 @@ class _SubjectsTabState extends State<_SubjectsTab> {
 
     try {
       await context.read<AppDataProvider>().adminCreateSubject(
-        name: subjectName,
-        description: subjectDescription,
-      );
+            name: subjectName,
+            description: subjectDescription,
+          );
 
       if (!mounted) return;
 
@@ -484,9 +507,11 @@ class _TutorsTab extends StatelessWidget {
           ErrorBanner(data.error),
           _AdminHeroCard(
             title: 'Tutor verification',
-            subtitle: 'Review submitted tutors, approve valid profiles, or reject incomplete applications.',
+            subtitle:
+                'Review submitted tutors, approve valid profiles, or reject incomplete applications.',
             icon: Icons.school_outlined,
-            trailing: _CountBadge(count: data.adminTutors.length, label: 'tutors'),
+            trailing:
+                _CountBadge(count: data.adminTutors.length, label: 'tutors'),
           ),
           const SizedBox(height: 16),
           if (data.adminTutors.isEmpty && data.loading) const _LoadingCard(),
@@ -624,7 +649,9 @@ class _TutorListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final status = tutor.verificationStatus.isEmpty ? 'NotSubmitted' : tutor.verificationStatus;
+    final status = tutor.verificationStatus.isEmpty
+        ? 'NotSubmitted'
+        : tutor.verificationStatus;
     final lowerStatus = status.toLowerCase();
     final isPending = lowerStatus == 'pending';
 
@@ -638,14 +665,17 @@ class _TutorListItem extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         leading: _InitialAvatar(
-          text: tutor.tutorName.isEmpty ? '?' : tutor.tutorName[0].toUpperCase(),
+          text:
+              tutor.tutorName.isEmpty ? '?' : tutor.tutorName[0].toUpperCase(),
           color: statusColor,
         ),
         title: Row(
           children: [
             Expanded(
               child: Text(
-                tutor.tutorName.isEmpty ? 'Tutor #${tutor.tutorId}' : tutor.tutorName,
+                tutor.tutorName.isEmpty
+                    ? 'Tutor #${tutor.tutorId}'
+                    : tutor.tutorName,
                 style: const TextStyle(fontWeight: FontWeight.w900),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -667,34 +697,34 @@ class _TutorListItem extends StatelessWidget {
         isThreeLine: true,
         trailing: isPending
             ? PopupMenuButton<String>(
-          onSelected: (value) {
-            if (value == 'detail') {
-              context.push('/admin/tutor/${tutor.tutorId}');
-            }
+                onSelected: (value) {
+                  if (value == 'detail') {
+                    context.push('/admin/tutor/${tutor.tutorId}');
+                  }
 
-            if (value == 'approve') {
-              _confirmApprove(context, tutor.tutorId);
-            }
+                  if (value == 'approve') {
+                    _confirmApprove(context, tutor.tutorId);
+                  }
 
-            if (value == 'reject') {
-              _showRejectDialog(context, tutor.tutorId);
-            }
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(
-              value: 'detail',
-              child: Text('View detail'),
-            ),
-            PopupMenuItem(
-              value: 'approve',
-              child: Text('Approve'),
-            ),
-            PopupMenuItem(
-              value: 'reject',
-              child: Text('Reject'),
-            ),
-          ],
-        )
+                  if (value == 'reject') {
+                    _showRejectDialog(context, tutor.tutorId);
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: 'detail',
+                    child: Text('View detail'),
+                  ),
+                  PopupMenuItem(
+                    value: 'approve',
+                    child: Text('Approve'),
+                  ),
+                  PopupMenuItem(
+                    value: 'reject',
+                    child: Text('Reject'),
+                  ),
+                ],
+              )
             : const Icon(Icons.chevron_right),
         onTap: () => context.push('/admin/tutor/${tutor.tutorId}'),
       ),
@@ -706,7 +736,8 @@ class _TutorListItem extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
           title: const Text('Approve tutor?'),
           content: const Text(
             'This tutor will be able to create availability and receive bookings.',
@@ -745,7 +776,8 @@ class _TutorListItem extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
           title: const Text('Reject tutor'),
           content: TextField(
             decoration: _adminInputDecoration(
@@ -778,9 +810,9 @@ class _TutorListItem extends StatelessWidget {
 
     try {
       await context.read<AppDataProvider>().adminRejectTutor(
-        tutorId: tutorId,
-        reason: reason,
-      );
+            tutorId: tutorId,
+            reason: reason,
+          );
 
       if (!context.mounted) return;
 
@@ -802,20 +834,25 @@ class _PayoutsTab extends StatelessWidget {
         .where((p) => p.status.toLowerCase() == 'pending')
         .toList();
     final paid = data.adminPayouts
-        .where((p) => ['paid', 'completed', 'approved']
-        .contains(p.status.toLowerCase()))
+        .where((p) =>
+            ['paid', 'completed', 'approved'].contains(p.status.toLowerCase()))
         .toList();
     final failed = data.adminPayouts
         .where((p) => ['failed', 'rejected', 'cancelled']
-        .contains(p.status.toLowerCase()))
+            .contains(p.status.toLowerCase()))
         .toList();
-    final others = data.adminPayouts
-        .where((p) {
+    final others = data.adminPayouts.where((p) {
       final s = p.status.toLowerCase();
-      return !['pending', 'paid', 'completed', 'approved',
-        'failed', 'rejected', 'cancelled'].contains(s);
-    })
-        .toList();
+      return ![
+        'pending',
+        'paid',
+        'completed',
+        'approved',
+        'failed',
+        'rejected',
+        'cancelled'
+      ].contains(s);
+    }).toList();
 
     return RefreshIndicator(
       onRefresh: data.adminLoadDashboard,
@@ -825,9 +862,11 @@ class _PayoutsTab extends StatelessWidget {
           ErrorBanner(data.error),
           _AdminHeroCard(
             title: 'Payout requests',
-            subtitle: 'Review tutor withdrawal requests and open each payout for processing.',
+            subtitle:
+                'Review tutor withdrawal requests and open each payout for processing.',
             icon: Icons.payments_outlined,
-            trailing: _CountBadge(count: data.adminPayouts.length, label: 'requests'),
+            trailing:
+                _CountBadge(count: data.adminPayouts.length, label: 'requests'),
           ),
           const SizedBox(height: 16),
           if (data.adminPayouts.isEmpty && !data.loading)
@@ -936,9 +975,9 @@ class _PayoutSection extends StatelessWidget {
               ),
             ),
           ...payouts.map((payout) => _PayoutItem(
-            payout: payout,
-            statusColor: statusColor,
-          )),
+                payout: payout,
+                statusColor: statusColor,
+              )),
         ],
       ),
     );
@@ -1013,214 +1052,564 @@ class _PayoutItem extends StatelessWidget {
   }
 }
 
-class _ReportsTab extends StatelessWidget {
+class _ReportsTab extends StatefulWidget {
   const _ReportsTab();
+
+  @override
+  State<_ReportsTab> createState() => _ReportsTabState();
+}
+
+class _ReportsTabState extends State<_ReportsTab> {
+  String _statusFilter = 'All';
 
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
-    final colors = Theme.of(context).colorScheme;
+    final reports = data.adminReports;
+    final visibleReports = _filteredReports(reports);
+    final groupedReports = _groupByCategory(visibleReports);
 
     return RefreshIndicator(
-      onRefresh: () => data.adminLoadReports(),
+      onRefresh: () => data.adminLoadReports(
+        status: _statusFilter == 'All' ? null : _statusFilter,
+      ),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           ErrorBanner(data.error),
           _AdminHeroCard(
             title: 'Tutor reports',
-            subtitle: 'Review complaints, proof images, tutor details, and resolution status.',
+            subtitle:
+                'Review complaints, proof images, tutor details, and resolution status.',
             icon: Icons.report_outlined,
-            trailing: _CountBadge(count: data.adminReports.length, label: 'reports'),
+            trailing: _CountBadge(count: reports.length, label: 'reports'),
           ),
           const SizedBox(height: 16),
-          if (data.adminReports.isEmpty && !data.loading)
+          _ReportManagementOverview(reports: reports),
+          const SizedBox(height: 14),
+          _AdminReportStatusFilter(
+            selected: _statusFilter,
+            reports: reports,
+            onChanged: (status) async {
+              setState(() => _statusFilter = status);
+              await context.read<AppDataProvider>().adminLoadReports(
+                    status: status == 'All' ? null : status,
+                  );
+            },
+          ),
+          const SizedBox(height: 16),
+          if (data.loading && reports.isEmpty)
+            const _LoadingCard()
+          else if (reports.isEmpty && !data.loading)
             const _EmptyStateCard(
               icon: Icons.report_outlined,
               title: 'No reports',
               subtitle: 'Tutor reports will appear here.',
-            ),
-          ...data.adminReports.map((report) {
-            final status = report.status.toLowerCase();
-            final statusColor = _statusColor(status);
+            )
+          else if (visibleReports.isEmpty)
+            _EmptyStateCard(
+              icon: Icons.filter_alt_off_outlined,
+              title: 'No $_statusFilter reports',
+              subtitle: 'Choose another status to continue triage.',
+            )
+          else
+            ...groupedReports.entries.map((entry) {
+              return _AdminReportCategorySection(
+                category: entry.key,
+                reports: entry.value,
+              );
+            }),
+        ],
+      ),
+    );
+  }
 
-            return Card(
-              elevation: 0,
-              margin: const EdgeInsets.only(bottom: 12),
-              color: colors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(_cardRadius),
-                side: BorderSide(color: colors.outlineVariant),
+  List<TutorReportModel> _filteredReports(List<TutorReportModel> reports) {
+    if (_statusFilter == 'All') return reports;
+
+    return reports.where((report) {
+      return report.status.toLowerCase() == _statusFilter.toLowerCase();
+    }).toList();
+  }
+
+  Map<String, List<TutorReportModel>> _groupByCategory(
+    List<TutorReportModel> reports,
+  ) {
+    final grouped = <String, List<TutorReportModel>>{};
+
+    for (final report in reports) {
+      final category =
+          report.category.trim().isEmpty ? 'Other' : report.category;
+      grouped.putIfAbsent(category, () => []).add(report);
+    }
+
+    return grouped;
+  }
+}
+
+class _ReportManagementOverview extends StatelessWidget {
+  final List<TutorReportModel> reports;
+
+  const _ReportManagementOverview({required this.reports});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final pending = _countStatus('Pending');
+    final reviewing = _countStatus('Reviewing');
+    final resolved = _countStatus('Resolved');
+    final rejected = _countStatus('Rejected');
+    final open = pending + reviewing;
+
+    return _PanelCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionTitle(
+            title: 'Report triage',
+            subtitle:
+                'Categorized queue for complaint handling and account decisions',
+            icon: Icons.manage_search_outlined,
+          ),
+          const SizedBox(height: 14),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.75,
+            children: [
+              _ReportMetricTile(
+                label: 'Open',
+                value: open,
+                icon: Icons.warning_amber_outlined,
+                color: open > 0 ? Colors.orange : colors.primary,
               ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                leading: _SoftIcon(
-                  icon: status == 'pending'
-                      ? Icons.pending_actions_outlined
-                      : status == 'resolved'
-                      ? Icons.check_circle_outline
-                      : Icons.report_outlined,
-                  color: statusColor,
-                ),
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        report.title,
-                        style: const TextStyle(fontWeight: FontWeight.w900),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _StatusPill(label: report.status, color: statusColor),
-                  ],
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    'Tutor: ${report.tutorName}\nReporter: ${report.reporterName}',
-                    style: TextStyle(
-                      height: 1.35,
-                      color: colors.onSurfaceVariant,
-                    ),
+              _ReportMetricTile(
+                label: 'Reviewing',
+                value: reviewing,
+                icon: Icons.rate_review_outlined,
+                color: Colors.blue,
+              ),
+              _ReportMetricTile(
+                label: 'Resolved',
+                value: resolved,
+                icon: Icons.check_circle_outline,
+                color: Colors.green,
+              ),
+              _ReportMetricTile(
+                label: 'Rejected',
+                value: rejected,
+                icon: Icons.cancel_outlined,
+                color: Colors.red,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _countStatus(String status) {
+    return reports.where((report) {
+      return report.status.toLowerCase() == status.toLowerCase();
+    }).length;
+  }
+}
+
+class _ReportMetricTile extends StatelessWidget {
+  final String label;
+  final int value;
+  final IconData icon;
+  final Color color;
+
+  const _ReportMetricTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          _SoftIcon(icon: icon, color: color, size: 38),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  value.toString(),
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-                isThreeLine: true,
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/admin/report/${report.tutorReportId}'),
-              ),
-            );
-          }),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: color.withOpacity(0.85),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _MoneyStatCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final double amount;
-  final IconData icon;
-  final Color? accent;
+class _AdminReportStatusFilter extends StatelessWidget {
+  final String selected;
+  final List<TutorReportModel> reports;
+  final ValueChanged<String> onChanged;
 
-  const _MoneyStatCard({
-    required this.title,
-    required this.subtitle,
-    required this.amount,
-    required this.icon,
-    this.accent,
+  const _AdminReportStatusFilter({
+    required this.selected,
+    required this.reports,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    const statuses = ['All', 'Pending', 'Reviewing', 'Resolved', 'Rejected'];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final status in statuses) ...[
+            ChoiceChip(
+              selected: selected == status,
+              label: Text('$status ${_count(status)}'),
+              avatar: Icon(
+                _reportStatusIcon(status),
+                size: 16,
+                color: selected == status ? null : _statusColor(status),
+              ),
+              onSelected: (_) => onChanged(status),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+
+  int _count(String status) {
+    if (status == 'All') return reports.length;
+
+    return reports.where((report) {
+      return report.status.toLowerCase() == status.toLowerCase();
+    }).length;
+  }
+}
+
+class _AdminReportCategorySection extends StatelessWidget {
+  final String category;
+  final List<TutorReportModel> reports;
+
+  const _AdminReportCategorySection({
+    required this.category,
+    required this.reports,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final openCount = reports.where((report) {
+      final status = report.status.toLowerCase();
+      return status == 'pending' || status == 'reviewing';
+    }).length;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  category,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+              ),
+              _StatusPill(
+                label: '$openCount open',
+                color: openCount > 0 ? Colors.orange : Colors.green,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...reports.map((report) => _AdminReportQueueCard(report: report)),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdminReportQueueCard extends StatelessWidget {
+  final TutorReportModel report;
+
+  const _AdminReportQueueCard({required this.report});
+
+  @override
+  Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final color = accent ?? colors.primary;
+    final statusColor = _statusColor(report.status);
+    final tutorActive = report.tutorIsActive ?? true;
 
     return Card(
       elevation: 0,
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
       color: colors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(_cardRadius),
         side: BorderSide(color: colors.outlineVariant),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        leading: _SoftIcon(icon: icon, color: color),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w900),
-        ),
-        subtitle: Text(subtitle),
-        trailing: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: MoneyText(amount),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(_cardRadius),
+        onTap: () => context.push('/admin/report/${report.tutorReportId}'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _SoftIcon(
+                    icon: _reportStatusIcon(report.status),
+                    color: statusColor,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          report.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          report.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            height: 1.35,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _StatusPill(label: report.status, color: statusColor),
+                  _StatusPill(
+                    label: tutorActive ? 'Tutor active' : 'Tutor deactivated',
+                    color: tutorActive ? Colors.green : Colors.red,
+                  ),
+                  _ReportMetaChip(
+                    icon: Icons.image_outlined,
+                    label: '${report.proofImages.length} proof',
+                  ),
+                  _ReportMetaChip(
+                    icon: Icons.schedule_outlined,
+                    label: _formatAdminReportDate(report.createdAt),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ReportPersonLine(
+                      icon: Icons.school_outlined,
+                      label: 'Tutor',
+                      value: report.tutorName,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _ReportPersonLine(
+                      icon: Icons.person_outline,
+                      label: 'Reporter',
+                      value: report.reporterName,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _ReportMetaChip(
+                    icon: Icons.event_note_outlined,
+                    label: 'Booking #${report.bookingId}',
+                  ),
+                  if (report.lessonId != null)
+                    _ReportMetaChip(
+                      icon: Icons.menu_book_outlined,
+                      label: 'Lesson #${report.lessonId}',
+                    ),
+                  if (report.subjectName != null)
+                    _ReportMetaChip(
+                      icon: Icons.subject_outlined,
+                      label: report.subjectName!,
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _StatGrid extends StatelessWidget {
-  final List<_StatItem> items;
+class _ReportPersonLine extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
 
-  const _StatGrid({
-    required this.items,
+  const _ReportPersonLine({
+    required this.icon,
+    required this.label,
+    required this.value,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      itemCount: items.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisExtent: 132,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemBuilder: (context, index) {
-        final item = items[index];
-        final colors = Theme.of(context).colorScheme;
-        final accent = item.color ?? colors.primary;
+    final colors = Theme.of(context).colorScheme;
 
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(_cardRadius),
-            border: Border.all(color: colors.outlineVariant),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SoftIcon(icon: item.icon, color: accent, size: 38),
-              const SizedBox(height: 8),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  item.value,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: colors.surfaceVariant.withOpacity(0.22),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: colors.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: colors.onSurfaceVariant,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
                   ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
                   maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w900),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                item.label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
 
-class _StatItem {
-  final String label;
-  final String value;
+class _ReportMetaChip extends StatelessWidget {
   final IconData icon;
-  final Color? color;
+  final String label;
 
-  _StatItem(
-      this.label,
-      this.value,
-      this.icon, [
-        this.color,
-      ]);
+  const _ReportMetaChip({
+    required this.icon,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: colors.surfaceVariant.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: colors.primary),
+          const SizedBox(width: 6),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 170),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+IconData _reportStatusIcon(String status) {
+  switch (status.toLowerCase()) {
+    case 'resolved':
+      return Icons.check_circle_outline;
+    case 'reviewing':
+      return Icons.rate_review_outlined;
+    case 'rejected':
+      return Icons.cancel_outlined;
+    case 'pending':
+      return Icons.pending_actions_outlined;
+    default:
+      return Icons.report_outlined;
+  }
+}
+
+String _formatAdminReportDate(DateTime value) {
+  final date = value.toLocal();
+
+  String two(int n) => n.toString().padLeft(2, '0');
+
+  return '${two(date.day)}/${two(date.month)}/${date.year}';
 }
 
 class _AdminHeroCard extends StatelessWidget {
@@ -1273,17 +1662,17 @@ class _AdminHeroCard extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: colors.onPrimaryContainer,
-                  ),
+                        fontWeight: FontWeight.w900,
+                        color: colors.onPrimaryContainer,
+                      ),
                 ),
                 const SizedBox(height: 5),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    height: 1.35,
-                    color: colors.onPrimaryContainer.withOpacity(0.78),
-                  ),
+                        height: 1.35,
+                        color: colors.onPrimaryContainer.withOpacity(0.78),
+                      ),
                 ),
               ],
             ),
@@ -1326,8 +1715,8 @@ class _SectionTitle extends StatelessWidget {
               Text(
                 subtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
+                      color: colors.onSurfaceVariant,
+                    ),
               ),
             ],
           ),
@@ -1527,7 +1916,8 @@ class _EmptyStateCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+                  Text(title,
+                      style: const TextStyle(fontWeight: FontWeight.w900)),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
@@ -1544,11 +1934,11 @@ class _EmptyStateCard extends StatelessWidget {
 }
 
 InputDecoration _adminInputDecoration(
-    BuildContext context, {
-      required String label,
-      required IconData icon,
-      String? hintText,
-    }) {
+  BuildContext context, {
+  required String label,
+  required IconData icon,
+  String? hintText,
+}) {
   final colors = Theme.of(context).colorScheme;
 
   return InputDecoration(
@@ -1574,8 +1964,12 @@ InputDecoration _adminInputDecoration(
 
 Color _statusColor(String status) {
   final normalized = status.toLowerCase();
-  if (normalized == 'pending' || normalized == 'reviewing') return Colors.orange;
-  if (normalized == 'resolved' || normalized == 'approved' || normalized == 'completed') {
+  if (normalized == 'pending' || normalized == 'reviewing') {
+    return Colors.orange;
+  }
+  if (normalized == 'resolved' ||
+      normalized == 'approved' ||
+      normalized == 'completed') {
     return Colors.green;
   }
   if (normalized == 'rejected' || normalized == 'cancelled') return Colors.red;
@@ -1593,10 +1987,10 @@ class _DashSectionLabel extends StatelessWidget {
     return Text(
       label.toUpperCase(),
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.9,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.9,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
     );
   }
 }
@@ -1650,17 +2044,17 @@ class _MetricCard extends StatelessWidget {
             child: Text(
               value,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colors.onSurfaceVariant,
-            ),
+                  color: colors.onSurfaceVariant,
+                ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -1721,8 +2115,8 @@ class _DashCard extends StatelessWidget {
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colors.onSurfaceVariant,
-            ),
+                  color: colors.onSurfaceVariant,
+                ),
           ),
           const SizedBox(height: 14),
           child,
@@ -1753,8 +2147,8 @@ class _RevStat extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: colors.onSurfaceVariant,
-            ),
+                  color: colors.onSurfaceVariant,
+                ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -1813,8 +2207,8 @@ class _BigStat extends StatelessWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color.withOpacity(0.8),
-                  ),
+                        color: color.withOpacity(0.8),
+                      ),
                 ),
               ],
             ),
@@ -1843,9 +2237,17 @@ class _TutorStatusBars extends StatelessWidget {
 
     return Column(
       children: [
-        _MiniBar(label: 'Approved', count: approved, pct: approved / t, color: Colors.green),
+        _MiniBar(
+            label: 'Approved',
+            count: approved,
+            pct: approved / t,
+            color: Colors.green),
         const SizedBox(height: 8),
-        _MiniBar(label: 'Pending', count: pending, pct: pending / t, color: Colors.orange),
+        _MiniBar(
+            label: 'Pending',
+            count: pending,
+            pct: pending / t,
+            color: Colors.orange),
         const SizedBox(height: 8),
         _MiniBar(
           label: 'Other',
@@ -1881,8 +2283,8 @@ class _MiniBar extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: colors.onSurfaceVariant,
-            ),
+                  color: colors.onSurfaceVariant,
+                ),
           ),
         ),
         const SizedBox(width: 8),
@@ -1901,8 +2303,8 @@ class _MiniBar extends StatelessWidget {
         Text(
           count.toString(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+                fontWeight: FontWeight.w700,
+              ),
         ),
       ],
     );
@@ -1964,7 +2366,8 @@ class _RevenueBarChart extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     labels[i],
-                    style: TextStyle(fontSize: 10, color: colors.onSurfaceVariant),
+                    style:
+                        TextStyle(fontSize: 10, color: colors.onSurfaceVariant),
                   ),
                 );
               },
@@ -1981,8 +2384,10 @@ class _RevenueBarChart extends StatelessWidget {
               ),
             ),
           ),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         gridData: FlGridData(
           drawVerticalLine: false,
@@ -1998,16 +2403,16 @@ class _RevenueBarChart extends StatelessWidget {
   }
 
   BarChartGroupData _bar(int x, double val, Color color) => BarChartGroupData(
-    x: x,
-    barRods: [
-      BarChartRodData(
-        toY: val,
-        color: color,
-        width: 28,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
-      ),
-    ],
-  );
+        x: x,
+        barRods: [
+          BarChartRodData(
+            toY: val,
+            color: color,
+            width: 28,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+          ),
+        ],
+      );
 }
 
 class _TutorDonutChart extends StatelessWidget {
@@ -2052,4 +2457,3 @@ class _TutorDonutChart extends StatelessWidget {
     );
   }
 }
-
