@@ -4,6 +4,9 @@ import '../models/mvp_models.dart';
 import '../services/api_service.dart';
 
 class AppDataProvider extends ChangeNotifier {
+  static const restrictedChatWarning =
+      'For your safety, keep communication and payment inside EduNest.';
+
   final ApiService api;
 
   bool loading = false;
@@ -29,6 +32,8 @@ class AppDataProvider extends ChangeNotifier {
   List<PayoutModel> adminPayouts = [];
 
   TutorVerificationModel? tutorVerification;
+  TutorPublicModel? selectedTutor;
+  List<AvailabilityModel> selectedTutorAvailabilities = [];
 
   TutorVerificationModel? adminTutorDetail;
   AdminPayoutDetailModel? adminPayoutDetail;
@@ -59,9 +64,9 @@ class AppDataProvider extends ChangeNotifier {
   AppDataProvider({required this.api});
 
   String subjectNameById(
-      int? subjectId, {
-        String fallback = 'Unknown subject',
-      }) {
+    int? subjectId, {
+    String fallback = 'Unknown subject',
+  }) {
     if (subjectId == null) {
       return fallback;
     }
@@ -95,6 +100,30 @@ class AppDataProvider extends ChangeNotifier {
     await _guard(() async {
       subjects = await api.getSubjects();
       availabilities = await api.getAvailabilities();
+    });
+  }
+
+  Future<void> loadTutorDetail(int tutorId) async {
+    await _guard(() async {
+      final results = await Future.wait([
+        api.getTutorById(tutorId),
+        api.getAvailabilitiesByTutor(tutorId),
+      ]);
+
+      selectedTutor = results[0] as TutorPublicModel;
+      selectedTutorAvailabilities = results[1] as List<AvailabilityModel>;
+
+      for (final availability in selectedTutorAvailabilities) {
+        final index = availabilities.indexWhere(
+          (item) => item.availabilityId == availability.availabilityId,
+        );
+
+        if (index >= 0) {
+          availabilities[index] = availability;
+        } else {
+          availabilities.add(availability);
+        }
+      }
     });
   }
 
@@ -164,8 +193,6 @@ class AppDataProvider extends ChangeNotifier {
       payouts = await api.getMyPayouts();
     });
   }
-
-
 
   Future<void> loadConversations() async {
     await _guard(() async {
@@ -239,6 +266,116 @@ class AppDataProvider extends ChangeNotifier {
     });
   }
 
+  Future<bool> shouldBlockRestrictedChatMessage({
+    required ConversationModel? conversation,
+    required String content,
+  }) async {
+    final text = content.trim();
+
+    if (conversation == null || text.isEmpty) return false;
+    if (!_containsRestrictedChatContent(text)) return false;
+
+    try {
+      await _ensureChatRestrictionContext();
+    } catch (_) {
+      return false;
+    }
+
+    final tutorId = _tutorIdForConversation(conversation);
+
+    if (tutorId == null) {
+      return false;
+    }
+
+    return !bookings.any(
+      (booking) =>
+          booking.tutorId == tutorId && _isBookedChatStatus(booking.status),
+    );
+  }
+
+  void showRestrictedChatWarning() {
+    error = restrictedChatWarning;
+    notifyListeners();
+  }
+
+  Future<void> _ensureChatRestrictionContext() async {
+    var changed = false;
+
+    bookings = await api.getMyBookings();
+    changed = true;
+
+    if (availabilities.isEmpty) {
+      availabilities = await api.getAvailabilities();
+      changed = true;
+    }
+
+    if (changed) {
+      notifyListeners();
+    }
+  }
+
+  static bool _isBookedChatStatus(String status) {
+    final normalized = status.trim().toLowerCase();
+
+    return normalized.isNotEmpty &&
+        normalized != 'cancelled' &&
+        normalized != 'canceled' &&
+        normalized != 'expired' &&
+        normalized != 'rejected';
+  }
+
+  int? _tutorIdForConversation(ConversationModel conversation) {
+    for (final availability in availabilities) {
+      if (availability.tutorUserId == conversation.otherUserId) {
+        return availability.tutorId;
+      }
+    }
+
+    return null;
+  }
+
+  static bool _containsRestrictedChatContent(String content) {
+    final text = content.trim();
+    final lower = text.toLowerCase();
+
+    final patterns = [
+      RegExp(
+        r'\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b',
+        caseSensitive: false,
+      ),
+      RegExp(
+        r'\b((https?:\/\/|www\.)\S+|[A-Z0-9-]+\.(com|vn|net|org|io|me|app|edu|info)\b\S*)',
+        caseSensitive: false,
+      ),
+      RegExp(
+        r'(?:^|[^\d])(?:\+?84|0)(?:[\s.\-()]?\d){8,10}(?:$|[^\d])',
+        caseSensitive: false,
+      ),
+      RegExp(
+        r'\b(zalo|facebook|fb|messenger|m\.me|telegram|whatsapp|gmail|email|e-mail|qr|vietqr|bank|banking|stk|so\s*tai\s*khoan|tai\s*khoan\s*ngan\s*hang|chuyen\s*khoan|ngan\s*hang|momo|vietcombank|vcb|techcombank|tcb|mbbank|mb\s*bank|acb|bidv|vietinbank|vpbank|tpbank)\b',
+        caseSensitive: false,
+      ),
+    ];
+
+    if (patterns.any((pattern) => pattern.hasMatch(text))) {
+      return true;
+    }
+
+    final hasLongNumber =
+        RegExp(r'(?:^|[^\d])(?:\d[\s.\-]*){8,20}(?:$|[^\d])').hasMatch(text);
+
+    if (!hasLongNumber) {
+      return false;
+    }
+
+    return lower.contains('account') ||
+        lower.contains('bank') ||
+        lower.contains('stk') ||
+        lower.contains('tai khoan') ||
+        lower.contains('ngan hang') ||
+        lower.contains('chuyen khoan');
+  }
+
   Future<void> loadMyAvailability() async {
     await _guard(() async {
       subjects = await api.getSubjects();
@@ -250,6 +387,7 @@ class AppDataProvider extends ChangeNotifier {
     required int subjectId,
     required String dayOfWeek,
     required String mode,
+    String? offlineAreas,
     required String level,
     required DateTime startCourseTime,
     required DateTime endCourseTime,
@@ -262,6 +400,7 @@ class AppDataProvider extends ChangeNotifier {
         subjectId: subjectId,
         dayOfWeek: dayOfWeek,
         mode: mode,
+        offlineAreas: offlineAreas,
         level: level,
         startCourseTime: startCourseTime,
         endCourseTime: endCourseTime,
@@ -314,6 +453,7 @@ class AppDataProvider extends ChangeNotifier {
 
       bookings = await api.getMyBookings();
       lessons = await api.getMyLessons();
+      availabilities = await api.getAvailabilities();
     });
 
     return payment;
@@ -688,7 +828,7 @@ class AppDataProvider extends ChangeNotifier {
   Future<void> adminLoadSupportReportDetail(int supportReportId) async {
     await _guard(() async {
       adminSupportReportDetail =
-      await api.adminGetSupportReportDetail(supportReportId);
+          await api.adminGetSupportReportDetail(supportReportId);
     });
   }
 
@@ -722,4 +862,85 @@ class AppDataProvider extends ChangeNotifier {
     });
   }
 
+  Future<ConversationModel> startConversationByEmail(String email) async {
+    late ConversationModel conversation;
+
+    await _guard(() async {
+      conversation = await api.startConversationByEmail(email);
+
+      final index = conversations.indexWhere(
+        (c) => c.conversationId == conversation.conversationId,
+      );
+
+      if (index >= 0) {
+        conversations[index] = conversation;
+      } else {
+        conversations.insert(0, conversation);
+      }
+    });
+
+    return conversation;
+  }
+
+  Future<void> loadAdminPayouts() async {
+    await _guard(() async {
+      adminPayouts = await api.adminGetPayouts();
+    });
+  }
+
+  Future<void> adminApprovePayoutWithPayOSChi(int payoutId) async {
+    await _guard(() async {
+      final updated = await api.adminApprovePayoutWithPayOSChi(payoutId);
+
+      final index = adminPayouts.indexWhere(
+        (x) => x.payoutId == updated.payoutId,
+      );
+
+      if (index >= 0) {
+        adminPayouts[index] = updated;
+      } else {
+        adminPayouts.insert(0, updated);
+      }
+
+      await loadAdminPayouts();
+    });
+  }
+
+  Future<void> adminMarkPayoutPaidManual(int payoutId) async {
+    await _guard(() async {
+      final updated = await api.adminUpdatePayoutStatus(
+        payoutId: payoutId,
+        status: 'Paid',
+      );
+
+      final index = adminPayouts.indexWhere(
+        (x) => x.payoutId == updated.payoutId,
+      );
+
+      if (index >= 0) {
+        adminPayouts[index] = updated;
+      }
+
+      await loadAdminPayouts();
+    });
+  }
+
+  Future<void> adminMarkPayoutFailed(int payoutId) async {
+    await _guard(() async {
+      final updated = await api.adminUpdatePayoutStatus(
+        payoutId: payoutId,
+        status: 'Failed',
+      );
+
+      final index = adminPayouts.indexWhere(
+        (x) => x.payoutId == updated.payoutId,
+      );
+
+      if (index >= 0) {
+        adminPayouts[index] = updated;
+      }
+
+      await loadAdminPayouts();
+    });
+  }
 }

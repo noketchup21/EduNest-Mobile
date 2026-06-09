@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/error_banner.dart';
 import 'auth_flow_type.dart';
+import 'auth_ui.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -16,77 +17,49 @@ class LoginScreen extends StatelessWidget {
 
     _showAuthMessageIfNeeded(context, auth);
 
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+    return AuthScaffold(
+      child: Column(
+        children: [
+          const AuthLogoLockup(),
+          const SizedBox(height: 24),
+          AuthPanel(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/images/Logo.png',
-                        height: 100,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.school, size: 80, color: Colors.blue),
-                      ),
-                      const SizedBox(height: 12),
-                      Image.asset(
-                        'assets/images/Chữ Logo.png',
-                        height: 40,
-                        errorBuilder: (context, error, stackTrace) => Text(
-                          'EduNest',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  'Welcome back',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Choose your account type to continue.',
-                  style: Theme.of(context).textTheme.bodyLarge,
+                const AuthHeader(
+                  icon: Icons.waving_hand_rounded,
+                  eyebrow: 'Login',
+                  title: 'Welcome back',
                 ),
                 ErrorBanner(auth.error),
-                const SizedBox(height: 24),
-                _AuthChoiceCard(
-                  icon: Icons.school,
-                  title: 'Tutor login',
-                  subtitle:
-                  'Create courses, manage lessons, wallet, and payouts.',
+                const SizedBox(height: 22),
+                AuthChoiceCard(
+                  icon: Icons.school_rounded,
+                  title: 'Tutor',
+                  subtitle: 'Teach',
+                  color: authAccentForTutor(true),
                   onTap: () => context.push('/login/tutor'),
                 ),
                 const SizedBox(height: 12),
-                _AuthChoiceCard(
-                  icon: Icons.family_restroom,
-                  title: 'Student login',
-                  subtitle: 'Book tutors, pay by QR, view lessons, and chat.',
+                AuthChoiceCard(
+                  icon: Icons.groups_2_rounded,
+                  title: 'Parent / Student',
+                  subtitle: 'Learn',
+                  color: authAccentForTutor(false),
                   onTap: () => context.push('/login/learner'),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
                 Center(
-                  child: TextButton(
+                  child: AuthLinkButton(
+                    icon: Icons.person_add_alt_1_rounded,
+                    label: 'Sign up',
                     onPressed: () => context.go('/register'),
-                    child: const Text('Create an account'),
                   ),
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -108,6 +81,7 @@ class _RoleLoginScreenState extends State<RoleLoginScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
   final formKey = GlobalKey<FormState>();
+  bool showPassword = false;
 
   @override
   void dispose() {
@@ -119,161 +93,115 @@ class _RoleLoginScreenState extends State<RoleLoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final accent = authAccentForTutor(widget.type.isTutor);
 
     _showAuthMessageIfNeeded(context, auth);
 
-    return Scaffold(
+    return AuthScaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/login'),
         ),
-        title: Text('${widget.type.title} login'),
+        title: const Text('Login'),
       ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${widget.type.title} account',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.type.subtitle,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  ErrorBanner(auth.error),
-                  TextFormField(
-                    controller: email,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Email is required';
-                      }
-
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: password,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                    ),
-                    obscureText: true,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return 'Password is required';
-                      }
-
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  AppButton(
-                    label: 'Login as ${widget.type.title}',
-                    loading: auth.isLoading,
-                    onPressed: () async {
-                      if (!formKey.currentState!.validate()) return;
-
-                      try {
-                        await auth.login(
-                          email.text.trim(),
-                          password.text,
-                          allowedRoles: widget.type.allowedRoles,
-                        );
-
-                        if (!context.mounted) return;
-
-                        if (auth.isAdmin) {
-                          context.go('/admin');
-                        } else if (auth.isTutor) {
-                          context.go('/tutor-verification');
-                        } else {
-                          context.go('/home');
-                        }
-                      } catch (_) {}
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        if (widget.type.isTutor) {
-                          context.go('/register/tutor');
-                        } else {
-                          context.go('/register/learner');
-                        }
-                      },
-                      child: const Text('Create an account'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthChoiceCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _AuthChoiceCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Row(
+      child: AuthPanel(
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 26,
-                child: Icon(icon),
+              AuthHeader(
+                icon: widget.type.isTutor
+                    ? Icons.school_rounded
+                    : Icons.groups_2_rounded,
+                eyebrow: widget.type.title,
+                title: 'Login',
+                color: accent,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style:
-                      Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(subtitle),
-                  ],
+              ErrorBanner(auth.error),
+              const SizedBox(height: 14),
+              AuthTextField(
+                controller: email,
+                labelText: 'Email',
+                icon: Icons.alternate_email_rounded,
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) {
+                    return 'Email is required';
+                  }
+
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              AuthTextField(
+                controller: password,
+                labelText: 'Password',
+                icon: Icons.lock_outline_rounded,
+                obscureText: !showPassword,
+                suffixIcon: IconButton(
+                  tooltip: showPassword ? 'Hide password' : 'Show password',
+                  icon: Icon(
+                    showPassword
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                  ),
+                  onPressed: () {
+                    setState(() => showPassword = !showPassword);
+                  },
+                ),
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'Password is required';
+                  }
+
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              AppButton(
+                label: 'Login',
+                icon: Icons.login_rounded,
+                loading: auth.isLoading,
+                onPressed: () async {
+                  if (!formKey.currentState!.validate()) return;
+
+                  try {
+                    await auth.login(
+                      email.text.trim(),
+                      password.text,
+                      allowedRoles: widget.type.allowedRoles,
+                    );
+
+                    if (!context.mounted) return;
+
+                    if (auth.isAdmin) {
+                      context.go('/admin');
+                    } else if (auth.isTutor) {
+                      context.go('/tutor-verification');
+                    } else {
+                      context.go('/home');
+                    }
+                  } catch (_) {}
+                },
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: AuthLinkButton(
+                  icon: Icons.person_add_alt_1_rounded,
+                  label: 'Sign up',
+                  onPressed: () {
+                    if (widget.type.isTutor) {
+                      context.go('/register/tutor');
+                    } else {
+                      context.go('/register/learner');
+                    }
+                  },
                 ),
               ),
-              const Icon(Icons.chevron_right),
             ],
           ),
         ),

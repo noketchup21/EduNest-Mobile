@@ -15,7 +15,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final otherUser = TextEditingController();
+  final otherUserEmail = TextEditingController();
 
   @override
   void initState() {
@@ -28,7 +28,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    otherUser.dispose();
+    otherUserEmail.dispose();
     super.dispose();
   }
 
@@ -114,10 +114,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextField(
-                        controller: otherUser,
-                        keyboardType: TextInputType.number,
+                        controller: otherUserEmail,
+                        keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          hintText: 'Other user ID',
+                          hintText: 'User email',
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -130,17 +130,25 @@ class _ChatScreenState extends State<ChatScreen> {
                       onPressed: data.loading
                           ? null
                           : () async {
-                        final id = int.tryParse(otherUser.text.trim());
+                        final email = otherUserEmail.text.trim();
 
-                        if (id == null) return;
+                        if (email.isEmpty || !email.contains('@')) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Enter a valid user email')),
+                          );
+                          return;
+                        }
 
                         try {
-                          final c = await data.startConversation(id);
+                          final conversation = await data.startConversationByEmail(email);
 
                           if (context.mounted) {
-                            context.push('/chat/${c.conversationId}');
+                            otherUserEmail.clear();
+                            context.push('/chat/${conversation.conversationId}');
                           }
-                        } catch (_) {}
+                        } catch (_) {
+                          // ErrorBanner will show provider error.
+                        }
                       },
                       icon: const Icon(Icons.send_rounded),
                       label: const Text('Start'),

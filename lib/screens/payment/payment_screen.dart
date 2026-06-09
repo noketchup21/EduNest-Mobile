@@ -69,11 +69,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Future<void> _checkPayment(BuildContext context) async {
     try {
-      final updated = await context
-          .read<AppDataProvider>()
-          .syncPayment(payment.bookingId);
+      final updated =
+          await context.read<AppDataProvider>().syncPayment(payment.bookingId);
 
-      if (!mounted) return;
+      if (!context.mounted) return;
 
       setState(() {
         payment = updated;
@@ -93,6 +92,34 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
+  bool get _isPaid => payment.status.toLowerCase() == 'paid';
+
+  Future<bool> _confirmLeavePayment() async {
+    final shouldLeave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Leave payment screen?'),
+          content: const Text(
+            'If you already paid, tap "I have paid / Check payment" before leaving so EduNest can confirm your booking and create lessons.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Stay'),
+            ),
+            FilledButton.tonal(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Leave anyway'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return shouldLeave == true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
@@ -100,84 +127,87 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final qr = payment.qrCode;
     final checkout = payment.checkoutUrl;
     final qrLooksLikeImage = qr != null && qr.startsWith('http');
-    final isPaid = payment.status.toLowerCase() == 'paid';
+    final isPaid = _isPaid;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Payment'),
-        actions: [
-          IconButton(
-            onPressed: data.loading ? null : () => _checkPayment(context),
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Check payment',
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          ErrorBanner(data.error),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
 
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Booking #${payment.bookingId}',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+        final shouldLeave = await _confirmLeavePayment();
+
+        if (shouldLeave && context.mounted) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Payment'),
+          actions: [
+            IconButton(
+              onPressed: data.loading ? null : () => _checkPayment(context),
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Check payment',
+            ),
+          ],
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            ErrorBanner(data.error),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Booking #${payment.bookingId}',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text('Provider: ${payment.provider}'),
-                  Text('Status: ${payment.status}'),
-                  Text('Description: ${payment.description}'),
-
-                  const SizedBox(height: 8),
-
-                  MoneyText(
-                    payment.amount,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
+                    const SizedBox(height: 8),
+                    Text('Provider: ${payment.provider}'),
+                    Text('Status: ${payment.status}'),
+                    Text('Description: ${payment.description}'),
+                    const SizedBox(height: 8),
+                    MoneyText(
+                      payment.amount,
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-
-          const SizedBox(height: 16),
-
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text(
-                    isPaid ? 'Payment completed' : 'Scan QR to pay',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Text(
+                      isPaid ? 'Payment completed' : 'Scan QR to pay',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  if (isPaid)
-                    const Icon(
-                      Icons.check_circle,
-                      size: 96,
-                      color: Colors.green,
-                    )
-                  else if (qr == null || qr.isEmpty)
-                    const Text(
-                      'QR code is empty. Check backend PayOS configuration.',
-                      textAlign: TextAlign.center,
-                    )
-                  else if (qrLooksLikeImage)
+                    const SizedBox(height: 16),
+                    if (isPaid)
+                      const Icon(
+                        Icons.check_circle,
+                        size: 96,
+                        color: Colors.green,
+                      )
+                    else if (qr == null || qr.isEmpty)
+                      const Text(
+                        'QR code is empty. Check backend PayOS configuration.',
+                        textAlign: TextAlign.center,
+                      )
+                    else if (qrLooksLikeImage)
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: Image.network(
@@ -191,57 +221,52 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         data: qr,
                         size: 260,
                       ),
-
-                  const SizedBox(height: 16),
-
-                  if (!isPaid && checkout != null && checkout.isNotEmpty)
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: data.loading
-                            ? null
-                            : () => _openCheckoutLink(context),
-                        icon: const Icon(Icons.open_in_new),
-                        label: const Text('Open payment link'),
+                    const SizedBox(height: 16),
+                    if (!isPaid && checkout != null && checkout.isNotEmpty)
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: data.loading
+                              ? null
+                              : () => _openCheckoutLink(context),
+                          icon: const Icon(Icons.open_in_new),
+                          label: const Text('Open payment link'),
+                        ),
                       ),
-                    ),
-
-                  const SizedBox(height: 8),
-
-                  if (!isPaid)
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: data.loading
-                            ? null
-                            : () => _checkPayment(context),
-                        icon: data.loading
-                            ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        )
-                            : const Icon(Icons.refresh),
-                        label: const Text('I have paid / Check payment'),
+                    const SizedBox(height: 8),
+                    if (!isPaid)
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: data.loading
+                              ? null
+                              : () => _checkPayment(context),
+                          icon: data.loading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.refresh),
+                          label: const Text('I have paid / Check payment'),
+                        ),
                       ),
+                    const SizedBox(height: 12),
+                    Text(
+                      isPaid
+                          ? 'Your booking is confirmed. Lessons have been created.'
+                          : 'After transferring money, tap "I have paid / Check payment" to sync PayOS status and create lessons.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    isPaid
-                        ? 'Your booking is confirmed. Lessons have been created.'
-                        : 'After transferring money, tap "I have paid / Check payment" to sync PayOS status and create lessons.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

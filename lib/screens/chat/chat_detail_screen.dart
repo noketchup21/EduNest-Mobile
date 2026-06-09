@@ -38,10 +38,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       await _loadMessages();
       _scrollToBottom();
 
+      if (!mounted) return;
+
       final data = context.read<AppDataProvider>();
       final conversation = _findConversation(data);
 
-      if (conversation != null && context.mounted) {
+      if (conversation != null) {
         for (final id in conversation.userIds) {
           data.loadUserName(id);
         }
@@ -73,7 +75,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
       _scrollToBottom();
     } catch (_) {
-      // ErrorBanner will show provider error.
+      final warning = context.read<AppDataProvider>().error;
+
+      if (mounted && warning == AppDataProvider.restrictedChatWarning) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(AppDataProvider.restrictedChatWarning),
+          ),
+        );
+      }
     } finally {
       polling = false;
     }
@@ -88,16 +98,36 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       sending = true;
     });
 
-    content.clear();
-
     try {
-      await context.read<AppDataProvider>().sendMessage(
+      final data = context.read<AppDataProvider>();
+      final conversation = _findConversation(data);
+      final shouldBlock = await data.shouldBlockRestrictedChatMessage(
+        conversation: conversation,
+        content: text,
+      );
+
+      if (shouldBlock) {
+        data.showRestrictedChatWarning();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(AppDataProvider.restrictedChatWarning),
+            ),
+          );
+        }
+
+        return;
+      }
+
+      await data.sendMessage(
         widget.conversationId,
         text,
       );
 
       if (!mounted) return;
 
+      content.clear();
       _scrollToBottom();
     } catch (_) {
       // ErrorBanner will show provider error.
@@ -134,9 +164,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   String _conversationTitle(
-      AppDataProvider data,
-      ConversationModel? conversation,
-      ) {
+    AppDataProvider data,
+    ConversationModel? conversation,
+  ) {
     if (conversation == null) {
       return 'Conversation #${widget.conversationId}';
     }
@@ -145,9 +175,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return conversation.otherUserName.trim();
     }
 
-    final otherIds = conversation.userIds
-        .where((id) => id != data.profile?.userId)
-        .toList();
+    final otherIds =
+        conversation.userIds.where((id) => id != data.profile?.userId).toList();
 
     if (otherIds.isEmpty) {
       return 'Conversation #${widget.conversationId}';
@@ -250,62 +279,62 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               onRefresh: () => _loadMessages(),
               child: messages.isEmpty
                   ? ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: [
-                  const SizedBox(height: 160),
-                  Column(
-                    children: [
-                      UserAvatar(
-                        imageUrl: otherAvatarUrl,
-                        name: titleName,
-                        radius: 34,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No messages yet',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        const SizedBox(height: 160),
+                        Column(
+                          children: [
+                            UserAvatar(
+                              imageUrl: otherAvatarUrl,
+                              name: titleName,
+                              radius: 34,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No messages yet',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Start the conversation 👋',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colors.onSurface.withValues(alpha: 0.45),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Start the conversation 👋',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colors.onSurface.withValues(alpha: 0.45),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              )
+                      ],
+                    )
                   : ListView.builder(
-                controller: scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 18),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final message = messages[index];
+                      controller: scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 18),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final message = messages[index];
 
-                  final mine = auth.userId != null &&
-                      message.userId == auth.userId;
+                        final mine = auth.userId != null &&
+                            message.userId == auth.userId;
 
-                  final senderName = mine
-                      ? 'You'
-                      : _senderName(
-                    data: data,
-                    conversation: conversation,
-                    messageUserId: message.userId,
-                  );
+                        final senderName = mine
+                            ? 'You'
+                            : _senderName(
+                                data: data,
+                                conversation: conversation,
+                                messageUserId: message.userId,
+                              );
 
-                  return _MessageRow(
-                    mine: mine,
-                    message: message.content,
-                    senderName: senderName,
-                    avatarUrl: mine ? null : otherAvatarUrl,
-                    time: formatter.format(message.createdAt.toLocal()),
-                  );
-                },
-              ),
+                        return _MessageRow(
+                          mine: mine,
+                          message: message.content,
+                          senderName: senderName,
+                          avatarUrl: mine ? null : otherAvatarUrl,
+                          time: formatter.format(message.createdAt.toLocal()),
+                        );
+                      },
+                    ),
             ),
           ),
           SafeArea(
@@ -361,12 +390,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     ),
                     child: sending
                         ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
-                    )
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
                         : const Icon(Icons.send_rounded),
                   ),
                 ],

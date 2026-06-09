@@ -25,6 +25,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
   final startTime = TextEditingController(text: '18:00:00');
   final endTime = TextEditingController(text: '20:00:00');
   final price = TextEditingController(text: '200000');
+  final offlineAreas = TextEditingController();
 
   int? selectedSubjectId;
 
@@ -75,6 +76,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     startTime.dispose();
     endTime.dispose();
     price.dispose();
+    offlineAreas.dispose();
 
     super.dispose();
   }
@@ -112,9 +114,9 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
             onPressed: data.loading
                 ? null
                 : () {
-              data.loadMyTutorVerification();
-              data.loadMyAvailability();
-            },
+                    data.loadMyTutorVerification();
+                    data.loadMyAvailability();
+                  },
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -128,7 +130,6 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             ErrorBanner(data.error),
-
             Card(
               child: ListTile(
                 leading: const Icon(Icons.verified),
@@ -141,9 +142,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
             Form(
               key: formKey,
               child: Column(
@@ -173,21 +172,19 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                       return null;
                     },
                   ),
-
                   if (data.subjects.isEmpty) ...[
                     const SizedBox(height: 8),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: TextButton.icon(
-                        onPressed: data.loading ? null : data.loadMyAvailability,
+                        onPressed:
+                            data.loading ? null : data.loadMyAvailability,
                         icon: const Icon(Icons.refresh),
                         label: const Text('No subjects loaded. Refresh'),
                       ),
                     ),
                   ],
-
                   const SizedBox(height: 12),
-
                   DropdownButtonFormField<String>(
                     value: dayOfWeek,
                     decoration: const InputDecoration(
@@ -213,9 +210,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                       });
                     },
                   ),
-
                   const SizedBox(height: 12),
-
                   DropdownButtonFormField<String>(
                     value: mode,
                     decoration: const InputDecoration(
@@ -233,12 +228,34 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     onChanged: (value) {
                       setState(() {
                         mode = value ?? 'Online';
+                        if (mode != 'Offline') {
+                          offlineAreas.clear();
+                        }
                       });
                     },
                   ),
-
                   const SizedBox(height: 12),
+                  if (mode == 'Offline') ...[
+                    TextFormField(
+                      controller: offlineAreas,
+                      decoration: const InputDecoration(
+                        labelText: 'Offline tutoring areas',
+                        hintText: 'Example: District 1, District 3, Binh Thanh',
+                      ),
+                      minLines: 2,
+                      maxLines: 4,
+                      maxLength: 500,
+                      validator: (value) {
+                        if (mode == 'Offline' &&
+                            (value == null || value.trim().isEmpty)) {
+                          return 'Enter the areas you are willing to tutor';
+                        }
 
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   DropdownButtonFormField<String>(
                     value: level,
                     decoration: const InputDecoration(
@@ -260,9 +277,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                       });
                     },
                   ),
-
                   const SizedBox(height: 12),
-
                   TextFormField(
                     controller: startDate,
                     readOnly: true,
@@ -276,9 +291,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     ),
                     validator: _required,
                   ),
-
                   const SizedBox(height: 12),
-
                   TextFormField(
                     controller: endDate,
                     readOnly: true,
@@ -292,9 +305,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     ),
                     validator: _required,
                   ),
-
                   const SizedBox(height: 12),
-
                   TextFormField(
                     controller: startTime,
                     readOnly: true,
@@ -308,9 +319,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     ),
                     validator: _required,
                   ),
-
                   const SizedBox(height: 12),
-
                   TextFormField(
                     controller: endTime,
                     readOnly: true,
@@ -324,9 +333,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     ),
                     validator: _required,
                   ),
-
                   const SizedBox(height: 12),
-
                   TextFormField(
                     controller: price,
                     decoration: const InputDecoration(
@@ -336,23 +343,19 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     keyboardType: TextInputType.number,
                     validator: _required,
                   ),
-
                   const SizedBox(height: 12),
-
                   Card(
                     child: ListTile(
                       leading: const Icon(Icons.calculate_outlined),
                       title: const Text('Course price preview'),
                       subtitle: Text(
                         'Lessons: $lessons\n'
-                            'Price per lesson: ${price.text.trim().isEmpty ? '0' : price.text.trim()}',
+                        'Price per lesson: ${price.text.trim().isEmpty ? '0' : price.text.trim()}',
                       ),
                       trailing: MoneyText(total),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
                   AppButton(
                     label: 'Create',
                     loading: data.loading,
@@ -361,18 +364,14 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
             Text(
               'My availability',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-
             const SizedBox(height: 8),
-
             if (data.myAvailabilities.isEmpty && !data.loading)
               const Card(
                 child: ListTile(
@@ -380,10 +379,8 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                   subtitle: Text('Create your first teaching schedule above.'),
                 ),
               ),
-
             ...data.myAvailabilities.map((availability) {
-              final totalPrice =
-              availability.totalCoursePrice > 0
+              final totalPrice = availability.totalCoursePrice > 0
                   ? availability.totalCoursePrice
                   : availability.pricePerSlot * availability.slot;
 
@@ -397,10 +394,11 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                   ),
                   subtitle: Text(
                     '${availability.dayOfWeek} '
-                        '${availability.startTime}-${availability.endTime}\n'
-                        '${availability.mode} • ${availability.level}\n'
-                        'Lessons: ${availability.slot}\n'
-                        'Price per lesson: ${availability.pricePerSlot.toStringAsFixed(0)}',
+                    '${availability.startTime}-${availability.endTime}\n'
+                    '${availability.mode} • ${availability.level}\n'
+                    '${_offlineAreaLine(availability)}'
+                    'Lessons: ${availability.slot}\n'
+                    'Price per lesson: ${availability.pricePerSlot.toStringAsFixed(0)}',
                   ),
                   trailing: MoneyText(totalPrice),
                 ),
@@ -413,10 +411,10 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
   }
 
   Widget _buildApprovalRequired(
-      BuildContext context,
-      AppDataProvider data,
-      TutorVerificationModel? verification,
-      ) {
+    BuildContext context,
+    AppDataProvider data,
+    TutorVerificationModel? verification,
+  ) {
     final status = verification?.verificationStatus ?? 'NotSubmitted';
     final lowerStatus = status.toLowerCase();
 
@@ -427,7 +425,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     if (lowerStatus == 'pending') {
       title = 'Waiting for admin approval';
       message =
-      'Your documents have been submitted. You cannot create availability until admin approves your tutor profile.';
+          'Your documents have been submitted. You cannot create availability until admin approves your tutor profile.';
       icon = Icons.hourglass_top;
     } else if (lowerStatus == 'rejected') {
       title = 'Verification rejected';
@@ -437,7 +435,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     } else {
       title = 'Tutor verification required';
       message =
-      'Please submit your CCCD, certificate or university document, and bank information before creating availability.';
+          'Please submit your CCCD, certificate or university document, and bank information before creating availability.';
       icon = Icons.assignment_outlined;
     }
 
@@ -448,7 +446,8 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
           IconButton(
             onPressed: data.loading
                 ? null
-                : () => context.read<AppDataProvider>().loadMyTutorVerification(),
+                : () =>
+                    context.read<AppDataProvider>().loadMyTutorVerification(),
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -467,8 +466,8 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                          fontWeight: FontWeight.w900,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -497,8 +496,8 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                         onPressed: data.loading
                             ? null
                             : () => context
-                            .read<AppDataProvider>()
-                            .loadMyTutorVerification(),
+                                .read<AppDataProvider>()
+                                .loadMyTutorVerification(),
                         icon: const Icon(Icons.refresh),
                         label: const Text('Refresh approval status'),
                       ),
@@ -560,6 +559,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
         subjectId: selectedSubjectId!,
         dayOfWeek: dayOfWeek,
         mode: mode,
+        offlineAreas: mode == 'Offline' ? offlineAreas.text.trim() : null,
         level: level,
         startCourseTime: parsedStartDate,
         endCourseTime: parsedEndDate,
@@ -615,6 +615,16 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     }
   }
 
+  String _offlineAreaLine(AvailabilityModel availability) {
+    final areas = availability.offlineAreas?.trim() ?? '';
+
+    if (availability.mode != 'Offline' || areas.isEmpty) {
+      return '';
+    }
+
+    return 'Areas: $areas\n';
+  }
+
   bool _isApproved(TutorVerificationModel? verification) {
     if (verification == null) return false;
 
@@ -642,8 +652,8 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     var count = 0;
 
     for (var date = DateTime(start.year, start.month, start.day);
-    !date.isAfter(end);
-    date = date.add(const Duration(days: 1))) {
+        !date.isAfter(end);
+        date = date.add(const Duration(days: 1))) {
       if (date.weekday == targetWeekday) {
         count++;
       }

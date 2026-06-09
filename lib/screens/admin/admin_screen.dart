@@ -840,18 +840,31 @@ class _PayoutsTab extends StatelessWidget {
     final pending = data.adminPayouts
         .where((p) => p.status.toLowerCase() == 'pending')
         .toList();
+
+    final processing = data.adminPayouts
+        .where((p) => p.status.toLowerCase() == 'processing')
+        .toList();
+
+    final manualQrRequired = data.adminPayouts
+        .where((p) => p.status.toLowerCase() == 'manualqrrequired')
+        .toList();
+
     final paid = data.adminPayouts
         .where((p) =>
-            ['paid', 'completed', 'approved'].contains(p.status.toLowerCase()))
+        ['paid', 'completed', 'approved'].contains(p.status.toLowerCase()))
         .toList();
+
     final failed = data.adminPayouts
         .where((p) => ['failed', 'rejected', 'cancelled']
-            .contains(p.status.toLowerCase()))
+        .contains(p.status.toLowerCase()))
         .toList();
+
     final others = data.adminPayouts.where((p) {
       final s = p.status.toLowerCase();
       return ![
         'pending',
+        'processing',
+        'manualqrrequired',
         'paid',
         'completed',
         'approved',
@@ -870,12 +883,14 @@ class _PayoutsTab extends StatelessWidget {
           _AdminHeroCard(
             title: 'Payout requests',
             subtitle:
-                'Review tutor withdrawal requests and open each payout for processing.',
+            'Approve tutor withdrawals with payOS Chi. If automatic payout fails, use the QR/manual backup.',
             icon: Icons.payments_outlined,
             trailing:
-                _CountBadge(count: data.adminPayouts.length, label: 'requests'),
+            _CountBadge(count: data.adminPayouts.length, label: 'requests'),
           ),
           const SizedBox(height: 16),
+          if (data.adminPayouts.isEmpty && data.loading)
+            const _LoadingCard(),
           if (data.adminPayouts.isEmpty && !data.loading)
             const _EmptyStateCard(
               icon: Icons.payments_outlined,
@@ -890,6 +905,22 @@ class _PayoutsTab extends StatelessWidget {
               emptyText: 'No pending payouts.',
               statusColor: Colors.orange,
               initiallyExpanded: true,
+            ),
+            _PayoutSection(
+              title: 'Processing',
+              icon: Icons.sync_rounded,
+              payouts: processing,
+              emptyText: 'No payOS Chi payouts are processing.',
+              statusColor: Colors.blue,
+              initiallyExpanded: processing.isNotEmpty,
+            ),
+            _PayoutSection(
+              title: 'Manual QR required',
+              icon: Icons.qr_code_2_outlined,
+              payouts: manualQrRequired,
+              emptyText: 'No payouts need QR/manual backup.',
+              statusColor: Colors.deepOrange,
+              initiallyExpanded: manualQrRequired.isNotEmpty,
             ),
             _PayoutSection(
               title: 'Paid',
@@ -982,9 +1013,9 @@ class _PayoutSection extends StatelessWidget {
               ),
             ),
           ...payouts.map((payout) => _PayoutItem(
-                payout: payout,
-                statusColor: statusColor,
-              )),
+            payout: payout,
+            statusColor: statusColor,
+          )),
         ],
       ),
     );
@@ -1004,6 +1035,21 @@ class _PayoutItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
+    final method = payout.payoutMethod.trim();
+    final reference = payout.payOSChiReferenceId?.trim() ?? '';
+    final approval = payout.payOSChiApprovalState?.trim() ?? '';
+    final transaction = payout.payOSChiTransactionState?.trim() ?? '';
+    final failure = payout.payOSChiFailureReason?.trim() ?? '';
+
+    final subtitleLines = <String>[
+      'Tutor #${payout.tutorId}',
+      if (method.isNotEmpty) 'Method: $method',
+      if (reference.isNotEmpty) 'Ref: $reference',
+      if (approval.isNotEmpty || transaction.isNotEmpty)
+        'payOS: ${approval.isEmpty ? '-' : approval} / ${transaction.isEmpty ? '-' : transaction}',
+      if (failure.isNotEmpty) 'Issue: $failure',
+    ];
+
     return Container(
       margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
@@ -1014,7 +1060,7 @@ class _PayoutItem extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         leading: _SoftIcon(
-          icon: Icons.payments_outlined,
+          icon: _payoutStatusIcon(payout.status),
           color: statusColor,
         ),
         title: Row(
@@ -1033,7 +1079,9 @@ class _PayoutItem extends StatelessWidget {
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 6),
           child: Text(
-            'Tutor #${payout.tutorId}',
+            subtitleLines.join('\n'),
+            maxLines: 5,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               height: 1.35,
               color: colors.onSurfaceVariant,
@@ -1056,6 +1104,27 @@ class _PayoutItem extends StatelessWidget {
         onTap: () => context.push('/admin/payout/${payout.payoutId}'),
       ),
     );
+  }
+}
+
+IconData _payoutStatusIcon(String status) {
+  switch (status.toLowerCase()) {
+    case 'paid':
+    case 'completed':
+    case 'approved':
+      return Icons.check_circle_outline;
+    case 'processing':
+      return Icons.sync_rounded;
+    case 'manualqrrequired':
+      return Icons.qr_code_2_outlined;
+    case 'failed':
+    case 'rejected':
+    case 'cancelled':
+      return Icons.cancel_outlined;
+    case 'pending':
+      return Icons.pending_actions_outlined;
+    default:
+      return Icons.payments_outlined;
   }
 }
 
@@ -1760,15 +1829,32 @@ InputDecoration _adminInputDecoration(
 
 Color _statusColor(String status) {
   final normalized = status.toLowerCase();
-  if (normalized == 'pending' || normalized == 'reviewing') {
-    return Colors.orange;
-  }
-  if (normalized == 'resolved' ||
+
+  if (normalized == 'paid' ||
+      normalized == 'resolved' ||
       normalized == 'approved' ||
       normalized == 'completed') {
     return Colors.green;
   }
-  if (normalized == 'rejected' || normalized == 'cancelled') return Colors.red;
+
+  if (normalized == 'processing') {
+    return Colors.blue;
+  }
+
+  if (normalized == 'manualqrrequired') {
+    return Colors.deepOrange;
+  }
+
+  if (normalized == 'pending' || normalized == 'reviewing') {
+    return Colors.orange;
+  }
+
+  if (normalized == 'failed' ||
+      normalized == 'rejected' ||
+      normalized == 'cancelled') {
+    return Colors.red;
+  }
+
   return Colors.blueGrey;
 }
 

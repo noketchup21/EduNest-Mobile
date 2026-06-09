@@ -45,11 +45,10 @@ class ApiService {
           final statusCode = error.response?.statusCode;
           final path = error.requestOptions.path;
 
-          final isAuthEndpoint =
-              path.contains('/api/auth/login') ||
-                  path.contains('/api/auth/register') ||
-                  path.contains('/api/auth/verify-email') ||
-                  path.contains('/api/auth/resend-code');
+          final isAuthEndpoint = path.contains('/api/auth/login') ||
+              path.contains('/api/auth/register') ||
+              path.contains('/api/auth/verify-email') ||
+              path.contains('/api/auth/resend-code');
 
           if (statusCode == 401 && !isAuthEndpoint) {
             final currentToken = prefs.getString(tokenKey);
@@ -188,23 +187,32 @@ class ApiService {
   Future<List<AvailabilityModel>> getAvailabilities() async {
     final res = await dio.get('/api/availability');
 
-    return _list(res.data)
-        .map((e) => AvailabilityModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => AvailabilityModel.fromJson(e)).toList();
+  }
+
+  Future<List<AvailabilityModel>> getAvailabilitiesByTutor(int tutorId) async {
+    final res = await dio.get('/api/availability/tutor/$tutorId');
+
+    return _list(res.data).map((e) => AvailabilityModel.fromJson(e)).toList();
+  }
+
+  Future<TutorPublicModel> getTutorById(int tutorId) async {
+    final res = await dio.get('/api/tutor/$tutorId');
+
+    return TutorPublicModel.fromJson(_asMap(res.data));
   }
 
   Future<List<AvailabilityModel>> getMyAvailabilities() async {
     final res = await dio.get('/api/availability/me');
 
-    return _list(res.data)
-        .map((e) => AvailabilityModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => AvailabilityModel.fromJson(e)).toList();
   }
 
   Future<AvailabilityModel> createAvailability({
     required int subjectId,
     required String dayOfWeek,
     required String mode,
+    String? offlineAreas,
     required String level,
     required DateTime startCourseTime,
     required DateTime endCourseTime,
@@ -218,6 +226,7 @@ class ApiService {
         'subjectId': subjectId,
         'dayOfWeek': dayOfWeek,
         'mode': mode,
+        'offlineAreas': offlineAreas?.trim(),
         'level': level,
         'startCourseTime': _dateOnlyIso(startCourseTime),
         'endCourseTime': _dateOnlyIso(endCourseTime),
@@ -231,9 +240,9 @@ class ApiService {
   }
 
   Future<BookingModel> createBooking(
-      int availabilityId, {
-        String? note,
-      }) async {
+    int availabilityId, {
+    String? note,
+  }) async {
     final body = <String, dynamic>{
       'availabilityId': availabilityId,
       'note': note,
@@ -256,9 +265,7 @@ class ApiService {
   Future<List<BookingModel>> getMyBookings() async {
     final res = await dio.get('/api/booking/me');
 
-    return _list(res.data)
-        .map((e) => BookingModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => BookingModel.fromJson(e)).toList();
   }
 
   Future<PaymentModel> createPayOsPayment(int bookingId) async {
@@ -270,9 +277,7 @@ class ApiService {
   Future<List<LessonModel>> getMyLessons() async {
     final res = await dio.get('/api/lesson/me');
 
-    return _list(res.data)
-        .map((e) => LessonModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => LessonModel.fromJson(e)).toList();
   }
 
   Future<BookingModel> cancelBooking(int bookingId) async {
@@ -308,10 +313,10 @@ class ApiService {
   }
 
   Future<LessonModel> markAttendance(
-      int lessonId, {
-        String status = 'Present',
-        String? note,
-      }) async {
+    int lessonId, {
+    String status = 'Present',
+    String? note,
+  }) async {
     final body = <String, dynamic>{
       'status': status,
       'note': note,
@@ -332,9 +337,9 @@ class ApiService {
   }
 
   Future<LessonModel> completeLesson(
-      int lessonId, {
-        String? note,
-      }) async {
+    int lessonId, {
+    String? note,
+  }) async {
     final body = <String, dynamic>{
       'note': note,
     };
@@ -370,9 +375,7 @@ class ApiService {
   Future<List<PayoutModel>> getMyPayouts() async {
     final res = await dio.get('/api/payout/me');
 
-    return _list(res.data)
-        .map((e) => PayoutModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => PayoutModel.fromJson(e)).toList();
   }
 
   Future<PayoutModel> requestPayout(double amount) async {
@@ -397,12 +400,21 @@ class ApiService {
     return ConversationModel.fromJson(_asMap(res.data));
   }
 
+  Future<ConversationModel> startConversationByEmail(String email) async {
+    final res = await dio.post(
+      '/api/chat/conversation',
+      data: {
+        'otherUserEmail': email.trim(),
+      },
+    );
+
+    return ConversationModel.fromJson(_asMap(res.data));
+  }
+
   Future<List<ConversationModel>> getConversations() async {
     final res = await dio.get('/api/chat/conversation');
 
-    return _list(res.data)
-        .map((e) => ConversationModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => ConversationModel.fromJson(e)).toList();
   }
 
   Future<List<MessageModel>> getMessages(int conversationId) async {
@@ -410,15 +422,13 @@ class ApiService {
       '/api/chat/conversation/$conversationId/message',
     );
 
-    return _list(res.data)
-        .map((e) => MessageModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => MessageModel.fromJson(e)).toList();
   }
 
   Future<MessageModel> sendMessage(
-      int conversationId,
-      String content,
-      ) async {
+    int conversationId,
+    String content,
+  ) async {
     final res = await dio.post(
       '/api/chat/conversation/$conversationId/message',
       data: {
@@ -432,9 +442,7 @@ class ApiService {
   Future<List<SubjectModel>> getSubjects() async {
     final res = await dio.get('/api/subject');
 
-    return _list(res.data)
-        .map((e) => SubjectModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => SubjectModel.fromJson(e)).toList();
   }
 
   Future<PaymentModel> syncPayment(int bookingId) async {
@@ -535,7 +543,32 @@ class ApiService {
 
   Future<List<PayoutModel>> adminGetPayouts() async {
     final res = await dio.get('/api/admin/payout');
-    return _list(res.data).map((e) => PayoutModel.fromJson(e)).toList();
+
+    final list = _asList(res.data);
+
+    return list.map((e) => PayoutModel.fromJson(_asMap(e))).toList();
+  }
+
+  Future<PayoutModel> adminApprovePayoutWithPayOSChi(int payoutId) async {
+    final res = await dio.patch(
+      '/api/admin/payouts/$payoutId/approve-payos-chi',
+    );
+
+    return PayoutModel.fromJson(_asMap(res.data));
+  }
+
+  Future<PayoutModel> adminUpdatePayoutStatus({
+    required int payoutId,
+    required String status,
+  }) async {
+    final res = await dio.patch(
+      '/api/admin/payout/$payoutId',
+      data: {
+        'status': status,
+      },
+    );
+
+    return PayoutModel.fromJson(_asMap(res.data));
   }
 
   Future<PayoutModel> adminUpdatePayout({
@@ -556,14 +589,11 @@ class ApiService {
     final res = await dio.get(
       '/api/report/tutor/me',
       queryParameters: {
-        if (status != null && status.trim().isNotEmpty)
-          'status': status.trim(),
+        if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
       },
     );
 
-    return _list(res.data)
-        .map((e) => TutorReportModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => TutorReportModel.fromJson(e)).toList();
   }
 
   Future<SupportReportModel> createSupportReport({
@@ -583,8 +613,7 @@ class ApiService {
       if (bookingId != null) 'bookingId': bookingId,
       if (lessonId != null) 'lessonId': lessonId,
       'proofImages': [
-        for (final path in proofImagePaths)
-          await MultipartFile.fromFile(path),
+        for (final path in proofImagePaths) await MultipartFile.fromFile(path),
       ],
     });
 
@@ -600,11 +629,8 @@ class ApiService {
   Future<List<SupportReportModel>> getMySupportReports() async {
     final res = await dio.get('/api/support-report/me');
 
-    return _list(res.data)
-        .map((e) => SupportReportModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => SupportReportModel.fromJson(e)).toList();
   }
-
 
   Future<List<SupportReportModel>> adminGetSupportReports({
     String? role,
@@ -618,9 +644,7 @@ class ApiService {
       },
     );
 
-    return _list(res.data)
-        .map((e) => SupportReportModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => SupportReportModel.fromJson(e)).toList();
   }
 
   Future<SupportReportModel> adminUpdateSupportReportStatus({
@@ -641,8 +665,8 @@ class ApiService {
   }
 
   Future<SupportReportModel> adminGetSupportReportDetail(
-      int supportReportId,
-      ) async {
+    int supportReportId,
+  ) async {
     final res = await dio.get(
       '/api/support-report/admin/$supportReportId',
     );
@@ -717,16 +741,10 @@ class ApiService {
     return TutorVerificationModel.fromJson(_asMap(res.data));
   }
 
-
-
   Future<TutorVerificationModel> adminGetTutorVerification(int tutorId) async {
     final res = await dio.get('/api/admin/tutor/$tutorId/verification');
     return TutorVerificationModel.fromJson(_asMap(res.data));
   }
-
-
-
-
 
   Future<AdminPayoutDetailModel> adminGetPayoutDetail(int payoutId) async {
     final res = await dio.get('/api/admin/payout/$payoutId');
@@ -842,8 +860,7 @@ class ApiService {
       'title': title,
       'description': description,
       'proofImages': [
-        for (final path in proofImagePaths)
-          await MultipartFile.fromFile(path),
+        for (final path in proofImagePaths) await MultipartFile.fromFile(path),
       ],
     });
 
@@ -859,23 +876,18 @@ class ApiService {
   Future<List<TutorReportModel>> getMyReports() async {
     final res = await dio.get('/api/report/me');
 
-    return _list(res.data)
-        .map((e) => TutorReportModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => TutorReportModel.fromJson(e)).toList();
   }
 
   Future<List<TutorReportModel>> adminGetReports({String? status}) async {
     final res = await dio.get(
       '/api/report/admin',
       queryParameters: {
-        if (status != null && status.trim().isNotEmpty)
-          'status': status.trim(),
+        if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
       },
     );
 
-    return _list(res.data)
-        .map((e) => TutorReportModel.fromJson(e))
-        .toList();
+    return _list(res.data).map((e) => TutorReportModel.fromJson(e)).toList();
   }
 
   Future<TutorReportModel> adminGetReport(int reportId) async {
@@ -1029,4 +1041,34 @@ String apiErrorMessage(Object error) {
 String _dateOnlyIso(DateTime value) {
   final dateOnly = DateTime(value.year, value.month, value.day);
   return dateOnly.toIso8601String();
+}
+
+List<dynamic> _asList(dynamic data) {
+  if (data is List) {
+    return data;
+  }
+
+  if (data is Map<String, dynamic>) {
+    final possibleKeys = [
+      'data',
+      'items',
+      'result',
+      'results',
+      r'$values',
+    ];
+
+    for (final key in possibleKeys) {
+      final value = data[key];
+
+      if (value is List) {
+        return value;
+      }
+
+      if (value is Map<String, dynamic> && value[r'$values'] is List) {
+        return value[r'$values'] as List;
+      }
+    }
+  }
+
+  return [];
 }

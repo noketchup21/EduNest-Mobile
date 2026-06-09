@@ -73,6 +73,8 @@ class AuthProvider extends ChangeNotifier {
       String password, {
         List<String>? allowedRoles,
       }) async {
+    authMessage = null;
+
     await _guard(() async {
       final data = await api.login(
         email: inputEmail,
@@ -97,6 +99,7 @@ class AuthProvider extends ChangeNotifier {
 
       if (allowedRoles != null && allowedRoles.isNotEmpty) {
         final currentRole = normalizedRole;
+
         final allowed = allowedRoles
             .map((e) => e.trim().toLowerCase())
             .where((e) => e.isNotEmpty)
@@ -127,6 +130,8 @@ class AuthProvider extends ChangeNotifier {
     String? bio,
     String? address,
   }) async {
+    authMessage = null;
+
     await _guard(() async {
       await api.register(
         name: name,
@@ -205,12 +210,30 @@ class AuthProvider extends ChangeNotifier {
     try {
       await task();
     } catch (e) {
-      error = apiErrorMessage(e).replaceFirst('Exception: ', '');
+      final message = apiErrorMessage(e).replaceFirst('Exception: ', '').trim();
+
+      error = message;
+
+      if (_shouldShowAsAuthMessage(message)) {
+        authMessage = message;
+      }
+
       rethrow;
     } finally {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  bool _shouldShowAsAuthMessage(String message) {
+    final value = message.toLowerCase();
+
+    return value.contains('deactivated') ||
+        value.contains('inactive') ||
+        value.contains('disabled') ||
+        value.contains('not active') ||
+        value.contains('contact edunest support') ||
+        value.contains('contact support');
   }
 
   bool _isJwtExpired(String jwt) {
@@ -266,22 +289,19 @@ class AuthProvider extends ChangeNotifier {
 
       final data = jsonDecode(payload) as Map<String, dynamic>;
 
-      final idValue =
-          data['nameid'] ??
-              data['sub'] ??
-              data['userId'] ??
-              data[
-              'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+      final idValue = data['nameid'] ??
+          data['sub'] ??
+          data['userId'] ??
+          data[
+          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
 
-      final roleValue =
-          data['role'] ??
-              data[
-              'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      final roleValue = data['role'] ??
+          data[
+          'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
 
-      final emailValue =
-          data['email'] ??
-              data[
-              'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
+      final emailValue = data['email'] ??
+          data[
+          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
 
       final parsedUserId = int.tryParse(idValue?.toString() ?? '');
 

@@ -18,11 +18,12 @@ import '../screens/payment/payment_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/wallet/wallet_screen.dart';
 import '../screens/tutor/tutor_verification_screen.dart';
+import '../screens/tutor/tutor_detail_screen.dart';
 import '../screens/admin/admin_tutor_detail_screen.dart';
 import '../screens/admin/admin_payout_detail_screen.dart';
 import '../screens/admin/report_tutor_screen.dart';
 import '../screens/admin/admin_report_detail_screen.dart';
-import '../screens/profile/terms_of_service_screen.dart'  as legal;
+import '../screens/profile/terms_of_service_screen.dart' as legal;
 import '../screens/report/my_reports_screen.dart';
 import '../screens/report/tutor_reports_screen.dart';
 import '../screens/admin/admin_reports_screen.dart';
@@ -39,10 +40,9 @@ class AppRouter {
         final loggedIn = auth.isAuthenticated;
         final location = state.uri.path;
 
-        final isAuthRoute =
-            location.startsWith('/login') ||
-                location.startsWith('/register') ||
-                location.startsWith('/verify-email');
+        final isAuthRoute = location.startsWith('/login') ||
+            location.startsWith('/register') ||
+            location.startsWith('/verify-email');
 
         if (!loggedIn && !isAuthRoute) {
           return '/login';
@@ -123,7 +123,6 @@ class AppRouter {
             );
           },
         ),
-
         ShellRoute(
           builder: (context, state, child) {
             return MainShell(
@@ -163,7 +162,6 @@ class AppRouter {
             ),
           ],
         ),
-
         GoRoute(
           path: '/payment',
           builder: (context, state) {
@@ -182,12 +180,10 @@ class AppRouter {
             );
           },
         ),
-
         GoRoute(
           path: '/availability/create',
           builder: (_, __) => const CreateAvailabilityScreen(),
         ),
-
         GoRoute(
           path: '/lessons/:id',
           builder: (context, state) {
@@ -206,12 +202,24 @@ class AppRouter {
             );
           },
         ),
-
         GoRoute(
           path: '/tutor-verification',
           builder: (_, __) => const TutorVerificationScreen(),
         ),
+        GoRoute(
+          path: '/tutors/:id',
+          builder: (context, state) {
+            final id = int.tryParse(state.pathParameters['id'] ?? '');
 
+            if (id == null) {
+              return const Scaffold(
+                body: Center(child: Text('Invalid tutor id')),
+              );
+            }
+
+            return TutorDetailScreen(tutorId: id);
+          },
+        ),
         GoRoute(
           path: '/admin/tutor/:id',
           builder: (context, state) {
@@ -226,7 +234,6 @@ class AppRouter {
             return AdminTutorDetailScreen(tutorId: id);
           },
         ),
-
         GoRoute(
           path: '/admin/payout/:id',
           builder: (context, state) {
@@ -241,12 +248,13 @@ class AppRouter {
             return AdminPayoutDetailScreen(payoutId: id);
           },
         ),
-
         GoRoute(
           path: '/report/booking/:bookingId',
           builder: (context, state) {
-            final bookingId = int.tryParse(state.pathParameters['bookingId'] ?? '') ?? 0;
-            final lessonId = int.tryParse(state.uri.queryParameters['lessonId'] ?? '');
+            final bookingId =
+                int.tryParse(state.pathParameters['bookingId'] ?? '') ?? 0;
+            final lessonId =
+                int.tryParse(state.uri.queryParameters['lessonId'] ?? '');
 
             return ReportTutorScreen(
               bookingId: bookingId,
@@ -257,42 +265,36 @@ class AppRouter {
         GoRoute(
           path: '/admin/report/:reportId',
           builder: (context, state) {
-            final reportId = int.tryParse(state.pathParameters['reportId'] ?? '') ?? 0;
+            final reportId =
+                int.tryParse(state.pathParameters['reportId'] ?? '') ?? 0;
 
             return AdminReportDetailScreen(reportId: reportId);
           },
         ),
-
         GoRoute(
           path: '/terms-of-service',
           builder: (_, __) => const legal.TermsOfServiceScreen(),
         ),
-
         GoRoute(
           path: '/my-reports',
           builder: (_, __) => const MyReportsScreen(),
         ),
-
         GoRoute(
           path: '/tutor-reports',
           builder: (_, __) => const TutorReportsScreen(),
         ),
-
         GoRoute(
           path: '/admin/reports',
           builder: (_, __) => const AdminReportsScreen(),
         ),
-
         GoRoute(
           path: '/support-report/create',
           builder: (_, __) => const CreateSupportReportScreen(),
         ),
-
         GoRoute(
           path: '/support-reports/me',
           builder: (_, __) => const MySupportReportsScreen(),
         ),
-
         GoRoute(
           path: '/chat/:id',
           builder: (context, state) {
@@ -409,9 +411,9 @@ class _NavItem {
   final String label;
 
   const _NavItem(
-      this.path,
-      this.icon,
-      this.selectedIcon,
-      this.label,
-      );
+    this.path,
+    this.icon,
+    this.selectedIcon,
+    this.label,
+  );
 }

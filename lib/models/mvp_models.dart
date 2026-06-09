@@ -24,6 +24,7 @@ class AvailabilityModel {
   final int? subjectId;
   final String dayOfWeek;
   final String mode;
+  final String? offlineAreas;
   final String level;
   final DateTime startCourseTime;
   final DateTime endCourseTime;
@@ -46,6 +47,7 @@ class AvailabilityModel {
     required this.subjectId,
     required this.dayOfWeek,
     required this.mode,
+    required this.offlineAreas,
     required this.level,
     required this.startCourseTime,
     required this.endCourseTime,
@@ -70,6 +72,7 @@ class AvailabilityModel {
       subjectId: json['subjectId'] == null ? null : _asInt(json['subjectId']),
       dayOfWeek: json['dayOfWeek']?.toString() ?? '',
       mode: json['mode']?.toString() ?? '',
+      offlineAreas: json['offlineAreas']?.toString(),
       level: json['level']?.toString() ?? '',
       startCourseTime: _asDate(json['startCourseTime']),
       endCourseTime: _asDate(json['endCourseTime']),
@@ -97,6 +100,44 @@ class AvailabilityModel {
             json['tutor']?['user']?['avatarUrl'] ??
             json['tutor']?['user']?['AvatarUrl'],
       ),
+    );
+  }
+}
+
+class TutorPublicModel {
+  final int tutorId;
+  final int userId;
+  final String name;
+  final String email;
+  final String phone;
+  final String bio;
+  final double revenue;
+  final double rating;
+  final bool isVerified;
+
+  TutorPublicModel({
+    required this.tutorId,
+    required this.userId,
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.bio,
+    required this.revenue,
+    required this.rating,
+    required this.isVerified,
+  });
+
+  factory TutorPublicModel.fromJson(Map<String, dynamic> json) {
+    return TutorPublicModel(
+      tutorId: _asInt(json['tutorId'] ?? json['TutorId']),
+      userId: _asInt(json['userId'] ?? json['UserId']),
+      name: json['name']?.toString() ?? json['Name']?.toString() ?? '',
+      email: json['email']?.toString() ?? json['Email']?.toString() ?? '',
+      phone: json['phone']?.toString() ?? json['Phone']?.toString() ?? '',
+      bio: json['bio']?.toString() ?? json['Bio']?.toString() ?? '',
+      revenue: _asDouble(json['revenue'] ?? json['Revenue']),
+      rating: _asDouble(json['rating'] ?? json['Rating']),
+      isVerified: json['isVerified'] == true || json['IsVerified'] == true,
     );
   }
 }
@@ -282,28 +323,100 @@ class PayoutModel {
   final int tutorId;
   final double amount;
   final String status;
+
+  final String payoutMethod;
+
   final DateTime requestedAt;
+  final DateTime? approvedAt;
   final DateTime? paidAt;
+
+  final String? payOSChiReferenceId;
+  final String? payOSChiBatchId;
+  final String? payOSChiPayoutItemId;
+  final String? payOSChiApprovalState;
+  final String? payOSChiTransactionState;
+  final String? payOSChiFailureReason;
+
+  final String? tutorBankName;
+  final String? tutorBankBin;
+  final String? tutorAccountNumber;
+  final String? tutorAccountHolderName;
+  final String? tutorBankBranch;
 
   PayoutModel({
     required this.payoutId,
     required this.tutorId,
     required this.amount,
     required this.status,
+    required this.payoutMethod,
     required this.requestedAt,
+    required this.approvedAt,
     required this.paidAt,
+    required this.payOSChiReferenceId,
+    required this.payOSChiBatchId,
+    required this.payOSChiPayoutItemId,
+    required this.payOSChiApprovalState,
+    required this.payOSChiTransactionState,
+    required this.payOSChiFailureReason,
+    required this.tutorBankName,
+    required this.tutorBankBin,
+    required this.tutorAccountNumber,
+    required this.tutorAccountHolderName,
+    required this.tutorBankBranch,
   });
 
   factory PayoutModel.fromJson(Map<String, dynamic> json) {
     return PayoutModel(
-      payoutId: _asInt(json['payoutId']),
-      tutorId: _asInt(json['tutorId']),
-      amount: _asDouble(json['amount']),
-      status: json['status']?.toString() ?? '',
-      requestedAt: _asDate(json['requestedAt']),
-      paidAt: json['paidAt'] == null ? null : _asDate(json['paidAt']),
+      payoutId: _asInt(json['payoutId'] ?? json['PayoutId']),
+      tutorId: _asInt(json['tutorId'] ?? json['TutorId']),
+      amount: _asDouble(json['amount'] ?? json['Amount']),
+      status: json['status']?.toString() ?? json['Status']?.toString() ?? '',
+      payoutMethod: json['payoutMethod']?.toString() ??
+          json['PayoutMethod']?.toString() ??
+          'ManualQr',
+      requestedAt: _asDate(json['requestedAt'] ?? json['RequestedAt']),
+      approvedAt: _asDateNullable(json['approvedAt'] ?? json['ApprovedAt']),
+      paidAt: _asDateNullable(json['paidAt'] ?? json['PaidAt']),
+      payOSChiReferenceId: json['payOSChiReferenceId']?.toString() ??
+          json['PayOSChiReferenceId']?.toString(),
+      payOSChiBatchId: json['payOSChiBatchId']?.toString() ??
+          json['PayOSChiBatchId']?.toString(),
+      payOSChiPayoutItemId: json['payOSChiPayoutItemId']?.toString() ??
+          json['PayOSChiPayoutItemId']?.toString(),
+      payOSChiApprovalState: json['payOSChiApprovalState']?.toString() ??
+          json['PayOSChiApprovalState']?.toString(),
+      payOSChiTransactionState: json['payOSChiTransactionState']?.toString() ??
+          json['PayOSChiTransactionState']?.toString(),
+      payOSChiFailureReason: json['payOSChiFailureReason']?.toString() ??
+          json['PayOSChiFailureReason']?.toString(),
+      tutorBankName: json['tutorBankName']?.toString() ??
+          json['TutorBankName']?.toString(),
+      tutorBankBin:
+          json['tutorBankBin']?.toString() ?? json['TutorBankBin']?.toString(),
+      tutorAccountNumber: json['tutorAccountNumber']?.toString() ??
+          json['TutorAccountNumber']?.toString(),
+      tutorAccountHolderName: json['tutorAccountHolderName']?.toString() ??
+          json['TutorAccountHolderName']?.toString(),
+      tutorBankBranch: json['tutorBankBranch']?.toString() ??
+          json['TutorBankBranch']?.toString(),
     );
   }
+}
+
+DateTime? _asDateNullable(dynamic value) {
+  if (value == null) return null;
+  final text = value.toString();
+  if (text.trim().isEmpty) return null;
+  return DateTime.tryParse(text);
+}
+
+DateTime _asDateTime(dynamic value) {
+  return DateTime.tryParse(value?.toString() ?? '') ?? DateTime.now();
+}
+
+DateTime? _asDateTimeNullable(dynamic value) {
+  if (value == null) return null;
+  return DateTime.tryParse(value.toString());
 }
 
 class ConversationModel {
@@ -597,22 +710,34 @@ class AdminPayoutDetailModel {
   final int payoutId;
   final int tutorId;
   final int tutorUserId;
+
   final String tutorName;
   final String tutorEmail;
+
   final double amount;
   final String status;
+  final String payoutMethod;
+
   final DateTime requestedAt;
+  final DateTime? approvedAt;
   final DateTime? paidAt;
 
   final String? bankName;
+  final String? bankBin;
   final String? accountNumber;
   final String? accountHolderName;
   final String? branchName;
 
-  final String? bankBin;
   final String transferContent;
   final String? transferQrUrl;
   final String? transferQrNote;
+
+  final String? payOSChiReferenceId;
+  final String? payOSChiBatchId;
+  final String? payOSChiPayoutItemId;
+  final String? payOSChiApprovalState;
+  final String? payOSChiTransactionState;
+  final String? payOSChiFailureReason;
 
   AdminPayoutDetailModel({
     required this.payoutId,
@@ -622,37 +747,71 @@ class AdminPayoutDetailModel {
     required this.tutorEmail,
     required this.amount,
     required this.status,
+    required this.payoutMethod,
     required this.requestedAt,
-    this.paidAt,
-    this.bankName,
-    this.bankBin,
-    this.accountNumber,
-    this.accountHolderName,
-    this.branchName,
-    this.transferContent = '',
-    this.transferQrUrl,
-    this.transferQrNote,
+    required this.approvedAt,
+    required this.paidAt,
+    required this.bankName,
+    required this.bankBin,
+    required this.accountNumber,
+    required this.accountHolderName,
+    required this.branchName,
+    required this.transferContent,
+    required this.transferQrUrl,
+    required this.transferQrNote,
+    required this.payOSChiReferenceId,
+    required this.payOSChiBatchId,
+    required this.payOSChiPayoutItemId,
+    required this.payOSChiApprovalState,
+    required this.payOSChiTransactionState,
+    required this.payOSChiFailureReason,
   });
 
   factory AdminPayoutDetailModel.fromJson(Map<String, dynamic> json) {
     return AdminPayoutDetailModel(
-      payoutId: _asInt(json['payoutId']),
-      tutorId: _asInt(json['tutorId']),
-      tutorUserId: _asInt(json['tutorUserId']),
-      tutorName: json['tutorName']?.toString() ?? '',
-      tutorEmail: json['tutorEmail']?.toString() ?? '',
-      amount: _asDouble(json['amount']),
-      status: json['status']?.toString() ?? '',
-      requestedAt: _asDate(json['requestedAt']),
-      paidAt: json['paidAt'] == null ? null : _asDate(json['paidAt']),
-      bankName: json['bankName']?.toString(),
-      accountNumber: json['accountNumber']?.toString(),
-      accountHolderName: json['accountHolderName']?.toString(),
-      branchName: json['branchName']?.toString(),
-      bankBin: json['bankBin']?.toString(),
-      transferContent: json['transferContent']?.toString() ?? '',
-      transferQrUrl: json['transferQrUrl']?.toString(),
-      transferQrNote: json['transferQrNote']?.toString(),
+      payoutId: _asInt(json['payoutId'] ?? json['PayoutId']),
+      tutorId: _asInt(json['tutorId'] ?? json['TutorId']),
+      tutorUserId: _asInt(json['tutorUserId'] ?? json['TutorUserId']),
+      tutorName:
+          json['tutorName']?.toString() ?? json['TutorName']?.toString() ?? '',
+      tutorEmail: json['tutorEmail']?.toString() ??
+          json['TutorEmail']?.toString() ??
+          '',
+      amount: _asDouble(json['amount'] ?? json['Amount']),
+      status: json['status']?.toString() ?? json['Status']?.toString() ?? '',
+      payoutMethod: json['payoutMethod']?.toString() ??
+          json['PayoutMethod']?.toString() ??
+          'ManualQr',
+      requestedAt: _asDate(json['requestedAt'] ?? json['RequestedAt']),
+      approvedAt: _asDateNullable(json['approvedAt'] ?? json['ApprovedAt']),
+      paidAt: _asDateNullable(json['paidAt'] ?? json['PaidAt']),
+      bankName: json['bankName']?.toString() ?? json['BankName']?.toString(),
+      bankBin: json['bankBin']?.toString() ?? json['BankBin']?.toString(),
+      accountNumber: json['accountNumber']?.toString() ??
+          json['AccountNumber']?.toString(),
+      accountHolderName: json['accountHolderName']?.toString() ??
+          json['AccountHolderName']?.toString(),
+      branchName:
+          json['branchName']?.toString() ?? json['BranchName']?.toString(),
+      transferContent: json['transferContent']?.toString() ??
+          json['TransferContent']?.toString() ??
+          '',
+      transferQrUrl: json['transferQrUrl']?.toString() ??
+          json['TransferQrUrl']?.toString(),
+      transferQrNote: json['transferQrNote']?.toString() ??
+          json['TransferQrNote']?.toString(),
+      payOSChiReferenceId: json['payOSChiReferenceId']?.toString() ??
+          json['PayOSChiReferenceId']?.toString(),
+      payOSChiBatchId: json['payOSChiBatchId']?.toString() ??
+          json['PayOSChiBatchId']?.toString(),
+      payOSChiPayoutItemId: json['payOSChiPayoutItemId']?.toString() ??
+          json['PayOSChiPayoutItemId']?.toString(),
+      payOSChiApprovalState: json['payOSChiApprovalState']?.toString() ??
+          json['PayOSChiApprovalState']?.toString(),
+      payOSChiTransactionState: json['payOSChiTransactionState']?.toString() ??
+          json['PayOSChiTransactionState']?.toString(),
+      payOSChiFailureReason: json['payOSChiFailureReason']?.toString() ??
+          json['PayOSChiFailureReason']?.toString(),
     );
   }
 }

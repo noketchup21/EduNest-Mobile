@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="edunest_mobile_api_mvp"
+        android:label="EduNest"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

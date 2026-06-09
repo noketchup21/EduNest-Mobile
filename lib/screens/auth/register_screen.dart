@@ -6,87 +6,60 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/error_banner.dart';
 import 'auth_flow_type.dart';
+import 'auth_ui.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AuthScaffold(
       appBar: AppBar(
-        title: const Text('Create account'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Sign up'),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Column(
-                  children: [
-                    Image.asset(
-                      'assets/images/Logo.png',
-                      height: 100,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.school, size: 80, color: Colors.blue),
-                    ),
-                    const SizedBox(height: 12),
-                    Image.asset(
-                      'assets/images/Chữ Logo.png',
-                      height: 40,
-                      errorBuilder: (context, error, stackTrace) => Text(
-                        'EduNest',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                            ),
-                      ),
-                    ),
-                  ],
+      child: Column(
+        children: [
+          const AuthLogoLockup(),
+          const SizedBox(height: 24),
+          AuthPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AuthHeader(
+                  icon: Icons.auto_awesome_rounded,
+                  eyebrow: 'Sign up',
+                  title: 'Choose your role',
                 ),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'Register as',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
+                const SizedBox(height: 22),
+                AuthChoiceCard(
+                  icon: Icons.school_rounded,
+                  title: 'Tutor',
+                  subtitle: 'Teach',
+                  color: authAccentForTutor(true),
+                  onTap: () => context.push('/register/tutor'),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Choose the account type you want to create.',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 24),
-
-              _RegisterChoiceCard(
-                icon: Icons.school,
-                title: 'Tutor',
-                subtitle: 'Create courses, teach lessons, and receive payouts.',
-                onTap: () => context.push('/register/tutor'),
-              ),
-
-              const SizedBox(height: 12),
-
-              _RegisterChoiceCard(
-                icon: Icons.family_restroom,
-                title: 'Parent / Student',
-                subtitle: 'Book courses, pay with QR, and join lessons.',
-                onTap: () => context.push('/register/learner'),
-              ),
-
-              const SizedBox(height: 16),
-
-              Center(
-                child: TextButton(
-                  onPressed: () => context.go('/login'),
-                  child: const Text('Already have an account? Login'),
+                const SizedBox(height: 12),
+                AuthChoiceCard(
+                  icon: Icons.groups_2_rounded,
+                  title: 'Parent / Student',
+                  subtitle: 'Learn',
+                  color: authAccentForTutor(false),
+                  onTap: () => context.push('/register/learner'),
                 ),
-              ),
-            ],
+                const SizedBox(height: 18),
+                Center(
+                  child: AuthLinkButton(
+                    icon: Icons.login_rounded,
+                    label: 'Login',
+                    onPressed: () => context.go('/login'),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -117,6 +90,7 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
   final address = TextEditingController();
 
   String learnerRole = 'Parent';
+  bool showPassword = false;
 
   bool get isTutor => widget.type.isTutor;
 
@@ -149,12 +123,10 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
         role: role,
         phone: phone.text.trim(),
         bio: isTutor ? _nullableText(bio) : null,
-        school: !isTutor && learnerRole == 'Student'
-            ? _nullableText(school)
-            : null,
-        address: !isTutor && learnerRole == 'Parent'
-            ? _nullableText(address)
-            : null,
+        school:
+            !isTutor && learnerRole == 'Student' ? _nullableText(school) : null,
+        address:
+            !isTutor && learnerRole == 'Parent' ? _nullableText(address) : null,
       );
 
       if (!mounted) return;
@@ -177,151 +149,149 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final accent = authAccentForTutor(isTutor);
 
-    return Scaffold(
+    return AuthScaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/register'),
         ),
-        title: Text('${widget.type.title} register'),
+        title: const Text('Sign up'),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+      child: AuthPanel(
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AuthHeader(
+                icon: isTutor ? Icons.school_rounded : Icons.groups_2_rounded,
+                eyebrow: widget.type.title,
+                title: 'Create account',
+                color: accent,
+              ),
+              ErrorBanner(auth.error),
+              const SizedBox(height: 14),
+              if (!isTutor) ...[
                 Text(
-                  'Create ${widget.type.title} account',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  widget.type.subtitle,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-
-                ErrorBanner(auth.error),
-
-                if (!isTutor) ...[
-                  DropdownButtonFormField<String>(
-                    value: learnerRole,
-                    decoration: const InputDecoration(
-                      labelText: 'Register as',
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Parent',
-                        child: Text('Parent'),
+                  'Register as',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
-                      DropdownMenuItem(
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(
+                        value: 'Parent',
+                        icon: Icon(Icons.supervisor_account_rounded),
+                        label: Text('Parent'),
+                      ),
+                      ButtonSegment(
                         value: 'Student',
-                        child: Text('Student'),
+                        icon: Icon(Icons.menu_book_rounded),
+                        label: Text('Student'),
                       ),
                     ],
-                    onChanged: (value) {
+                    selected: {learnerRole},
+                    onSelectionChanged: (value) {
                       setState(() {
-                        learnerRole = value ?? 'Parent';
+                        learnerRole = value.first;
                       });
                     },
                   ),
-                  const SizedBox(height: 12),
-                ],
-
-                TextFormField(
-                  controller: name,
-                  decoration: const InputDecoration(
-                    labelText: 'Full name',
-                  ),
-                  validator: _required,
                 ),
-
                 const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: email,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: _emailValidator,
-                ),
-
-                const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone',
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: _required,
-                ),
-
-                const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: password,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                  ),
-                  obscureText: true,
-                  validator: _passwordValidator,
-                ),
-
-                const SizedBox(height: 12),
-
-                if (isTutor) ...[
-                  TextFormField(
-                    controller: bio,
-                    decoration: const InputDecoration(
-                      labelText: 'Tutor bio',
-                      hintText: 'Example: Math tutor with 2 years experience',
-                    ),
-                    minLines: 2,
-                    maxLines: 4,
-                  ),
-                ] else if (learnerRole == 'Student') ...[
-                  TextFormField(
-                    controller: school,
-                    decoration: const InputDecoration(
-                      labelText: 'School',
-                    ),
-                  ),
-                ] else ...[
-                  TextFormField(
-                    controller: address,
-                    decoration: const InputDecoration(
-                      labelText: 'Address',
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 20),
-
-                AppButton(
-                  label: 'Create $role account',
-                  loading: auth.isLoading,
-                  onPressed: _register,
-                ),
-
-                const SizedBox(height: 8),
-
-                Center(
-                  child: TextButton(
-                    onPressed: () => context.go(loginRoute),
-                    child: const Text('Already have an account? Login'),
-                  ),
-                ),
               ],
-            ),
+              AuthTextField(
+                controller: name,
+                labelText: 'Full name',
+                icon: Icons.badge_outlined,
+                validator: _required,
+              ),
+              const SizedBox(height: 12),
+              AuthTextField(
+                controller: email,
+                labelText: 'Email',
+                icon: Icons.alternate_email_rounded,
+                keyboardType: TextInputType.emailAddress,
+                validator: _emailValidator,
+              ),
+              const SizedBox(height: 12),
+              AuthTextField(
+                controller: phone,
+                labelText: 'Phone',
+                icon: Icons.phone_outlined,
+                keyboardType: TextInputType.phone,
+                validator: _required,
+              ),
+              const SizedBox(height: 12),
+              AuthTextField(
+                controller: password,
+                labelText: 'Password',
+                icon: Icons.lock_outline_rounded,
+                obscureText: !showPassword,
+                suffixIcon: IconButton(
+                  tooltip: showPassword ? 'Hide password' : 'Show password',
+                  icon: Icon(
+                    showPassword
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                  ),
+                  onPressed: () {
+                    setState(() => showPassword = !showPassword);
+                  },
+                ),
+                validator: _passwordValidator,
+              ),
+              const SizedBox(height: 12),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: isTutor
+                    ? AuthTextField(
+                        key: const ValueKey('bio'),
+                        controller: bio,
+                        labelText: 'Tutor bio',
+                        hintText: 'Short intro',
+                        icon: Icons.edit_note_rounded,
+                        minLines: 2,
+                        maxLines: 4,
+                      )
+                    : learnerRole == 'Student'
+                        ? AuthTextField(
+                            key: const ValueKey('school'),
+                            controller: school,
+                            labelText: 'School',
+                            icon: Icons.apartment_rounded,
+                          )
+                        : AuthTextField(
+                            key: const ValueKey('address'),
+                            controller: address,
+                            labelText: 'Address',
+                            icon: Icons.location_on_outlined,
+                          ),
+              ),
+              const SizedBox(height: 20),
+              AppButton(
+                label: 'Create account',
+                icon: Icons.person_add_alt_1_rounded,
+                loading: auth.isLoading,
+                onPressed: _register,
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: AuthLinkButton(
+                  icon: Icons.login_rounded,
+                  label: 'Login',
+                  onPressed: () => context.go(loginRoute),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -363,58 +333,5 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
   String? _nullableText(TextEditingController controller) {
     final text = controller.text.trim();
     return text.isEmpty ? null : text;
-  }
-}
-
-class _RegisterChoiceCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _RegisterChoiceCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 26,
-                child: Icon(icon),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style:
-                      Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(subtitle),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

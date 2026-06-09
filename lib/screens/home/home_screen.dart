@@ -227,6 +227,9 @@ class _TutorCourseCard extends StatelessWidget {
                     '${availability.startTime} - ${availability.endTime}'),
                 _buildInfoTag(theme, Icons.layers_rounded,
                     '${availability.mode} • ${availability.level}'),
+                if (_offlineAreas(availability).isNotEmpty)
+                  _buildInfoTag(theme, Icons.location_on_outlined,
+                      _offlineAreas(availability)),
                 _buildInfoTag(theme, Icons.list_alt_rounded,
                     '${availability.slot} lessons'),
               ],
@@ -450,6 +453,19 @@ class _TutorGroupCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
+                tooltip: 'View profile',
+                onPressed: () => context.push('/tutors/${first.tutorId}'),
+                icon: Icon(Icons.person_search_rounded,
+                    color: theme.colorScheme.onSurfaceVariant, size: 22),
+                style: IconButton.styleFrom(
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest
+                      .withOpacity(0.6),
+                  padding: const EdgeInsets.all(8),
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                tooltip: 'Chat',
                 onPressed: first.tutorUserId <= 0
                     ? null
                     : () => _startChat(context, first.tutorUserId),
@@ -466,6 +482,25 @@ class _TutorGroupCard extends StatelessWidget {
           ),
           children: [
             const Divider(height: 1, indent: 16, endIndent: 16),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.push('/tutors/${first.tutorId}'),
+                      icon: const Icon(Icons.badge_rounded),
+                      label: const Text('View tutor profile'),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             ...courses.map((availability) =>
                 _LearnerCourseTile(availability: availability)),
           ],
@@ -543,6 +578,30 @@ class _LearnerCourseTile extends StatelessWidget {
                     '${availability.startTime} - ${availability.endTime}'),
               ],
             ),
+            if (_offlineAreas(availability).isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 14,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      _offlineAreas(availability),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 14),
             Row(
               children: [
@@ -616,4 +675,14 @@ String _subjectText(BuildContext context, AvailabilityModel availability) {
   if ((availability.subjectName ?? '').isNotEmpty)
     return availability.subjectName!;
   return data.availabilitySubjectName(availability);
+}
+
+String _offlineAreas(AvailabilityModel availability) {
+  final areas = availability.offlineAreas?.trim() ?? '';
+
+  if (availability.mode != 'Offline' || areas.isEmpty) {
+    return '';
+  }
+
+  return areas;
 }
