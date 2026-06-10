@@ -75,6 +75,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
                 child: TabBar(
                   isScrollable: true,
+                  tabAlignment: TabAlignment.start,
                   dividerColor: Colors.transparent,
                   indicator: BoxDecoration(
                     color: colors.surface,
