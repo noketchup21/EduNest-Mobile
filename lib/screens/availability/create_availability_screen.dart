@@ -17,6 +17,16 @@ class CreateAvailabilityScreen extends StatefulWidget {
 }
 
 class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
+  static const List<String> weekdayOptions = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+
   final formKey = GlobalKey<FormState>();
 
   late final TextEditingController startDate;
@@ -29,7 +39,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
 
   int? selectedSubjectId;
 
-  String dayOfWeek = 'Monday';
+  final Set<String> selectedDaysOfWeek = {'Monday'};
   String mode = 'Online';
   String level = 'Beginner';
 
@@ -148,7 +158,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
               child: Column(
                 children: [
                   DropdownButtonFormField<int>(
-                    value: selectedSubjectId,
+                    initialValue: selectedSubjectId,
                     decoration: const InputDecoration(
                       labelText: 'Subject',
                       hintText: 'Choose a subject',
@@ -185,34 +195,60 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     ),
                   ],
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: dayOfWeek,
-                    decoration: const InputDecoration(
-                      labelText: 'Day of week',
-                    ),
-                    items: const [
-                      'Monday',
-                      'Tuesday',
-                      'Wednesday',
-                      'Thursday',
-                      'Friday',
-                      'Saturday',
-                      'Sunday',
-                    ].map((item) {
-                      return DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(item),
+                  FormField<Set<String>>(
+                    initialValue: selectedDaysOfWeek,
+                    validator: (_) {
+                      if (selectedDaysOfWeek.isEmpty) {
+                        return 'Choose at least one day';
+                      }
+
+                      return null;
+                    },
+                    builder: (field) {
+                      final colors = Theme.of(context).colorScheme;
+
+                      return InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Days of week',
+                          errorText: field.errorText,
+                          border: const OutlineInputBorder(),
+                        ),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: weekdayOptions.map((day) {
+                            final selected = selectedDaysOfWeek.contains(day);
+
+                            return FilterChip(
+                              label: Text(day),
+                              selected: selected,
+                              avatar: selected
+                                  ? Icon(
+                                      Icons.check_rounded,
+                                      size: 18,
+                                      color: colors.onSecondaryContainer,
+                                    )
+                                  : null,
+                              onSelected: (value) {
+                                setState(() {
+                                  if (value) {
+                                    selectedDaysOfWeek.add(day);
+                                  } else {
+                                    selectedDaysOfWeek.remove(day);
+                                  }
+
+                                  field.didChange({...selectedDaysOfWeek});
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
                       );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        dayOfWeek = value ?? 'Monday';
-                      });
                     },
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: mode,
+                    initialValue: mode,
                     decoration: const InputDecoration(
                       labelText: 'Mode',
                     ),
@@ -257,7 +293,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     const SizedBox(height: 12),
                   ],
                   DropdownButtonFormField<String>(
-                    value: level,
+                    initialValue: level,
                     decoration: const InputDecoration(
                       labelText: 'Level',
                     ),
@@ -543,7 +579,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     final lessonCount = _calculateSlotCount();
 
     if (lessonCount <= 0) {
-      _showMessage('No lesson found for selected day in this date range');
+      _showMessage('No lesson found for selected days in this date range');
       return;
     }
 
@@ -557,7 +593,9 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     try {
       await data.createAvailability(
         subjectId: selectedSubjectId!,
-        dayOfWeek: dayOfWeek,
+        daysOfWeek: weekdayOptions
+            .where((day) => selectedDaysOfWeek.contains(day))
+            .toList(),
         mode: mode,
         offlineAreas: mode == 'Offline' ? offlineAreas.text.trim() : null,
         level: level,
@@ -648,13 +686,13 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
       return 0;
     }
 
-    final targetWeekday = _weekdayNumber(dayOfWeek);
+    final targetWeekdays = selectedDaysOfWeek.map(_weekdayNumber).toSet();
     var count = 0;
 
     for (var date = DateTime(start.year, start.month, start.day);
         !date.isAfter(end);
         date = date.add(const Duration(days: 1))) {
-      if (date.weekday == targetWeekday) {
+      if (targetWeekdays.contains(date.weekday)) {
         count++;
       }
     }

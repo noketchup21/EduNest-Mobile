@@ -5,7 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/mvp_models.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://edunest-backend-8e6z.onrender.com';
+  static const String baseUrl = String.fromEnvironment(
+    'EDUNEST_API_BASE_URL',
+    defaultValue: 'https://edunest-backend-8e6z.onrender.com',
+  );
+  static const String appVersion = String.fromEnvironment(
+    'EDUNEST_APP_VERSION',
+    defaultValue: '0.2.0+2',
+  );
   static const String tokenKey = 'auth_token';
   static const String refreshTokenKey = 'refresh_token';
 
@@ -295,7 +302,7 @@ class ApiService {
 
   Future<AvailabilityModel> createAvailability({
     required int subjectId,
-    required String dayOfWeek,
+    required List<String> daysOfWeek,
     required String mode,
     String? offlineAreas,
     required String level,
@@ -305,11 +312,17 @@ class ApiService {
     required String endTime,
     required double pricePerSlot,
   }) async {
+    final normalizedDays = daysOfWeek
+        .map((day) => day.trim())
+        .where((day) => day.isNotEmpty)
+        .toList();
+
     final res = await dio.post(
       '/api/availability',
       data: {
         'subjectId': subjectId,
-        'dayOfWeek': dayOfWeek,
+        'dayOfWeek': normalizedDays.join(','),
+        'daysOfWeek': normalizedDays,
         'mode': mode,
         'offlineAreas': offlineAreas?.trim(),
         'level': level,
@@ -443,6 +456,194 @@ class ApiService {
     );
 
     return HomeworkSubmissionModel.fromJson(_asMap(res.data));
+  }
+
+  Future<List<CourseMaterialSectionModel>> getCourseMaterials(
+    int availabilityId,
+  ) async {
+    late final Response<dynamic> res;
+
+    try {
+      res = await _tryRequests([
+        () => dio.get('/api/material/availability/$availabilityId'),
+        () => dio.get('/api/materials/availability/$availabilityId'),
+        () => dio.get('/api/course-materials/availability/$availabilityId'),
+        () => dio.get(
+              '/api/material',
+              queryParameters: {'availabilityId': availabilityId},
+            ),
+      ]);
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        return <CourseMaterialSectionModel>[];
+      }
+
+      rethrow;
+    }
+
+    return _materialSectionsFromResponse(
+      res.data,
+      availabilityId: availabilityId,
+    );
+  }
+
+  Future<CourseMaterialSectionModel> createMaterialSection({
+    required int availabilityId,
+    required String title,
+    String? description,
+  }) async {
+    final body = {
+      'title': title.trim(),
+      'description': description?.trim(),
+    }..removeWhere((_, value) => value == null || value.toString().isEmpty);
+
+    final res = await _tryRequests([
+      () => dio.post(
+            '/api/material/availability/$availabilityId/sections',
+            data: body,
+          ),
+      () => dio.post(
+            '/api/materials/availability/$availabilityId/sections',
+            data: body,
+          ),
+      () => dio.post(
+            '/api/course-materials/availability/$availabilityId/sections',
+            data: body,
+          ),
+    ]);
+
+    return CourseMaterialSectionModel.fromJson(_asMap(res.data));
+  }
+
+  Future<CourseMaterialSectionModel> updateMaterialSection({
+    required int sectionId,
+    required String title,
+    String? description,
+  }) async {
+    final body = {
+      'title': title.trim(),
+      'description': description?.trim(),
+    }..removeWhere((_, value) => value == null || value.toString().isEmpty);
+
+    final res = await _tryRequests([
+      () => dio.put('/api/material/sections/$sectionId', data: body),
+      () => dio.put('/api/materials/sections/$sectionId', data: body),
+      () => dio.put('/api/course-materials/sections/$sectionId', data: body),
+    ]);
+
+    return CourseMaterialSectionModel.fromJson(_asMap(res.data));
+  }
+
+  Future<void> deleteMaterialSection(int sectionId) async {
+    await _tryRequests([
+      () => dio.delete('/api/material/sections/$sectionId'),
+      () => dio.delete('/api/materials/sections/$sectionId'),
+      () => dio.delete('/api/course-materials/sections/$sectionId'),
+    ]);
+  }
+
+  Future<CourseMaterialItemModel> createMaterialItem({
+    required int availabilityId,
+    required int sectionId,
+    required String title,
+    String? description,
+    String? linkUrl,
+    String? filePath,
+  }) async {
+    final hasFile = filePath != null && filePath.trim().isNotEmpty;
+    Future<FormData> data() async => FormData.fromMap({
+          'availabilityId': availabilityId,
+          'sectionId': sectionId,
+          'title': title.trim(),
+          if (description != null && description.trim().isNotEmpty)
+            'description': description.trim(),
+          if (linkUrl != null && linkUrl.trim().isNotEmpty)
+            'fileUrl': linkUrl.trim(),
+          if (linkUrl != null && linkUrl.trim().isNotEmpty)
+            'linkUrl': linkUrl.trim(),
+          if (hasFile) 'file': await MultipartFile.fromFile(filePath.trim()),
+        });
+
+    final res = await _tryRequests([
+      () async => dio.post(
+            '/api/material/sections/$sectionId/items',
+            data: await data(),
+            options: Options(contentType: 'multipart/form-data'),
+          ),
+      () async => dio.post(
+            '/api/materials/sections/$sectionId/items',
+            data: await data(),
+            options: Options(contentType: 'multipart/form-data'),
+          ),
+      () async => dio.post(
+            '/api/course-materials/sections/$sectionId/items',
+            data: await data(),
+            options: Options(contentType: 'multipart/form-data'),
+          ),
+      () async => dio.post(
+            '/api/material/availability/$availabilityId',
+            data: await data(),
+            options: Options(contentType: 'multipart/form-data'),
+          ),
+    ]);
+
+    return CourseMaterialItemModel.fromJson(_asMap(res.data));
+  }
+
+  Future<CourseMaterialItemModel> updateMaterialItem({
+    required int materialId,
+    required String title,
+    String? description,
+    String? linkUrl,
+    String? filePath,
+    int? sectionId,
+  }) async {
+    final hasFile = filePath != null && filePath.trim().isNotEmpty;
+    Future<FormData> data() async => FormData.fromMap({
+          'title': title.trim(),
+          if (sectionId != null) 'sectionId': sectionId,
+          if (description != null && description.trim().isNotEmpty)
+            'description': description.trim(),
+          if (linkUrl != null && linkUrl.trim().isNotEmpty)
+            'fileUrl': linkUrl.trim(),
+          if (linkUrl != null && linkUrl.trim().isNotEmpty)
+            'linkUrl': linkUrl.trim(),
+          if (hasFile) 'file': await MultipartFile.fromFile(filePath.trim()),
+        });
+
+    final res = await _tryRequests([
+      () async => dio.put(
+            '/api/material/items/$materialId',
+            data: await data(),
+            options: Options(contentType: 'multipart/form-data'),
+          ),
+      () async => dio.put(
+            '/api/materials/items/$materialId',
+            data: await data(),
+            options: Options(contentType: 'multipart/form-data'),
+          ),
+      () async => dio.put(
+            '/api/course-materials/items/$materialId',
+            data: await data(),
+            options: Options(contentType: 'multipart/form-data'),
+          ),
+      () async => dio.put(
+            '/api/material/$materialId',
+            data: await data(),
+            options: Options(contentType: 'multipart/form-data'),
+          ),
+    ]);
+
+    return CourseMaterialItemModel.fromJson(_asMap(res.data));
+  }
+
+  Future<void> deleteMaterialItem(int materialId) async {
+    await _tryRequests([
+      () => dio.delete('/api/material/items/$materialId'),
+      () => dio.delete('/api/materials/items/$materialId'),
+      () => dio.delete('/api/course-materials/items/$materialId'),
+      () => dio.delete('/api/material/$materialId'),
+    ]);
   }
 
   Future<LessonDetailModel> setMeetingLink({
@@ -622,7 +823,7 @@ class ApiService {
         data: {
           'deviceId': deviceId,
           'platform': 'android',
-          'appVersion': '1.0.0',
+          'appVersion': appVersion,
         },
       );
 
@@ -639,7 +840,7 @@ class ApiService {
         '/api/admin/app/download',
         data: {
           'platform': 'android',
-          'appVersion': '1.0.0',
+          'appVersion': appVersion,
         },
       );
     } catch (_) {
@@ -1092,6 +1293,47 @@ class ApiService {
     return response.data as Map<String, dynamic>;
   }
 
+  List<CourseMaterialSectionModel> _materialSectionsFromResponse(
+    dynamic data, {
+    required int availabilityId,
+  }) {
+    final map = _asMap(data);
+    final rawSections =
+        map['sections'] ?? map['Sections'] ?? map['data'] ?? map['items'];
+
+    if (rawSections is List) {
+      final rows = rawSections.map((item) => _asMap(item)).toList();
+      final sectionLike = rows.any((row) {
+        return row.containsKey('items') ||
+            row.containsKey('materials') ||
+            row.containsKey('sectionId') ||
+            row.containsKey('materialSectionId') ||
+            row.containsKey('courseMaterialSectionId');
+      });
+
+      if (sectionLike) {
+        return rows
+            .map((row) => CourseMaterialSectionModel.fromJson(row))
+            .toList()
+          ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+      }
+    }
+
+    final flatItems = _list(data)
+        .map((item) => CourseMaterialItemModel.fromJson(item))
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    if (flatItems.isEmpty) return <CourseMaterialSectionModel>[];
+
+    return [
+      CourseMaterialSectionModel.flat(
+        availabilityId: availabilityId,
+        items: flatItems,
+      ),
+    ];
+  }
+
   Future<Response<dynamic>> _tryRequests(
     List<Future<Response<dynamic>> Function()> requests,
   ) async {
@@ -1189,16 +1431,20 @@ String apiErrorMessage(Object error) {
     final data = error.response?.data;
 
     if (data is Map) {
+      final validationMessage = _validationErrorMessage(data['errors']);
+      if (validationMessage != null) {
+        final message = data['message']?.toString();
+        return message == null || message.trim().isEmpty
+            ? validationMessage
+            : '$message $validationMessage';
+      }
+
       if (data['message'] != null) {
         return data['message'].toString();
       }
 
       if (data['title'] != null) {
         return data['title'].toString();
-      }
-
-      if (data['errors'] != null) {
-        return data['errors'].toString();
       }
 
       return data.toString();
@@ -1218,6 +1464,34 @@ String apiErrorMessage(Object error) {
   }
 
   return error.toString();
+}
+
+String? _validationErrorMessage(dynamic errors) {
+  if (errors == null) return null;
+
+  if (errors is Map) {
+    final messages = <String>[];
+
+    for (final entry in errors.entries) {
+      final key = entry.key.toString();
+      final value = entry.value;
+      final detail = value is List ? value.join(', ') : value.toString();
+
+      if (detail.trim().isNotEmpty) {
+        messages.add('$key: $detail');
+      }
+    }
+
+    return messages.isEmpty ? null : messages.join(' ');
+  }
+
+  if (errors is List) {
+    final text = errors.map((item) => item.toString()).join(' ');
+    return text.trim().isEmpty ? null : text;
+  }
+
+  final text = errors.toString().trim();
+  return text.isEmpty ? null : text;
 }
 
 String _dateOnlyIso(DateTime value) {

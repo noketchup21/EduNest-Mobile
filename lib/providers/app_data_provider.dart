@@ -32,6 +32,10 @@ class AppDataProvider extends ChangeNotifier {
   DateTime? _homeworkDashboardLoadedAt;
   Future<void>? _homeworkDashboardLoad;
   final Map<int, Future<void>> _homeworkCourseLoads = {};
+  final Map<int, List<CourseMaterialSectionModel>> courseMaterials = {};
+  final Map<int, DateTime> _courseMaterialsLoadedAt = {};
+  final Map<int, Future<void>> _courseMaterialLoads = {};
+  static const Duration _courseMaterialsCacheDuration = Duration(seconds: 45);
 
   AdminDashboardModel? adminDashboard;
   List<TutorVerificationModel> pendingTutors = [];
@@ -234,6 +238,144 @@ class AppDataProvider extends ChangeNotifier {
       if (_homeworkCourseLoads[availabilityId] == load) {
         _homeworkCourseLoads.remove(availabilityId);
       }
+    });
+  }
+
+  Future<void> loadCourseMaterials(
+    int availabilityId, {
+    bool force = false,
+  }) {
+    if (!force && _courseMaterialLoads[availabilityId] != null) {
+      return _courseMaterialLoads[availabilityId]!;
+    }
+
+    if (!force &&
+        courseMaterials.containsKey(availabilityId) &&
+        _isFresh(
+          _courseMaterialsLoadedAt[availabilityId],
+          duration: _courseMaterialsCacheDuration,
+        )) {
+      return Future.value();
+    }
+
+    final load = _guard(() async {
+      courseMaterials[availabilityId] =
+          await api.getCourseMaterials(availabilityId);
+      _courseMaterialsLoadedAt[availabilityId] = DateTime.now();
+    });
+
+    _courseMaterialLoads[availabilityId] = load;
+
+    return load.whenComplete(() {
+      if (_courseMaterialLoads[availabilityId] == load) {
+        _courseMaterialLoads.remove(availabilityId);
+      }
+    });
+  }
+
+  Future<void> createMaterialSection({
+    required int availabilityId,
+    required String title,
+    String? description,
+  }) async {
+    await _guard(() async {
+      await api.createMaterialSection(
+        availabilityId: availabilityId,
+        title: title,
+        description: description,
+      );
+      courseMaterials[availabilityId] =
+          await api.getCourseMaterials(availabilityId);
+      _courseMaterialsLoadedAt[availabilityId] = DateTime.now();
+    });
+  }
+
+  Future<void> updateMaterialSection({
+    required int availabilityId,
+    required int sectionId,
+    required String title,
+    String? description,
+  }) async {
+    await _guard(() async {
+      await api.updateMaterialSection(
+        sectionId: sectionId,
+        title: title,
+        description: description,
+      );
+      courseMaterials[availabilityId] =
+          await api.getCourseMaterials(availabilityId);
+      _courseMaterialsLoadedAt[availabilityId] = DateTime.now();
+    });
+  }
+
+  Future<void> deleteMaterialSection({
+    required int availabilityId,
+    required int sectionId,
+  }) async {
+    await _guard(() async {
+      await api.deleteMaterialSection(sectionId);
+      courseMaterials[availabilityId] =
+          await api.getCourseMaterials(availabilityId);
+      _courseMaterialsLoadedAt[availabilityId] = DateTime.now();
+    });
+  }
+
+  Future<void> createMaterialItem({
+    required int availabilityId,
+    required int sectionId,
+    required String title,
+    String? description,
+    String? linkUrl,
+    String? filePath,
+  }) async {
+    await _guard(() async {
+      await api.createMaterialItem(
+        availabilityId: availabilityId,
+        sectionId: sectionId,
+        title: title,
+        description: description,
+        linkUrl: linkUrl,
+        filePath: filePath,
+      );
+      courseMaterials[availabilityId] =
+          await api.getCourseMaterials(availabilityId);
+      _courseMaterialsLoadedAt[availabilityId] = DateTime.now();
+    });
+  }
+
+  Future<void> updateMaterialItem({
+    required int availabilityId,
+    required int materialId,
+    required String title,
+    String? description,
+    String? linkUrl,
+    String? filePath,
+    int? sectionId,
+  }) async {
+    await _guard(() async {
+      await api.updateMaterialItem(
+        materialId: materialId,
+        title: title,
+        description: description,
+        linkUrl: linkUrl,
+        filePath: filePath,
+        sectionId: sectionId,
+      );
+      courseMaterials[availabilityId] =
+          await api.getCourseMaterials(availabilityId);
+      _courseMaterialsLoadedAt[availabilityId] = DateTime.now();
+    });
+  }
+
+  Future<void> deleteMaterialItem({
+    required int availabilityId,
+    required int materialId,
+  }) async {
+    await _guard(() async {
+      await api.deleteMaterialItem(materialId);
+      courseMaterials[availabilityId] =
+          await api.getCourseMaterials(availabilityId);
+      _courseMaterialsLoadedAt[availabilityId] = DateTime.now();
     });
   }
 
@@ -460,7 +602,7 @@ class AppDataProvider extends ChangeNotifier {
 
   Future<void> createAvailability({
     required int subjectId,
-    required String dayOfWeek,
+    required List<String> daysOfWeek,
     required String mode,
     String? offlineAreas,
     required String level,
@@ -473,7 +615,7 @@ class AppDataProvider extends ChangeNotifier {
     await _guard(() async {
       await api.createAvailability(
         subjectId: subjectId,
-        dayOfWeek: dayOfWeek,
+        daysOfWeek: daysOfWeek,
         mode: mode,
         offlineAreas: offlineAreas,
         level: level,
@@ -803,9 +945,12 @@ class AppDataProvider extends ChangeNotifier {
     _lessonHomeworksLoadedAt[lessonId] = DateTime.now();
   }
 
-  bool _isFresh(DateTime? loadedAt) {
+  bool _isFresh(
+    DateTime? loadedAt, {
+    Duration duration = _homeworkCacheDuration,
+  }) {
     if (loadedAt == null) return false;
-    return DateTime.now().difference(loadedAt) < _homeworkCacheDuration;
+    return DateTime.now().difference(loadedAt) < duration;
   }
 
   Future<void> setLessonMeetingLink({

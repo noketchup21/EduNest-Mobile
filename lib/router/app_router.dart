@@ -17,6 +17,7 @@ import '../screens/homework/homework_take_screen.dart';
 import '../screens/homework/tutor_homework_screen.dart';
 import '../screens/lesson/lesson_detail_screen.dart';
 import '../screens/lesson/lesson_screen.dart';
+import '../screens/materials/course_materials_screen.dart';
 import '../screens/payment/payment_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/wallet/wallet_screen.dart';
@@ -87,6 +88,12 @@ class AppRouter {
 
         if (loggedIn &&
             location.startsWith('/homework/') &&
+            ((!auth.isLearner && !auth.isTutor) || auth.isAdmin)) {
+          return '/home';
+        }
+
+        if (loggedIn &&
+            location == '/materials' &&
             ((!auth.isLearner && !auth.isTutor) || auth.isAdmin)) {
           return '/home';
         }
@@ -176,6 +183,10 @@ class AppRouter {
 
                 return const HomeworkScreen();
               },
+            ),
+            GoRoute(
+              path: '/materials',
+              builder: (_, __) => const CourseMaterialsScreen(),
             ),
             GoRoute(
               path: '/chat',
@@ -409,19 +420,13 @@ class MainShell extends StatelessWidget {
           Icons.event_note,
           'Booking',
         ),
-      if (!auth.isAdmin)
-        const _NavItem(
-          '/lessons',
-          Icons.school_outlined,
-          Icons.school,
-          'Lesson',
-        ),
       if ((auth.isLearner || auth.isTutor) && !auth.isAdmin)
         const _NavItem(
-          '/homework',
-          Icons.assignment_outlined,
-          Icons.assignment,
-          'Homework',
+          '/course-tools',
+          Icons.auto_stories_outlined,
+          Icons.auto_stories,
+          'Course',
+          opensCourseTools: true,
         ),
       const _NavItem(
         '/chat',
@@ -445,24 +450,342 @@ class MainShell extends StatelessWidget {
     ];
 
     final current = items.indexWhere(
-      (e) => location == e.path || location.startsWith('${e.path}/'),
+      (e) {
+        if (e.opensCourseTools) return _isCourseLocation(location);
+        return location == e.path || location.startsWith('${e.path}/');
+      },
     );
     final index = current < 0 ? 0 : current;
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (i) {
-          context.go(items[i].path);
-        },
-        destinations: items.map((e) {
-          return NavigationDestination(
-            icon: Icon(e.icon),
-            selectedIcon: Icon(e.selectedIcon),
-            label: e.label,
-          );
-        }).toList(),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_isCourseLocation(location))
+            _CourseQuickSwitchBar(location: location),
+          NavigationBar(
+            height: 66,
+            labelTextStyle: WidgetStateProperty.all(
+              const TextStyle(
+                fontSize: 10,
+                height: 1,
+                letterSpacing: 0,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            selectedIndex: index,
+            onDestinationSelected: (i) {
+              if (items[i].opensCourseTools) {
+                _showCourseTools(context, location);
+                return;
+              }
+
+              context.go(items[i].path);
+            },
+            destinations: items.map((e) {
+              return NavigationDestination(
+                icon: Icon(e.icon),
+                selectedIcon: Icon(e.selectedIcon),
+                label: e.label,
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+bool _isCourseLocation(String location) {
+  return location == '/lessons' ||
+      location.startsWith('/lessons/') ||
+      location == '/homework' ||
+      location.startsWith('/homework/') ||
+      location == '/materials' ||
+      location.startsWith('/materials/');
+}
+
+class _CourseQuickSwitchBar extends StatelessWidget {
+  final String location;
+
+  const _CourseQuickSwitchBar({required this.location});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Material(
+      color: colors.surface,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: colors.outlineVariant.withValues(alpha: 0.55),
+              width: 0.5,
+            ),
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+        child: Row(
+          children: [
+            _QuickCourseButton(
+              icon: Icons.school_outlined,
+              label: 'Lesson',
+              selected:
+                  location == '/lessons' || location.startsWith('/lessons/'),
+              onTap: () => context.go('/lessons'),
+            ),
+            const SizedBox(width: 8),
+            _QuickCourseButton(
+              icon: Icons.assignment_outlined,
+              label: 'Homework',
+              selected:
+                  location == '/homework' || location.startsWith('/homework/'),
+              onTap: () => context.go('/homework'),
+            ),
+            const SizedBox(width: 8),
+            _QuickCourseButton(
+              icon: Icons.folder_copy_outlined,
+              label: 'Materials',
+              selected: location == '/materials' ||
+                  location.startsWith('/materials/'),
+              onTap: () => context.go('/materials'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickCourseButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _QuickCourseButton({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Expanded(
+      child: InkWell(
+        onTap: selected ? null : onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: selected
+                ? colors.primaryContainer.withValues(alpha: 0.78)
+                : colors.surfaceContainerHighest.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected
+                  ? colors.primary.withValues(alpha: 0.28)
+                  : colors.outlineVariant.withValues(alpha: 0.45),
+              width: 0.5,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 17,
+                color: selected
+                    ? colors.onPrimaryContainer
+                    : colors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: selected
+                        ? colors.onPrimaryContainer
+                        : colors.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _showCourseTools(BuildContext shellContext, String location) {
+  final theme = Theme.of(shellContext);
+  final colors = theme.colorScheme;
+
+  return showGeneralDialog<void>(
+    context: shellContext,
+    barrierDismissible: true,
+    barrierLabel: 'Course tools',
+    barrierColor: Colors.transparent,
+    transitionDuration: const Duration(milliseconds: 160),
+    pageBuilder: (dialogContext, animation, secondaryAnimation) {
+      return SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => Navigator.of(dialogContext).pop(),
+              ),
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 74,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: colors.outlineVariant.withValues(alpha: 0.6),
+                      width: 0.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      _CourseToolAction(
+                        icon: Icons.school_outlined,
+                        selectedIcon: Icons.school,
+                        label: 'Lesson',
+                        selected: location == '/lessons' ||
+                            location.startsWith('/lessons/'),
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          shellContext.go('/lessons');
+                        },
+                      ),
+                      _CourseToolAction(
+                        icon: Icons.assignment_outlined,
+                        selectedIcon: Icons.assignment,
+                        label: 'Homework',
+                        selected: location == '/homework' ||
+                            location.startsWith('/homework/'),
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          shellContext.go('/homework');
+                        },
+                      ),
+                      _CourseToolAction(
+                        icon: Icons.folder_copy_outlined,
+                        selectedIcon: Icons.folder_copy,
+                        label: 'Materials',
+                        selected: location == '/materials' ||
+                            location.startsWith('/materials/'),
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          shellContext.go('/materials');
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.12),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+        ),
+        child: FadeTransition(opacity: animation, child: child),
+      );
+    },
+  );
+}
+
+class _CourseToolAction extends StatelessWidget {
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CourseToolAction({
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 70,
+          decoration: BoxDecoration(
+            color: selected
+                ? colors.primaryContainer.withValues(alpha: 0.75)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                selected ? selectedIcon : icon,
+                color: selected ? colors.onPrimaryContainer : colors.primary,
+              ),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: selected
+                      ? colors.onPrimaryContainer
+                      : colors.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -473,11 +796,13 @@ class _NavItem {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+  final bool opensCourseTools;
 
   const _NavItem(
     this.path,
     this.icon,
     this.selectedIcon,
-    this.label,
-  );
+    this.label, {
+    this.opensCourseTools = false,
+  });
 }

@@ -73,9 +73,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: data.loading
                 ? null
                 : () async {
-              setState(() => initialized = false);
-              await context.read<AppDataProvider>().loadProfile();
-            },
+                    setState(() => initialized = false);
+                    await context.read<AppDataProvider>().loadProfile();
+                  },
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
@@ -179,10 +179,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!profileFormKey.currentState!.validate()) return;
     try {
       await context.read<AppDataProvider>().updateProfile(
-        name: name.text.trim(),
-        phone: phone.text.trim(),
-        tutorBio: tutorBio.text.trim(),
-      );
+            name: name.text.trim(),
+            phone: phone.text.trim(),
+            tutorBio: tutorBio.text.trim(),
+          );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully')),
@@ -194,12 +194,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!bankFormKey.currentState!.validate()) return;
     try {
       await context.read<AppDataProvider>().updateTutorBankAccount(
-        bankName: bankName.text.trim(),
-        bankBin: bankBin.text.trim(),
-        accountNumber: accountNumber.text.trim(),
-        accountHolderName: accountHolderName.text.trim(),
-        branchName: branchName.text.trim(),
-      );
+            bankName: bankName.text.trim(),
+            bankBin: bankBin.text.trim(),
+            accountNumber: accountNumber.text.trim(),
+            accountHolderName: accountHolderName.text.trim(),
+            branchName: branchName.text.trim(),
+          );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Bank account updated successfully')),
@@ -208,6 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickAndUploadAvatar() async {
+    final data = context.read<AppDataProvider>();
     try {
       final picked = await ImagePicker().pickImage(
         source: ImageSource.gallery,
@@ -215,7 +216,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         maxWidth: 900,
       );
       if (picked == null) return;
-      await context.read<AppDataProvider>().uploadAvatar(picked.path);
+      await data.uploadAvatar(picked.path);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Avatar updated successfully')),
@@ -229,7 +230,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _deleteAvatar() async {
-    final profile = context.read<AppDataProvider>().profile;
+    final data = context.read<AppDataProvider>();
+    final profile = data.profile;
     final avatarUrl = profile?.avatarUrl?.trim() ?? '';
     if (avatarUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -260,7 +262,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (confirmed != true || !mounted) return;
     try {
-      await context.read<AppDataProvider>().deleteAvatar();
+      await data.deleteAvatar();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Avatar deleted')),
@@ -325,20 +327,19 @@ class _HeaderCard extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 44,
                   backgroundColor: theme.colorScheme.primaryContainer,
-                  backgroundImage:
-                  hasAvatar ? NetworkImage(avatarUrl) : null,
+                  backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
                   child: hasAvatar
                       ? null
                       : Text(
-                    displayName.isEmpty
-                        ? '?'
-                        : displayName[0].toUpperCase(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 32,
-                      color: theme.colorScheme.onPrimaryContainer,
-                    ),
-                  ),
+                          displayName.isEmpty
+                              ? '?'
+                              : displayName[0].toUpperCase(),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 32,
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
+                        ),
                 ),
               ),
               Positioned(
@@ -378,18 +379,18 @@ class _HeaderCard extends StatelessWidget {
                     backgroundColor: theme.colorScheme.primary,
                     child: loading
                         ? SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: theme.colorScheme.onPrimary,
-                      ),
-                    )
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                          )
                         : Icon(
-                      Icons.camera_alt_outlined,
-                      size: 17,
-                      color: theme.colorScheme.onPrimary,
-                    ),
+                            Icons.camera_alt_outlined,
+                            size: 17,
+                            color: theme.colorScheme.onPrimary,
+                          ),
                   ),
                 ),
               ),
@@ -519,10 +520,10 @@ class _ProfileForm extends StatelessWidget {
     final theme = Theme.of(context);
 
     InputDecoration inputStyle(
-        String label,
-        IconData icon, {
-          bool enabled = true,
-        }) {
+      String label,
+      IconData icon, {
+      bool enabled = true,
+    }) {
       return InputDecoration(
         labelText: label,
         prefixIcon: Icon(
@@ -584,8 +585,7 @@ class _ProfileForm extends StatelessWidget {
             const SizedBox(height: 16),
             TextFormField(
               controller: phone,
-              decoration:
-              inputStyle('Phone Number', Icons.phone_outlined),
+              decoration: inputStyle('Phone Number', Icons.phone_outlined),
               keyboardType: TextInputType.phone,
             ),
             if (isTutor) ...[
@@ -655,10 +655,10 @@ class _BankForm extends StatelessWidget {
     final theme = Theme.of(context);
 
     InputDecoration inputStyle(
-        String label,
-        IconData icon, {
-          String? hint,
-        }) {
+      String label,
+      IconData icon, {
+      String? hint,
+    }) {
       return InputDecoration(
         labelText: label,
         hintText: hint,
@@ -667,8 +667,7 @@ class _BankForm extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
         ),
         filled: true,
-        fillColor:
-        theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
+        fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
       );
     }
 
