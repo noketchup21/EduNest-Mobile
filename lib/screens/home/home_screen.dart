@@ -66,6 +66,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     size: 28, color: theme.colorScheme.primary),
               ),
             ),
+          if (!isTutor)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: IconButton(
+                onPressed: () => context.push('/favorites'),
+                icon: const Icon(Icons.favorite_border_rounded),
+                tooltip: 'Favorite tutors',
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
@@ -400,10 +409,12 @@ class _TutorGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final data = context.watch<AppDataProvider>();
     final theme = Theme.of(context);
     final first = courses.first;
     final tutorName =
         first.tutorName.isEmpty ? 'Tutor #${first.tutorId}' : first.tutorName;
+    final isFavorite = data.isFavoriteTutor(first.tutorId);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -453,13 +464,24 @@ class _TutorGroupCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                tooltip: 'View profile',
-                onPressed: () => context.push('/tutors/${first.tutorId}'),
-                icon: Icon(Icons.person_search_rounded,
-                    color: theme.colorScheme.onSurfaceVariant, size: 22),
+                tooltip: isFavorite ? 'Unsave tutor' : 'Save tutor',
+                onPressed: data.loading
+                    ? null
+                    : () => _toggleFavorite(context, first, tutorName),
+                icon: Icon(
+                  isFavorite
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: isFavorite
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.onSurfaceVariant,
+                  size: 22,
+                ),
                 style: IconButton.styleFrom(
-                  backgroundColor: theme.colorScheme.surfaceContainerHighest
-                      .withOpacity(0.6),
+                  backgroundColor: isFavorite
+                      ? theme.colorScheme.errorContainer.withOpacity(0.55)
+                      : theme.colorScheme.surfaceContainerHighest
+                          .withOpacity(0.6),
                   padding: const EdgeInsets.all(8),
                 ),
               ),
@@ -516,6 +538,31 @@ class _TutorGroupCard extends StatelessWidget {
       if (context.mounted) context.push('/chat/${conversation.conversationId}');
     } catch (_) {}
   }
+
+  Future<void> _toggleFavorite(
+    BuildContext context,
+    AvailabilityModel availability,
+    String tutorName,
+  ) async {
+    try {
+      await context.read<AppDataProvider>().toggleFavoriteTutor(
+            tutorId: availability.tutorId,
+            name: tutorName,
+            userId: availability.tutorUserId,
+            avatarUrl: availability.tutorAvatarUrl,
+          );
+
+      if (!context.mounted) return;
+
+      final saved =
+          context.read<AppDataProvider>().isFavoriteTutor(availability.tutorId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(saved ? 'Tutor saved' : 'Tutor removed from favorites'),
+        ),
+      );
+    } catch (_) {}
+  }
 }
 
 class _LearnerCourseTile extends StatelessWidget {
@@ -559,7 +606,7 @@ class _LearnerCourseTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    '${availability.mode}',
+                    availability.mode,
                     style: TextStyle(
                         fontSize: 11,
                         color: theme.colorScheme.secondary,
@@ -672,8 +719,9 @@ class _LearnerCourseTile extends StatelessWidget {
 
 String _subjectText(BuildContext context, AvailabilityModel availability) {
   final data = context.read<AppDataProvider>();
-  if ((availability.subjectName ?? '').isNotEmpty)
+  if ((availability.subjectName ?? '').isNotEmpty) {
     return availability.subjectName!;
+  }
   return data.availabilitySubjectName(availability);
 }
 

@@ -202,6 +202,91 @@ class ApiService {
     return TutorPublicModel.fromJson(_asMap(res.data));
   }
 
+  Future<List<FavoriteTutorModel>> getFavoriteTutors() async {
+    final res = await _tryRequests([
+      () => dio.get('/api/favorite-tutor/me'),
+      () => dio.get('/api/favorite/tutor/me'),
+      () => dio.get('/api/favorite-tutors/me'),
+      () => dio.get('/api/tutor/favorite'),
+    ]);
+
+    return _list(res.data).map((e) => FavoriteTutorModel.fromJson(e)).toList();
+  }
+
+  Future<FavoriteTutorModel> saveFavoriteTutor(int tutorId) async {
+    final res = await _tryRequests([
+      () => dio.post('/api/favorite-tutor/$tutorId'),
+      () => dio.post(
+            '/api/favorite-tutor',
+            data: {
+              'tutorId': tutorId,
+            },
+          ),
+      () => dio.post('/api/favorite/tutor/$tutorId'),
+      () => dio.post('/api/tutor/$tutorId/favorite'),
+    ]);
+
+    return FavoriteTutorModel.fromJson(_asMap(res.data));
+  }
+
+  Future<void> unsaveFavoriteTutor(int tutorId) async {
+    await _tryRequests([
+      () => dio.delete('/api/favorite-tutor/$tutorId'),
+      () => dio.delete(
+            '/api/favorite-tutor',
+            data: {
+              'tutorId': tutorId,
+            },
+          ),
+      () => dio.delete('/api/favorite/tutor/$tutorId'),
+      () => dio.delete('/api/tutor/$tutorId/favorite'),
+    ]);
+  }
+
+  Future<List<TutorReviewModel>> getTutorReviews(int tutorId) async {
+    final res = await _tryRequests([
+      () => dio.get('/api/review/tutor/$tutorId'),
+      () => dio.get('/api/tutor/$tutorId/review'),
+      () => dio.get('/api/tutor/$tutorId/reviews'),
+      () => dio.get('/api/tutor-review/tutor/$tutorId'),
+    ]);
+
+    return _list(res.data).map((e) => TutorReviewModel.fromJson(e)).toList();
+  }
+
+  Future<List<TutorReviewModel>> getMyTutorReviews() async {
+    final res = await _tryRequests([
+      () => dio.get('/api/review/me'),
+      () => dio.get('/api/tutor-review/me'),
+      () => dio.get('/api/reviews/me'),
+    ]);
+
+    return _list(res.data).map((e) => TutorReviewModel.fromJson(e)).toList();
+  }
+
+  Future<TutorReviewModel> createTutorReview({
+    required int bookingId,
+    required int tutorId,
+    required int rating,
+    required String comment,
+  }) async {
+    final body = <String, dynamic>{
+      'bookingId': bookingId,
+      'tutorId': tutorId,
+      'rating': rating,
+      'comment': comment.trim(),
+    };
+
+    final res = await _tryRequests([
+      () => dio.post('/api/review', data: body),
+      () => dio.post('/api/tutor-review', data: body),
+      () => dio.post('/api/booking/$bookingId/review', data: body),
+      () => dio.post('/api/tutor/$tutorId/review', data: body),
+    ]);
+
+    return TutorReviewModel.fromJson(_asMap(res.data));
+  }
+
   Future<List<AvailabilityModel>> getMyAvailabilities() async {
     final res = await dio.get('/api/availability/me');
 
@@ -937,6 +1022,35 @@ class ApiService {
   Future<Map<String, dynamic>> getUserById(int userId) async {
     final response = await dio.get('/api/User/$userId');
     return response.data as Map<String, dynamic>;
+  }
+
+  Future<Response<dynamic>> _tryRequests(
+    List<Future<Response<dynamic>> Function()> requests,
+  ) async {
+    DioException? fallbackError;
+
+    for (final request in requests) {
+      try {
+        return await request();
+      } on DioException catch (error) {
+        if (!_canTryFallback(error)) {
+          rethrow;
+        }
+
+        fallbackError = error;
+      }
+    }
+
+    if (fallbackError != null) {
+      throw fallbackError;
+    }
+
+    throw Exception('No API request was configured.');
+  }
+
+  bool _canTryFallback(DioException error) {
+    final statusCode = error.response?.statusCode;
+    return statusCode == 404 || statusCode == 405;
   }
 
   static Map<String, dynamic> _asMap(dynamic data) {

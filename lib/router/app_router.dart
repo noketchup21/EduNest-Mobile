@@ -19,6 +19,7 @@ import '../screens/profile/profile_screen.dart';
 import '../screens/wallet/wallet_screen.dart';
 import '../screens/tutor/tutor_verification_screen.dart';
 import '../screens/tutor/tutor_detail_screen.dart';
+import '../screens/tutor/favorite_tutors_screen.dart';
 import '../screens/admin/admin_tutor_detail_screen.dart';
 import '../screens/admin/admin_payout_detail_screen.dart';
 import '../screens/admin/report_tutor_screen.dart';
@@ -29,7 +30,6 @@ import '../screens/report/tutor_reports_screen.dart';
 import '../screens/admin/admin_reports_screen.dart';
 import '../screens/support/create_support_report_screen.dart';
 import '../screens/support/my_support_reports_screen.dart';
-import '../screens/admin/admin_support_reports_screen.dart';
 
 class AppRouter {
   static GoRouter build(AuthProvider auth) {
@@ -219,6 +219,10 @@ class AppRouter {
 
             return TutorDetailScreen(tutorId: id);
           },
+        ),
+        GoRoute(
+          path: '/favorites',
+          builder: (_, __) => const FavoriteTutorsScreen(),
         ),
         GoRoute(
           path: '/admin/tutor/:id',

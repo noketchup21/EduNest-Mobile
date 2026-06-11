@@ -8,6 +8,7 @@ import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/tutor_review_sheet.dart';
 import '../../widgets/user_avatar.dart';
 
 class LessonScreen extends StatefulWidget {
@@ -89,17 +90,14 @@ class _LessonScreenState extends State<LessonScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
           children: [
             ErrorBanner(data.error),
-
             if (auth.isTutor && overdueSessions.isNotEmpty) ...[
               _TutorReminderBox(sessions: overdueSessions),
               const SizedBox(height: 10),
             ],
-
             if (nextLesson != null) ...[
               _NextLessonBox(info: nextLesson, isTutor: auth.isTutor),
               const SizedBox(height: 10),
             ],
-
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
@@ -111,13 +109,11 @@ class _LessonScreenState extends State<LessonScreen> {
                 ),
               ),
             ),
-
             if (data.loading && lessons.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 48),
                 child: Center(child: CircularProgressIndicator()),
               ),
-
             if (!data.loading && lessons.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 48),
@@ -135,7 +131,6 @@ class _LessonScreenState extends State<LessonScreen> {
                   ],
                 ),
               ),
-
             if (auth.isTutor)
               ...tutorGrouped.values.map((availabilityLessons) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
@@ -144,8 +139,8 @@ class _LessonScreenState extends State<LessonScreen> {
             else
               ...learnerGrouped.values.map((availabilityGroups) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
-                    child:
-                        _LearnerTutorCard(availabilityGroups: availabilityGroups),
+                    child: _LearnerTutorCard(
+                        availabilityGroups: availabilityGroups),
                   )),
           ],
         ),
@@ -166,8 +161,7 @@ class _LessonScreenState extends State<LessonScreen> {
           .values
           .map((s) => _TutorSessionInfo.fromLessons(s))
           .where((s) =>
-              s.status.toLowerCase() != 'completed' &&
-              s.endTime.isAfter(now))
+              s.status.toLowerCase() != 'completed' && s.endTime.isAfter(now))
           .toList()
         ..sort((a, b) => a.startTime.compareTo(b.startTime));
       if (sessions.isEmpty) return null;
@@ -187,22 +181,19 @@ class _LessonScreenState extends State<LessonScreen> {
     return _NextLessonInfo(lesson: upcoming.first, studentCount: 1);
   }
 
-  List<_TutorSessionInfo> _findOverdueTutorSessions(
-      List<LessonModel> lessons) {
+  List<_TutorSessionInfo> _findOverdueTutorSessions(List<LessonModel> lessons) {
     final now = DateTime.now();
     return _groupLessonsBySession(lessons)
         .values
         .map((s) => _TutorSessionInfo.fromLessons(s))
         .where((s) =>
-            s.status.toLowerCase() != 'completed' &&
-            !s.endTime.isAfter(now))
+            s.status.toLowerCase() != 'completed' && !s.endTime.isAfter(now))
         .toList()
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
   }
 
   Map<int, Map<int, List<LessonModel>>>
-      _groupLearnerLessonsByTutorThenAvailability(
-          List<LessonModel> lessons) {
+      _groupLearnerLessonsByTutorThenAvailability(List<LessonModel> lessons) {
     final grouped = <int, Map<int, List<LessonModel>>>{};
     for (final l in lessons) {
       grouped.putIfAbsent(l.tutorId, () => {});
@@ -298,8 +289,7 @@ class _TutorReminderBox extends StatelessWidget {
             decoration: const BoxDecoration(
               color: _red50,
               borderRadius: BorderRadius.vertical(top: Radius.circular(15.5)),
-              border: Border(
-                  bottom: BorderSide(color: _red200, width: 0.5)),
+              border: Border(bottom: BorderSide(color: _red200, width: 0.5)),
             ),
             child: Row(
               children: [
@@ -307,8 +297,8 @@ class _TutorReminderBox extends StatelessWidget {
                     size: 20, color: _red800),
                 const SizedBox(width: 8),
                 Text('Attendance reminder',
-                    style: theme.textTheme.bodyLarge
-                        ?.copyWith(fontWeight: FontWeight.w600, color: _red800)),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600, color: _red800)),
               ],
             ),
           ),
@@ -318,12 +308,14 @@ class _TutorReminderBox extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
             child: Text(
               'These lessons have ended but are not completed yet. Open the detail page, take attendance, then complete the lesson.',
-              style: theme.textTheme.bodyLarge
-                  ?.copyWith(color: colors.onSurface.withValues(alpha: 0.6), height: 1.6),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colors.onSurface.withValues(alpha: 0.6), height: 1.6),
             ),
           ),
 
-          Divider(height: 0.5, thickness: 0.5,
+          Divider(
+              height: 0.5,
+              thickness: 0.5,
               color: colors.outlineVariant.withValues(alpha: 0.4)),
 
           // Session rows
@@ -332,8 +324,8 @@ class _TutorReminderBox extends StatelessWidget {
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Row(
                     children: [
                       Container(
@@ -352,16 +344,16 @@ class _TutorReminderBox extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(_subjectName(lesson),
-                                style: theme.textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.w600),
+                                style: theme.textTheme.bodyLarge
+                                    ?.copyWith(fontWeight: FontWeight.w600),
                                 overflow: TextOverflow.ellipsis),
                             const SizedBox(height: 2),
                             Text(
                               '${_lessonTimeText(lesson)} · '
                               '${session.studentCount} student${session.studentCount == 1 ? '' : 's'} · ${session.status}',
                               style: theme.textTheme.bodyLarge?.copyWith(
-                                  color: colors.onSurface
-                                      .withValues(alpha: 0.55)),
+                                  color:
+                                      colors.onSurface.withValues(alpha: 0.55)),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -373,8 +365,7 @@ class _TutorReminderBox extends StatelessWidget {
                             context.push('/lessons/${lesson.lessonId}'),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size(60, 32),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
                           textStyle: const TextStyle(
                               fontSize: 14, fontWeight: FontWeight.w500),
                           shape: RoundedRectangleBorder(
@@ -385,12 +376,12 @@ class _TutorReminderBox extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (shown.indexOf(session) < shown.length - 1 || hiddenCount > 0)
+                if (shown.indexOf(session) < shown.length - 1 ||
+                    hiddenCount > 0)
                   Divider(
                       height: 0.5,
                       thickness: 0.5,
-                      color:
-                          colors.outlineVariant.withValues(alpha: 0.4)),
+                      color: colors.outlineVariant.withValues(alpha: 0.4)),
               ],
             );
           }),
@@ -400,8 +391,8 @@ class _TutorReminderBox extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
               child: Text(
                 '+$hiddenCount more session${hiddenCount == 1 ? '' : 's'} need attention.',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colors.onSurface.withValues(alpha: 0.5)),
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(color: colors.onSurface.withValues(alpha: 0.5)),
               ),
             )
           else
@@ -443,14 +434,11 @@ class _NextLessonBox extends StatelessWidget {
         children: [
           // Label header
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: const BoxDecoration(
               color: _green50,
-              borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(15.5)),
-              border: Border(
-                  bottom: BorderSide(color: _green200, width: 0.5)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15.5)),
+              border: Border(bottom: BorderSide(color: _green200, width: 0.5)),
             ),
             child: Row(
               children: [
@@ -574,8 +562,7 @@ class _LearnerTutorCard extends StatelessWidget {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           leading: UserAvatar(
             imageUrl: first.tutorAvatarUrl,
             name: first.tutorName,
@@ -583,8 +570,8 @@ class _LearnerTutorCard extends StatelessWidget {
           ),
           title: Text(
             first.tutorName,
-            style:
-                theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
           subtitle: Text(
             '${allLessons.length} lesson${allLessons.length == 1 ? '' : 's'} '
@@ -612,8 +599,12 @@ class _LearnerAvailabilityGroup extends StatelessWidget {
     final sorted = [...lessons]
       ..sort((a, b) => a.scheduleTime.compareTo(b.scheduleTime));
     final first = sorted.first;
+    final data = context.watch<AppDataProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final allCompleted =
+        sorted.every((lesson) => lesson.status.toLowerCase() == 'completed');
+    final reviewed = data.hasReviewedBooking(first.bookingId);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
@@ -637,12 +628,17 @@ class _LearnerAvailabilityGroup extends StatelessWidget {
             subtitle: Text(
               'Availability #${first.availabilityId} · '
               '${sorted.length} lesson${sorted.length == 1 ? '' : 's'}',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                  color: colors.onSurface.withValues(alpha: 0.5)),
+              style: theme.textTheme.bodyLarge
+                  ?.copyWith(color: colors.onSurface.withValues(alpha: 0.5)),
             ),
-            children: sorted
-                .map((lesson) => _LessonTile(lesson: lesson))
-                .toList(),
+            children: [
+              ...sorted.map((lesson) => _LessonTile(lesson: lesson)),
+              if (allCompleted)
+                _CourseReviewAction(
+                  lesson: first,
+                  reviewed: reviewed,
+                ),
+            ],
           ),
         ),
       ),
@@ -653,6 +649,56 @@ class _LearnerAvailabilityGroup extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────
 // Tutor: Availability Card → Session Tiles
 // ─────────────────────────────────────────────────────────────────
+
+class _CourseReviewAction extends StatelessWidget {
+  final LessonModel lesson;
+  final bool reviewed;
+
+  const _CourseReviewAction({
+    required this.lesson,
+    required this.reviewed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final data = context.watch<AppDataProvider>();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: reviewed || data.loading ? null : () => _review(context),
+          icon: Icon(
+            reviewed ? Icons.check_circle_rounded : Icons.rate_review_rounded,
+          ),
+          label: Text(reviewed ? 'Reviewed' : 'Review tutor'),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(0, 42),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _review(BuildContext context) async {
+    final created = await showTutorReviewSheet(
+      context: context,
+      bookingId: lesson.bookingId,
+      tutorId: lesson.tutorId,
+      tutorName: lesson.tutorName,
+    );
+
+    if (created == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review submitted')),
+      );
+    }
+  }
+}
 
 class _TutorAvailabilityCard extends StatelessWidget {
   final List<LessonModel> lessons;
@@ -679,8 +725,7 @@ class _TutorAvailabilityCard extends StatelessWidget {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           leading: CircleAvatar(
             radius: 19,
             backgroundColor: colors.surfaceContainerHighest,
@@ -689,8 +734,8 @@ class _TutorAvailabilityCard extends StatelessWidget {
           ),
           title: Text(
             _subjectName(first),
-            style:
-                theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
           subtitle: Text(
             'Availability #${first.availabilityId} · '
@@ -699,9 +744,7 @@ class _TutorAvailabilityCard extends StatelessWidget {
             style: theme.textTheme.bodyLarge
                 ?.copyWith(color: colors.onSurface.withValues(alpha: 0.55)),
           ),
-          children: sessions
-              .map((s) => _TutorSessionTile(lessons: s))
-              .toList(),
+          children: sessions.map((s) => _TutorSessionTile(lessons: s)).toList(),
         ),
       ),
     );
@@ -752,8 +795,7 @@ class _TutorSessionTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: colors.surfaceContainerLowest,
           border: Border.all(
-              color: colors.outlineVariant.withValues(alpha: 0.5),
-              width: 0.5),
+              color: colors.outlineVariant.withValues(alpha: 0.5), width: 0.5),
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(14),
@@ -782,8 +824,7 @@ class _TutorSessionTile extends StatelessWidget {
             // Helper text
             Container(
               width: double.infinity,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
               decoration: BoxDecoration(
                 color: isDone
                     ? _green50
@@ -837,8 +878,7 @@ class _TutorSessionTile extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: () =>
-                    context.push('/lessons/${first.lessonId}'),
+                onPressed: () => context.push('/lessons/${first.lessonId}'),
                 icon: const Icon(Icons.people_outline, size: 16),
                 label: const Text('Open detail'),
                 style: FilledButton.styleFrom(
@@ -869,8 +909,8 @@ class _LessonTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
-    final hasLink = lesson.meetingLink != null &&
-        lesson.meetingLink!.trim().isNotEmpty;
+    final hasLink =
+        lesson.meetingLink != null && lesson.meetingLink!.trim().isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
@@ -879,15 +919,15 @@ class _LessonTile extends StatelessWidget {
           // Icon / link button
           hasLink
               ? InkWell(
-                  onTap: () => _openMeetingLink(
-                      context, lesson.meetingLink!.trim()),
+                  onTap: () =>
+                      _openMeetingLink(context, lesson.meetingLink!.trim()),
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      border: Border.all(
-                          color: colors.outlineVariant, width: 0.5),
+                      border:
+                          Border.all(color: colors.outlineVariant, width: 0.5),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(Icons.video_call_outlined,
@@ -947,8 +987,7 @@ class _MetaRow extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon,
-            size: 20, color: colors.onSurface.withValues(alpha: 0.4)),
+        Icon(icon, size: 20, color: colors.onSurface.withValues(alpha: 0.4)),
         const SizedBox(width: 7),
         Flexible(
           child: Text(label,
@@ -976,8 +1015,8 @@ class _StatusChip extends StatelessWidget {
         border: Border.all(color: border, width: 0.5),
       ),
       child: Text(status,
-          style: TextStyle(
-              fontSize: 15, fontWeight: FontWeight.w500, color: fg)),
+          style:
+              TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: fg)),
     );
   }
 
@@ -1056,22 +1095,19 @@ Future<void> _openMeetingLink(BuildContext context, String link) async {
       SnackBar(
         content: const Text('Invalid meeting link'),
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
       ),
     );
     return;
   }
-  final opened =
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+  final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
   if (!opened && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Could not open meeting link'),
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
       ),
     );

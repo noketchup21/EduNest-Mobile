@@ -6,6 +6,7 @@ import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/money_text.dart';
+import '../../widgets/tutor_review_sheet.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -50,7 +51,8 @@ class _BookingScreenState extends State<BookingScreen> {
               onPressed: data.loading ? null : data.loadBookings,
               icon: const Icon(Icons.refresh_rounded),
               style: IconButton.styleFrom(
-                backgroundColor: colors.surfaceContainerHighest.withOpacity(0.3),
+                backgroundColor:
+                    colors.surfaceContainerHighest.withOpacity(0.3),
               ),
             ),
           ),
@@ -63,16 +65,15 @@ class _BookingScreenState extends State<BookingScreen> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
             ErrorBanner(data.error),
-
             if (data.loading && data.bookings.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 64),
                 child: Center(child: CircularProgressIndicator()),
               ),
-
             if (!data.loading && data.bookings.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 24),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 64, horizontal: 24),
                 child: Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
@@ -97,7 +98,8 @@ class _BookingScreenState extends State<BookingScreen> {
                       const SizedBox(height: 16),
                       Text(
                         'No Bookings Found',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -111,7 +113,6 @@ class _BookingScreenState extends State<BookingScreen> {
                   ),
                 ),
               ),
-
             ...data.bookings.map((booking) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 14),
@@ -144,6 +145,8 @@ class _BookingCard extends StatelessWidget {
     final canPay = status == 'pending';
     final canCancel = status == 'pending';
     final canReport = _canReportBooking(booking);
+    final canReview = _canReviewBooking(booking);
+    final reviewed = data.hasReviewedBooking(booking.bookingId);
 
     final subjectName = data.subjectNameById(
       booking.subjectId,
@@ -173,7 +176,11 @@ class _BookingCard extends StatelessWidget {
         children: [
           Container(
             width: 6,
-            height: canReport ? 260 : 210,
+            height: canReport && canReview
+                ? 318
+                : canReport || canReview
+                    ? 266
+                    : 210,
             color: statusColor,
           ),
           Expanded(
@@ -239,7 +246,8 @@ class _BookingCard extends StatelessWidget {
                         children: [
                           Text(
                             'Tuition Fee',
-                            style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
+                            style: TextStyle(
+                                fontSize: 11, color: colors.onSurfaceVariant),
                           ),
                           MoneyText(
                             booking.priceAtBooking,
@@ -287,13 +295,13 @@ class _BookingCard extends StatelessWidget {
                                 label: 'Cancel Booking',
                                 enabled: !data.loading,
                                 variant: _ButtonVariant.outlined,
-                                onPressed: () => _cancel(context, booking.bookingId),
+                                onPressed: () =>
+                                    _cancel(context, booking.bookingId),
                               ),
                             ),
                           ],
                         ],
                       ),
-
                       if (canReport) ...[
                         const SizedBox(height: 8),
                         SizedBox(
@@ -306,6 +314,21 @@ class _BookingCard extends StatelessWidget {
                             onPressed: () => context.push(
                               '/report/booking/${booking.bookingId}',
                             ),
+                          ),
+                        ),
+                      ],
+                      if (canReview) ...[
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: _ActionButton(
+                            icon: reviewed
+                                ? Icons.check_circle_rounded
+                                : Icons.rate_review_rounded,
+                            label: reviewed ? 'Reviewed' : 'Review Tutor',
+                            enabled: !reviewed && !data.loading,
+                            variant: _ButtonVariant.outlined,
+                            onPressed: () => _review(context, booking),
                           ),
                         ),
                       ],
@@ -323,6 +346,11 @@ class _BookingCard extends StatelessWidget {
   bool _canReportBooking(BookingModel booking) {
     final status = booking.status.toLowerCase();
     return status == 'confirmed' || status == 'completed';
+  }
+
+  bool _canReviewBooking(BookingModel booking) {
+    final status = booking.status.toLowerCase();
+    return status == 'paid' || status == 'confirmed' || status == 'completed';
   }
 
   Color _getIndicatorColor(String status) {
@@ -368,6 +396,21 @@ class _BookingCard extends StatelessWidget {
       if (!context.mounted) return;
       context.push('/payment', extra: payment);
     } catch (_) {}
+  }
+
+  Future<void> _review(BuildContext context, BookingModel booking) async {
+    final created = await showTutorReviewSheet(
+      context: context,
+      bookingId: booking.bookingId,
+      tutorId: booking.tutorId,
+      tutorName: 'Tutor #${booking.tutorId}',
+    );
+
+    if (created == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review submitted')),
+      );
+    }
   }
 
   Future<void> _cancel(BuildContext context, int bookingId) async {
@@ -449,9 +492,12 @@ class _BookingCard extends StatelessWidget {
     );
 
     if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    final data = context.read<AppDataProvider>();
 
     try {
-      await context.read<AppDataProvider>().cancelBooking(bookingId);
+      await data.cancelBooking(bookingId);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -537,7 +583,8 @@ class _ActionButton extends StatelessWidget {
     final borderRadius = BorderRadius.circular(12);
 
     final iconWidget = Icon(icon, size: 16);
-    final labelWidget = Text(label, style: const TextStyle(fontWeight: FontWeight.bold));
+    final labelWidget =
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold));
 
     if (variant == _ButtonVariant.filled) {
       return FilledButton.icon(

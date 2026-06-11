@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/money_text.dart';
 import '../../widgets/user_avatar.dart';
@@ -33,6 +34,7 @@ class _TutorDetailScreenState extends State<TutorDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
+    final auth = context.watch<AuthProvider>();
     final tutor = data.selectedTutor?.tutorId == widget.tutorId
         ? data.selectedTutor
         : null;
@@ -47,6 +49,9 @@ class _TutorDetailScreenState extends State<TutorDetailScreen> {
             : 'Tutor #${widget.tutorId}';
     final tutorUserId =
         courses.isNotEmpty ? courses.first.tutorUserId : tutor?.userId ?? 0;
+    final reviews = data.tutorReviews[widget.tutorId] ?? <TutorReviewModel>[];
+    final isFavorite = data.isFavoriteTutor(widget.tutorId);
+    final canFavorite = auth.isLearner && !auth.isAdmin;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
@@ -74,12 +79,27 @@ class _TutorDetailScreenState extends State<TutorDetailScreen> {
                 name: name,
                 avatarUrl: avatarUrl,
                 courseCount: courses.length,
+                isFavorite: isFavorite,
                 onChat: tutorUserId <= 0
                     ? null
                     : () => _startChat(context, tutorUserId),
+                onFavorite: !canFavorite || data.loading
+                    ? null
+                    : () => _toggleFavorite(
+                          context: context,
+                          tutorId: widget.tutorId,
+                          tutorUserId: tutorUserId,
+                          name: name,
+                          avatarUrl: avatarUrl,
+                        ),
               ),
               const SizedBox(height: 14),
               _BioCard(bio: tutor?.bio ?? ''),
+              const SizedBox(height: 14),
+              _ReviewSummaryCard(
+                averageRating: tutor?.rating ?? 0,
+                reviews: reviews,
+              ),
               const SizedBox(height: 18),
               Text(
                 'Available courses',
@@ -130,6 +150,32 @@ class _TutorDetailScreenState extends State<TutorDetailScreen> {
       }
     } catch (_) {}
   }
+
+  Future<void> _toggleFavorite({
+    required BuildContext context,
+    required int tutorId,
+    required int tutorUserId,
+    required String name,
+    required String? avatarUrl,
+  }) async {
+    try {
+      await context.read<AppDataProvider>().toggleFavoriteTutor(
+            tutorId: tutorId,
+            name: name,
+            userId: tutorUserId,
+            avatarUrl: avatarUrl,
+          );
+
+      if (!context.mounted) return;
+
+      final saved = context.read<AppDataProvider>().isFavoriteTutor(tutorId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(saved ? 'Tutor saved' : 'Tutor removed from favorites'),
+        ),
+      );
+    } catch (_) {}
+  }
 }
 
 class _TutorHeroCard extends StatelessWidget {
@@ -137,14 +183,18 @@ class _TutorHeroCard extends StatelessWidget {
   final String name;
   final String? avatarUrl;
   final int courseCount;
+  final bool isFavorite;
   final VoidCallback? onChat;
+  final VoidCallback? onFavorite;
 
   const _TutorHeroCard({
     required this.tutor,
     required this.name,
     required this.avatarUrl,
     required this.courseCount,
+    required this.isFavorite,
     required this.onChat,
+    required this.onFavorite,
   });
 
   @override
@@ -220,8 +270,136 @@ class _TutorHeroCard extends StatelessWidget {
                   label: const Text('Chat'),
                 ),
               ),
+              const SizedBox(width: 10),
+              if (onFavorite != null)
+                IconButton.filledTonal(
+                  onPressed: onFavorite,
+                  tooltip: isFavorite ? 'Unsave tutor' : 'Save tutor',
+                  icon: Icon(
+                    isFavorite
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                  ),
+                  color: isFavorite ? colors.error : null,
+                ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewSummaryCard extends StatelessWidget {
+  final double averageRating;
+  final List<TutorReviewModel> reviews;
+
+  const _ReviewSummaryCard({
+    required this.averageRating,
+    required this.reviews,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: colors.outlineVariant.withValues(alpha: 0.45),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.star_rounded, color: Colors.amber.shade700),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  averageRating > 0
+                      ? '${averageRating.toStringAsFixed(1)} tutor rating'
+                      : 'Tutor reviews',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '${reviews.length}',
+                style: TextStyle(color: colors.onSurfaceVariant),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (reviews.isEmpty)
+            Text(
+              'No written reviews yet.',
+              style: TextStyle(color: colors.onSurfaceVariant),
+            )
+          else
+            ...reviews.take(3).map((review) => _ReviewTile(review: review)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewTile extends StatelessWidget {
+  final TutorReviewModel review;
+
+  const _ReviewTile({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final name = review.reviewerName.trim().isEmpty
+        ? 'Learner'
+        : review.reviewerName.trim();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(
+                  5,
+                  (index) => Icon(
+                    index < review.rating
+                        ? Icons.star_rounded
+                        : Icons.star_border_rounded,
+                    size: 16,
+                    color: Colors.amber.shade700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (review.comment.trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              review.comment.trim(),
+              style: TextStyle(color: colors.onSurfaceVariant),
+            ),
+          ],
         ],
       ),
     );

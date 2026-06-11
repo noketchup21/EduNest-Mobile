@@ -142,6 +142,136 @@ class TutorPublicModel {
   }
 }
 
+class FavoriteTutorModel {
+  final int favoriteTutorId;
+  final int tutorId;
+  final int userId;
+  final String name;
+  final String email;
+  final String phone;
+  final String bio;
+  final double rating;
+  final bool isVerified;
+  final String? avatarUrl;
+
+  FavoriteTutorModel({
+    required this.favoriteTutorId,
+    required this.tutorId,
+    required this.userId,
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.bio,
+    required this.rating,
+    required this.isVerified,
+    this.avatarUrl,
+  });
+
+  factory FavoriteTutorModel.fromJson(Map<String, dynamic> json) {
+    final tutor = _asMap(json['tutor'] ?? json['Tutor']);
+    final user = _asMap(tutor['user'] ?? tutor['User']);
+    final source = tutor.isEmpty ? json : tutor;
+
+    return FavoriteTutorModel(
+      favoriteTutorId: _asInt(
+        json['favoriteTutorId'] ??
+            json['FavoriteTutorId'] ??
+            json['id'] ??
+            json['Id'],
+      ),
+      tutorId: _asInt(
+        source['tutorId'] ??
+            source['TutorId'] ??
+            json['tutorId'] ??
+            json['TutorId'],
+      ),
+      userId: _asInt(
+        source['userId'] ??
+            source['UserId'] ??
+            user['userId'] ??
+            user['UserId'],
+      ),
+      name: source['name']?.toString() ??
+          source['Name']?.toString() ??
+          user['name']?.toString() ??
+          user['Name']?.toString() ??
+          json['tutorName']?.toString() ??
+          json['TutorName']?.toString() ??
+          '',
+      email: source['email']?.toString() ??
+          source['Email']?.toString() ??
+          user['email']?.toString() ??
+          user['Email']?.toString() ??
+          '',
+      phone: source['phone']?.toString() ??
+          source['Phone']?.toString() ??
+          user['phone']?.toString() ??
+          user['Phone']?.toString() ??
+          '',
+      bio: source['bio']?.toString() ??
+          source['Bio']?.toString() ??
+          json['bio']?.toString() ??
+          json['Bio']?.toString() ??
+          '',
+      rating: _asDouble(source['rating'] ?? source['Rating'] ?? json['rating']),
+      isVerified: source['isVerified'] == true ||
+          source['IsVerified'] == true ||
+          json['isVerified'] == true ||
+          json['IsVerified'] == true,
+      avatarUrl: _avatarUrl(
+        source['avatarUrl'] ??
+            source['AvatarUrl'] ??
+            user['avatarUrl'] ??
+            user['AvatarUrl'] ??
+            json['tutorAvatarUrl'] ??
+            json['avatarUrl'],
+      ),
+    );
+  }
+}
+
+class TutorReviewModel {
+  final int reviewId;
+  final int bookingId;
+  final int tutorId;
+  final int userId;
+  final int rating;
+  final String comment;
+  final DateTime createdAt;
+  final String reviewerName;
+
+  TutorReviewModel({
+    required this.reviewId,
+    required this.bookingId,
+    required this.tutorId,
+    required this.userId,
+    required this.rating,
+    required this.comment,
+    required this.createdAt,
+    required this.reviewerName,
+  });
+
+  factory TutorReviewModel.fromJson(Map<String, dynamic> json) {
+    return TutorReviewModel(
+      reviewId: _asInt(json['reviewId'] ?? json['ReviewId'] ?? json['id']),
+      bookingId: _asInt(json['bookingId'] ?? json['BookingId']),
+      tutorId: _asInt(json['tutorId'] ?? json['TutorId']),
+      userId: _asInt(json['userId'] ?? json['UserId']),
+      rating: _asInt(json['rating'] ?? json['Rating']),
+      comment: json['comment']?.toString() ??
+          json['Comment']?.toString() ??
+          json['content']?.toString() ??
+          '',
+      createdAt: _asDate(json['createdAt'] ?? json['CreatedAt']),
+      reviewerName: json['reviewerName']?.toString() ??
+          json['ReviewerName']?.toString() ??
+          json['userName']?.toString() ??
+          json['UserName']?.toString() ??
+          '',
+    );
+  }
+}
+
 class BookingModel {
   final int bookingId;
   final int availabilityId;
@@ -408,15 +538,6 @@ DateTime? _asDateNullable(dynamic value) {
   final text = value.toString();
   if (text.trim().isEmpty) return null;
   return DateTime.tryParse(text);
-}
-
-DateTime _asDateTime(dynamic value) {
-  return DateTime.tryParse(value?.toString() ?? '') ?? DateTime.now();
-}
-
-DateTime? _asDateTimeNullable(dynamic value) {
-  if (value == null) return null;
-  return DateTime.tryParse(value.toString());
 }
 
 class ConversationModel {

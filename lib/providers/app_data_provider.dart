@@ -34,6 +34,9 @@ class AppDataProvider extends ChangeNotifier {
   TutorVerificationModel? tutorVerification;
   TutorPublicModel? selectedTutor;
   List<AvailabilityModel> selectedTutorAvailabilities = [];
+  List<FavoriteTutorModel> favoriteTutors = [];
+  final Map<int, List<TutorReviewModel>> tutorReviews = {};
+  List<TutorReviewModel> myTutorReviews = [];
 
   TutorVerificationModel? adminTutorDetail;
   AdminPayoutDetailModel? adminPayoutDetail;
@@ -100,6 +103,7 @@ class AppDataProvider extends ChangeNotifier {
     await _guard(() async {
       subjects = await api.getSubjects();
       availabilities = await api.getAvailabilities();
+      await _tryLoadFavoriteTutors();
     });
   }
 
@@ -112,6 +116,8 @@ class AppDataProvider extends ChangeNotifier {
 
       selectedTutor = results[0] as TutorPublicModel;
       selectedTutorAvailabilities = results[1] as List<AvailabilityModel>;
+      await _tryLoadFavoriteTutors();
+      await _tryLoadTutorReviews(tutorId);
 
       for (final availability in selectedTutorAvailabilities) {
         final index = availabilities.indexWhere(
@@ -143,6 +149,7 @@ class AppDataProvider extends ChangeNotifier {
     await _guard(() async {
       subjects = await api.getSubjects();
       bookings = await api.getMyBookings();
+      await _tryLoadMyTutorReviews();
     });
   }
 
@@ -159,6 +166,7 @@ class AppDataProvider extends ChangeNotifier {
   Future<void> loadLessons() async {
     await _guard(() async {
       lessons = await api.getMyLessons();
+      await _tryLoadMyTutorReviews();
     });
   }
 
@@ -421,6 +429,8 @@ class AppDataProvider extends ChangeNotifier {
       availabilities = await api.getAvailabilities();
       bookings = await api.getMyBookings();
       lessons = await api.getMyLessons();
+      await _tryLoadFavoriteTutors();
+      await _tryLoadMyTutorReviews();
     });
   }
 
@@ -445,6 +455,107 @@ class AppDataProvider extends ChangeNotifier {
     }
   }
 
+  bool isFavoriteTutor(int tutorId) {
+    return favoriteTutors.any((favorite) => favorite.tutorId == tutorId);
+  }
+
+  bool hasReviewedBooking(int bookingId) {
+    return myTutorReviews.any((review) => review.bookingId == bookingId);
+  }
+
+  Future<void> loadFavoriteTutors() async {
+    await _guard(() async {
+      favoriteTutors = await api.getFavoriteTutors();
+    });
+  }
+
+  Future<void> toggleFavoriteTutor({
+    required int tutorId,
+    required String name,
+    int userId = 0,
+    String? avatarUrl,
+  }) async {
+    await _guard(() async {
+      if (isFavoriteTutor(tutorId)) {
+        await api.unsaveFavoriteTutor(tutorId);
+        favoriteTutors.removeWhere((favorite) => favorite.tutorId == tutorId);
+        return;
+      }
+
+      final favorite = await api.saveFavoriteTutor(tutorId);
+
+      favoriteTutors.removeWhere((item) => item.tutorId == tutorId);
+      favoriteTutors.insert(
+        0,
+        favorite.tutorId == 0
+            ? FavoriteTutorModel(
+                favoriteTutorId: 0,
+                tutorId: tutorId,
+                userId: userId,
+                name: name,
+                email: '',
+                phone: '',
+                bio: '',
+                rating: 0,
+                isVerified: false,
+                avatarUrl: avatarUrl,
+              )
+            : favorite,
+      );
+    });
+  }
+
+  Future<void> loadTutorReviews(int tutorId) async {
+    await _guard(() async {
+      tutorReviews[tutorId] = await api.getTutorReviews(tutorId);
+    });
+  }
+
+  Future<void> createTutorReview({
+    required int bookingId,
+    required int tutorId,
+    required int rating,
+    required String comment,
+  }) async {
+    await _guard(() async {
+      final review = await api.createTutorReview(
+        bookingId: bookingId,
+        tutorId: tutorId,
+        rating: rating,
+        comment: comment,
+      );
+
+      myTutorReviews.removeWhere((item) => item.bookingId == bookingId);
+      myTutorReviews.insert(0, review);
+
+      final reviews = tutorReviews[tutorId] ?? <TutorReviewModel>[];
+      reviews.removeWhere((item) => item.reviewId == review.reviewId);
+      tutorReviews[tutorId] = [review, ...reviews];
+
+      if (selectedTutor?.tutorId == tutorId) {
+        selectedTutor = await api.getTutorById(tutorId);
+      }
+    });
+  }
+
+  Future<void> _tryLoadFavoriteTutors() async {
+    try {
+      favoriteTutors = await api.getFavoriteTutors();
+    } catch (_) {}
+  }
+
+  Future<void> _tryLoadTutorReviews(int tutorId) async {
+    try {
+      tutorReviews[tutorId] = await api.getTutorReviews(tutorId);
+    } catch (_) {}
+  }
+
+  Future<void> _tryLoadMyTutorReviews() async {
+    try {
+      myTutorReviews = await api.getMyTutorReviews();
+    } catch (_) {}
+  }
+
   Future<PaymentModel> syncPayment(int bookingId) async {
     late PaymentModel payment;
 
@@ -454,6 +565,7 @@ class AppDataProvider extends ChangeNotifier {
       bookings = await api.getMyBookings();
       lessons = await api.getMyLessons();
       availabilities = await api.getAvailabilities();
+      await _tryLoadMyTutorReviews();
     });
 
     return payment;
