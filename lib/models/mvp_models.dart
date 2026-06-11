@@ -359,6 +359,7 @@ class LessonModel {
   final int? subjectId;
   final String? subjectName;
   final String? tutorAvatarUrl;
+  final String? studentName;
 
   LessonModel({
     required this.lessonId,
@@ -374,6 +375,7 @@ class LessonModel {
     required this.subjectId,
     required this.subjectName,
     this.tutorAvatarUrl,
+    this.studentName,
   });
 
   factory LessonModel.fromJson(Map<String, dynamic> json) {
@@ -392,6 +394,8 @@ class LessonModel {
       subjectId: json['subjectId'] == null ? null : _asInt(json['subjectId']),
       subjectName: json['subjectName']?.toString(),
       tutorAvatarUrl: json['tutorAvatarUrl']?.toString(),
+      studentName:
+          json['studentName']?.toString() ?? json['StudentName']?.toString(),
     );
   }
 }
@@ -678,6 +682,260 @@ class LessonStudentModel {
       studentName: json['studentName']?.toString() ?? '',
       attendanceStatus: json['attendanceStatus']?.toString() ?? '',
       lessonStatus: json['lessonStatus']?.toString() ?? '',
+    );
+  }
+}
+
+class HomeworkModel {
+  final int homeworkId;
+  final int bookingId;
+  final int? lessonId;
+  final String type;
+  final String title;
+  final String? description;
+  final DateTime dueDate;
+  final DateTime uploadedAt;
+  final double totalPoints;
+  final List<HomeworkQuestionModel> questions;
+  final List<HomeworkEssayModel> essays;
+  final HomeworkSubmissionModel? mySubmission;
+  final List<HomeworkSubmissionModel> submissions;
+
+  HomeworkModel({
+    required this.homeworkId,
+    required this.bookingId,
+    required this.lessonId,
+    required this.type,
+    required this.title,
+    required this.description,
+    required this.dueDate,
+    required this.uploadedAt,
+    required this.totalPoints,
+    required this.questions,
+    required this.essays,
+    required this.mySubmission,
+    required this.submissions,
+  });
+
+  bool get isMultipleChoice => type.toLowerCase() == 'multiplechoice';
+  bool get isEssay => type.toLowerCase() == 'essay';
+
+  HomeworkModel copyWith({
+    HomeworkSubmissionModel? mySubmission,
+    List<HomeworkSubmissionModel>? submissions,
+  }) {
+    return HomeworkModel(
+      homeworkId: homeworkId,
+      bookingId: bookingId,
+      lessonId: lessonId,
+      type: type,
+      title: title,
+      description: description,
+      dueDate: dueDate,
+      uploadedAt: uploadedAt,
+      totalPoints: totalPoints,
+      questions: questions,
+      essays: essays,
+      mySubmission: mySubmission ?? this.mySubmission,
+      submissions: submissions ?? this.submissions,
+    );
+  }
+
+  factory HomeworkModel.fromJson(Map<String, dynamic> json) {
+    return HomeworkModel(
+      homeworkId: _asInt(json['homeworkId']),
+      bookingId: _asInt(json['bookingId']),
+      lessonId: json['lessonId'] == null ? null : _asInt(json['lessonId']),
+      type: json['type']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString(),
+      dueDate: _asDate(json['dueDate']),
+      uploadedAt: _asDate(json['uploadedAt']),
+      totalPoints: _asDouble(json['totalPoints']),
+      questions: (json['questions'] as List? ?? [])
+          .map((e) => HomeworkQuestionModel.fromJson(_asMap(e)))
+          .toList(),
+      essays: (json['essays'] as List? ?? [])
+          .map((e) => HomeworkEssayModel.fromJson(_asMap(e)))
+          .toList(),
+      mySubmission: json['mySubmission'] == null
+          ? null
+          : HomeworkSubmissionModel.fromJson(_asMap(json['mySubmission'])),
+      submissions: (json['submissions'] as List? ?? [])
+          .map((e) => HomeworkSubmissionModel.fromJson(_asMap(e)))
+          .toList(),
+    );
+  }
+}
+
+class HomeworkQuestionModel {
+  final int multipleChoiceQuestionId;
+  final String questionText;
+  final double point;
+  final List<HomeworkOptionModel> options;
+
+  HomeworkQuestionModel({
+    required this.multipleChoiceQuestionId,
+    required this.questionText,
+    required this.point,
+    required this.options,
+  });
+
+  factory HomeworkQuestionModel.fromJson(Map<String, dynamic> json) {
+    return HomeworkQuestionModel(
+      multipleChoiceQuestionId: _asInt(json['multipleChoiceQuestionId']),
+      questionText: json['questionText']?.toString() ?? '',
+      point: _asDouble(json['point']),
+      options: (json['options'] as List? ?? [])
+          .map((e) => HomeworkOptionModel.fromJson(_asMap(e)))
+          .toList(),
+    );
+  }
+}
+
+class HomeworkOptionModel {
+  final int questionOptionId;
+  final String content;
+  final bool? isCorrect;
+
+  HomeworkOptionModel({
+    required this.questionOptionId,
+    required this.content,
+    required this.isCorrect,
+  });
+
+  factory HomeworkOptionModel.fromJson(Map<String, dynamic> json) {
+    return HomeworkOptionModel(
+      questionOptionId: _asInt(json['questionOptionId']),
+      content: json['content']?.toString() ?? '',
+      isCorrect: json['isCorrect'] as bool?,
+    );
+  }
+}
+
+class HomeworkEssayModel {
+  final int essayId;
+  final String questionText;
+  final double points;
+
+  HomeworkEssayModel({
+    required this.essayId,
+    required this.questionText,
+    required this.points,
+  });
+
+  factory HomeworkEssayModel.fromJson(Map<String, dynamic> json) {
+    return HomeworkEssayModel(
+      essayId: _asInt(json['essayId']),
+      questionText: json['questionText']?.toString() ?? '',
+      points: _asDouble(json['points']),
+    );
+  }
+}
+
+class HomeworkSubmissionModel {
+  final int submissionId;
+  final int homeworkId;
+  final int studentId;
+  final String studentName;
+  final DateTime submittedAt;
+  final DateTime? gradedAt;
+  final double totalScore;
+  final double maxScore;
+  final bool isGraded;
+  final String? feedback;
+  final List<MultipleChoiceAnswerModel> multipleChoiceAnswers;
+  final List<EssayAnswerModel> essayAnswers;
+
+  HomeworkSubmissionModel({
+    required this.submissionId,
+    required this.homeworkId,
+    required this.studentId,
+    required this.studentName,
+    required this.submittedAt,
+    required this.gradedAt,
+    required this.totalScore,
+    required this.maxScore,
+    required this.isGraded,
+    required this.feedback,
+    required this.multipleChoiceAnswers,
+    required this.essayAnswers,
+  });
+
+  factory HomeworkSubmissionModel.fromJson(Map<String, dynamic> json) {
+    return HomeworkSubmissionModel(
+      submissionId: _asInt(json['submissionId']),
+      homeworkId: _asInt(json['homeworkId']),
+      studentId: _asInt(json['studentId']),
+      studentName: json['studentName']?.toString() ?? '',
+      submittedAt: _asDate(json['submittedAt']),
+      gradedAt: _asDateNullable(json['gradedAt']),
+      totalScore: _asDouble(json['totalScore']),
+      maxScore: _asDouble(json['maxScore']),
+      isGraded: json['isGraded'] == true,
+      feedback: json['feedback']?.toString(),
+      multipleChoiceAnswers: (json['multipleChoiceAnswers'] as List? ?? [])
+          .map((e) => MultipleChoiceAnswerModel.fromJson(_asMap(e)))
+          .toList(),
+      essayAnswers: (json['essayAnswers'] as List? ?? [])
+          .map((e) => EssayAnswerModel.fromJson(_asMap(e)))
+          .toList(),
+    );
+  }
+}
+
+class MultipleChoiceAnswerModel {
+  final int multipleChoiceQuestionAnswerId;
+  final int multipleChoiceQuestionId;
+  final int questionOptionId;
+  final String selectedOption;
+  final bool isCorrect;
+  final double score;
+
+  MultipleChoiceAnswerModel({
+    required this.multipleChoiceQuestionAnswerId,
+    required this.multipleChoiceQuestionId,
+    required this.questionOptionId,
+    required this.selectedOption,
+    required this.isCorrect,
+    required this.score,
+  });
+
+  factory MultipleChoiceAnswerModel.fromJson(Map<String, dynamic> json) {
+    return MultipleChoiceAnswerModel(
+      multipleChoiceQuestionAnswerId:
+          _asInt(json['multipleChoiceQuestionAnswerId']),
+      multipleChoiceQuestionId: _asInt(json['multipleChoiceQuestionId']),
+      questionOptionId: _asInt(json['questionOptionId']),
+      selectedOption: json['selectedOption']?.toString() ?? '',
+      isCorrect: json['isCorrect'] == true,
+      score: _asDouble(json['score']),
+    );
+  }
+}
+
+class EssayAnswerModel {
+  final int essayAnswerId;
+  final int essayId;
+  final String answerText;
+  final double score;
+  final String? feedback;
+
+  EssayAnswerModel({
+    required this.essayAnswerId,
+    required this.essayId,
+    required this.answerText,
+    required this.score,
+    required this.feedback,
+  });
+
+  factory EssayAnswerModel.fromJson(Map<String, dynamic> json) {
+    return EssayAnswerModel(
+      essayAnswerId: _asInt(json['essayAnswerId']),
+      essayId: _asInt(json['essayId']),
+      answerText: json['answerText']?.toString() ?? '',
+      score: _asDouble(json['score']),
+      feedback: json['feedback']?.toString(),
     );
   }
 }

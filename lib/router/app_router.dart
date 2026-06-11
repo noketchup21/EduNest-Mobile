@@ -12,6 +12,9 @@ import '../screens/booking/booking_screen.dart';
 import '../screens/chat/chat_detail_screen.dart';
 import '../screens/chat/chat_screen.dart';
 import '../screens/home/home_screen.dart';
+import '../screens/homework/homework_screen.dart';
+import '../screens/homework/homework_take_screen.dart';
+import '../screens/homework/tutor_homework_screen.dart';
 import '../screens/lesson/lesson_detail_screen.dart';
 import '../screens/lesson/lesson_screen.dart';
 import '../screens/payment/payment_screen.dart';
@@ -73,6 +76,18 @@ class AppRouter {
         if (loggedIn &&
             location.startsWith('/availability/create') &&
             (!auth.isTutor || auth.isAdmin)) {
+          return '/home';
+        }
+
+        if (loggedIn &&
+            location == '/homework' &&
+            ((!auth.isLearner && !auth.isTutor) || auth.isAdmin)) {
+          return '/home';
+        }
+
+        if (loggedIn &&
+            location.startsWith('/homework/') &&
+            ((!auth.isLearner && !auth.isTutor) || auth.isAdmin)) {
           return '/home';
         }
 
@@ -149,6 +164,20 @@ class AppRouter {
               builder: (_, __) => const LessonScreen(),
             ),
             GoRoute(
+              path: '/homework',
+              builder: (_, state) {
+                if (auth.isTutor) {
+                  return TutorHomeworkScreen(
+                    initialLessonId: int.tryParse(
+                      state.uri.queryParameters['lessonId'] ?? '',
+                    ),
+                  );
+                }
+
+                return const HomeworkScreen();
+              },
+            ),
+            GoRoute(
               path: '/chat',
               builder: (_, __) => const ChatScreen(),
             ),
@@ -161,6 +190,28 @@ class AppRouter {
               builder: (_, __) => const ProfileScreen(),
             ),
           ],
+        ),
+        GoRoute(
+          path: '/homework/:lessonId/:homeworkId',
+          builder: (context, state) {
+            final lessonId =
+                int.tryParse(state.pathParameters['lessonId'] ?? '');
+            final homeworkId =
+                int.tryParse(state.pathParameters['homeworkId'] ?? '');
+
+            if (lessonId == null || homeworkId == null) {
+              return const Scaffold(
+                body: Center(
+                  child: Text('Invalid homework'),
+                ),
+              );
+            }
+
+            return HomeworkTakeScreen(
+              lessonId: lessonId,
+              homeworkId: homeworkId,
+            );
+          },
         ),
         GoRoute(
           path: '/payment',
@@ -365,6 +416,13 @@ class MainShell extends StatelessWidget {
           Icons.school,
           'Lesson',
         ),
+      if ((auth.isLearner || auth.isTutor) && !auth.isAdmin)
+        const _NavItem(
+          '/homework',
+          Icons.assignment_outlined,
+          Icons.assignment,
+          'Homework',
+        ),
       const _NavItem(
         '/chat',
         Icons.chat_bubble_outline,
@@ -386,7 +444,9 @@ class MainShell extends StatelessWidget {
       ),
     ];
 
-    final current = items.indexWhere((e) => location.startsWith(e.path));
+    final current = items.indexWhere(
+      (e) => location == e.path || location.startsWith('${e.path}/'),
+    );
     final index = current < 0 ? 0 : current;
 
     return Scaffold(

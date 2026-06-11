@@ -26,6 +26,12 @@ class AppDataProvider extends ChangeNotifier {
   List<ConversationModel> conversations = [];
   final Map<int, List<MessageModel>> messages = {};
   final Map<int, LessonDetailModel> lessonDetails = {};
+  final Map<int, List<HomeworkModel>> lessonHomeworks = {};
+  final Map<int, DateTime> _lessonHomeworksLoadedAt = {};
+  static const Duration _homeworkCacheDuration = Duration(seconds: 45);
+  DateTime? _homeworkDashboardLoadedAt;
+  Future<void>? _homeworkDashboardLoad;
+  final Map<int, Future<void>> _homeworkCourseLoads = {};
 
   AdminDashboardModel? adminDashboard;
   List<TutorVerificationModel> pendingTutors = [];
@@ -167,6 +173,67 @@ class AppDataProvider extends ChangeNotifier {
     await _guard(() async {
       lessons = await api.getMyLessons();
       await _tryLoadMyTutorReviews();
+    });
+  }
+
+  Future<void> loadHomeworkDashboard({bool force = false}) {
+    if (!force && _homeworkDashboardLoad != null) {
+      return _homeworkDashboardLoad!;
+    }
+
+    if (!force && lessons.isNotEmpty && _isFresh(_homeworkDashboardLoadedAt)) {
+      return Future.value();
+    }
+
+    final load = _guard(() async {
+      lessons = await api.getMyLessons();
+      final lessonIds = lessons.map((lesson) => lesson.lessonId).toSet();
+
+      lessonHomeworks.removeWhere(
+        (lessonId, _) => !lessonIds.contains(lessonId),
+      );
+
+      await _tryLoadMyTutorReviews();
+      _homeworkDashboardLoadedAt = DateTime.now();
+    });
+
+    _homeworkDashboardLoad = load;
+
+    return load.whenComplete(() {
+      if (_homeworkDashboardLoad == load) {
+        _homeworkDashboardLoad = null;
+      }
+    });
+  }
+
+  Future<void> loadHomeworkCourse(
+    int availabilityId, {
+    bool force = false,
+  }) {
+    if (!force && _homeworkCourseLoads[availabilityId] != null) {
+      return _homeworkCourseLoads[availabilityId]!;
+    }
+
+    final load = _guard(() async {
+      if (lessons.isEmpty || force) {
+        lessons = await api.getMyLessons();
+      }
+
+      final courseLessons = lessons
+          .where((lesson) => lesson.availabilityId == availabilityId)
+          .toList();
+
+      for (final lesson in courseLessons) {
+        await _loadLessonHomeworksRaw(lesson.lessonId, force: force);
+      }
+    });
+
+    _homeworkCourseLoads[availabilityId] = load;
+
+    return load.whenComplete(() {
+      if (_homeworkCourseLoads[availabilityId] == load) {
+        _homeworkCourseLoads.remove(availabilityId);
+      }
     });
   }
 
@@ -584,6 +651,161 @@ class AppDataProvider extends ChangeNotifier {
     await _guard(() async {
       lessonDetails[lessonId] = await api.getLessonDetail(lessonId);
     });
+  }
+
+  Future<void> loadLessonHomeworks(
+    int lessonId, {
+    bool force = false,
+  }) async {
+    await _guard(() async {
+      await _loadLessonHomeworksRaw(lessonId, force: force);
+    });
+  }
+
+  Future<void> createHomework({
+    required int lessonId,
+    required Map<String, dynamic> body,
+  }) async {
+    await _guard(() async {
+      await api.createHomework(lessonId: lessonId, body: body);
+      await _loadLessonHomeworksRaw(lessonId, force: true);
+    });
+  }
+
+  Future<void> updateHomework({
+    required int lessonId,
+    required int homeworkId,
+    required Map<String, dynamic> body,
+  }) async {
+    await _guard(() async {
+      await api.updateHomework(homeworkId: homeworkId, body: body);
+      await _loadLessonHomeworksRaw(lessonId, force: true);
+    });
+  }
+
+  Future<void> deleteHomework({
+    required int lessonId,
+    required int homeworkId,
+  }) async {
+    await _guard(() async {
+      await api.deleteHomework(homeworkId);
+      await _loadLessonHomeworksRaw(lessonId, force: true);
+    });
+  }
+
+  Future<void> submitHomework({
+    required int lessonId,
+    required int homeworkId,
+    required List<Map<String, dynamic>> multipleChoiceAnswers,
+    required List<Map<String, dynamic>> essayAnswers,
+  }) async {
+    await _guard(() async {
+      final submission = await api.submitHomework(
+        homeworkId: homeworkId,
+        multipleChoiceAnswers: multipleChoiceAnswers,
+        essayAnswers: essayAnswers,
+      );
+      await _loadLessonHomeworksRaw(lessonId, force: true);
+      _applyMyHomeworkSubmission(
+        homeworkId: homeworkId,
+        submission: submission,
+      );
+    });
+  }
+
+  Future<void> gradeEssaySubmission({
+    required int lessonId,
+    required int homeworkId,
+    required int submissionId,
+    required List<Map<String, dynamic>> essayGrades,
+    String? feedback,
+  }) async {
+    await _guard(() async {
+      final gradedSubmission = await api.gradeEssaySubmission(
+        homeworkId: homeworkId,
+        submissionId: submissionId,
+        essayGrades: essayGrades,
+        feedback: feedback,
+      );
+      await _loadLessonHomeworksRaw(lessonId, force: true);
+      _applyGradedHomeworkSubmission(
+        homeworkId: homeworkId,
+        submission: gradedSubmission,
+      );
+    });
+  }
+
+  void _applyMyHomeworkSubmission({
+    required int homeworkId,
+    required HomeworkSubmissionModel submission,
+  }) {
+    _updateCachedHomeworkCopies(
+      homeworkId: homeworkId,
+      update: (homework) => homework.copyWith(mySubmission: submission),
+    );
+  }
+
+  void _applyGradedHomeworkSubmission({
+    required int homeworkId,
+    required HomeworkSubmissionModel submission,
+  }) {
+    _updateCachedHomeworkCopies(
+      homeworkId: homeworkId,
+      update: (homework) {
+        final submissions = [...homework.submissions];
+        final submissionIndex = submissions.indexWhere(
+          (item) => item.submissionId == submission.submissionId,
+        );
+
+        if (submissionIndex >= 0) {
+          submissions[submissionIndex] = submission;
+        } else {
+          submissions.insert(0, submission);
+        }
+
+        final mySubmission =
+            homework.mySubmission?.submissionId == submission.submissionId
+                ? submission
+                : homework.mySubmission;
+
+        return homework.copyWith(
+          mySubmission: mySubmission,
+          submissions: submissions,
+        );
+      },
+    );
+  }
+
+  void _updateCachedHomeworkCopies({
+    required int homeworkId,
+    required HomeworkModel Function(HomeworkModel homework) update,
+  }) {
+    for (final entry in lessonHomeworks.entries) {
+      final homeworks = entry.value;
+
+      for (var index = 0; index < homeworks.length; index += 1) {
+        if (homeworks[index].homeworkId == homeworkId) {
+          homeworks[index] = update(homeworks[index]);
+        }
+      }
+    }
+  }
+
+  Future<void> _loadLessonHomeworksRaw(
+    int lessonId, {
+    bool force = false,
+  }) async {
+    if (!force && _isFresh(_lessonHomeworksLoadedAt[lessonId])) {
+      return;
+    }
+
+    lessonHomeworks[lessonId] = await api.getLessonHomeworks(lessonId);
+    _lessonHomeworksLoadedAt[lessonId] = DateTime.now();
+  }
+
+  bool _isFresh(DateTime? loadedAt) {
+    if (loadedAt == null) return false;
+    return DateTime.now().difference(loadedAt) < _homeworkCacheDuration;
   }
 
   Future<void> setLessonMeetingLink({

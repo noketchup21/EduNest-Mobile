@@ -377,6 +377,74 @@ class ApiService {
     return LessonDetailModel.fromJson(_asMap(res.data));
   }
 
+  Future<List<HomeworkModel>> getLessonHomeworks(int lessonId) async {
+    final res = await dio.get('/api/homework/lesson/$lessonId');
+
+    return _list(res.data).map((e) => HomeworkModel.fromJson(e)).toList();
+  }
+
+  Future<HomeworkModel> createHomework({
+    required int lessonId,
+    required Map<String, dynamic> body,
+  }) async {
+    final res = await dio.post(
+      '/api/homework/lesson/$lessonId',
+      data: body,
+    );
+
+    return HomeworkModel.fromJson(_asMap(res.data));
+  }
+
+  Future<HomeworkModel> updateHomework({
+    required int homeworkId,
+    required Map<String, dynamic> body,
+  }) async {
+    final res = await dio.put(
+      '/api/homework/$homeworkId',
+      data: body,
+    );
+
+    return HomeworkModel.fromJson(_asMap(res.data));
+  }
+
+  Future<void> deleteHomework(int homeworkId) async {
+    await dio.delete('/api/homework/$homeworkId');
+  }
+
+  Future<HomeworkSubmissionModel> submitHomework({
+    required int homeworkId,
+    required List<Map<String, dynamic>> multipleChoiceAnswers,
+    required List<Map<String, dynamic>> essayAnswers,
+  }) async {
+    final res = await dio.post(
+      '/api/homework/$homeworkId/submit',
+      data: {
+        'multipleChoiceAnswers': multipleChoiceAnswers,
+        'essayAnswers': essayAnswers,
+      },
+    );
+
+    return HomeworkSubmissionModel.fromJson(_asMap(res.data));
+  }
+
+  Future<HomeworkSubmissionModel> gradeEssaySubmission({
+    required int homeworkId,
+    required int submissionId,
+    required List<Map<String, dynamic>> essayGrades,
+    String? feedback,
+  }) async {
+    final res = await dio.patch(
+      '/api/homework/$homeworkId/submissions/$submissionId/grade',
+      data: {
+        'essayGrades': essayGrades,
+        if (feedback != null && feedback.trim().isNotEmpty)
+          'feedback': feedback.trim(),
+      },
+    );
+
+    return HomeworkSubmissionModel.fromJson(_asMap(res.data));
+  }
+
   Future<LessonDetailModel> setMeetingLink({
     required int lessonId,
     required String meetingLink,
