@@ -48,3 +48,10 @@ app.*.map.json
 /android/key.properties
 /android/*.jks
 /android/*.keystore
+
+# Windows Store signing/package artifacts
+/windows/*.pfx
+/windows/*.cer
+*.msix
+*.msixbundle
+*.msixupload

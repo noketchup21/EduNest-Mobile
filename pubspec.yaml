@@ -30,6 +30,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^4.0.0
   flutter_launcher_icons: any
+  msix: ^3.17.0
 
 flutter:
   uses-material-design: true
@@ -40,3 +41,17 @@ flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/images/Logo.png"
+
+msix_config:
+  display_name: EduNest
+  publisher_display_name: noketchup
+  identity_name: noketchup.EduNest
+  publisher: CN=3BFDBE1D-EB63-4751-BE37-562E52FE8B7A
+  msix_version: 1.0.0.0
+  logo_path: assets/images/Logo.png
+  output_name: EduNest
+  store: true
+  sign_msix: false
+  install_certificate: false
+  windows_build_args: --dart-define=EDUNEST_API_BASE_URL=https://edunest-backend-8e6z.onrender.com --dart-define=EDUNEST_APP_VERSION=1.0.0+1
+  capabilities: internetClient
