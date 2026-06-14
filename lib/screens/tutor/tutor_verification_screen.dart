@@ -85,7 +85,8 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
           IconButton(
             onPressed: data.loading
                 ? null
-                : () => context.read<AppDataProvider>().loadMyTutorVerification(),
+                : () =>
+                    context.read<AppDataProvider>().loadMyTutorVerification(),
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -133,10 +134,10 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   }
 
   Widget _buildForm(
-      BuildContext context,
-      AppDataProvider data,
-      TutorVerificationModel? verification,
-      ) {
+    BuildContext context,
+    AppDataProvider data,
+    TutorVerificationModel? verification,
+  ) {
     return Form(
       key: _formKey,
       child: Column(
@@ -213,8 +214,8 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             child: Text(
               'Bank information',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+                    fontWeight: FontWeight.w800,
+                  ),
             ),
           ),
           const SizedBox(height: 12),
@@ -227,20 +228,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             validator: _requiredValidator,
           ),
           const SizedBox(height: 12),
-
           BankBinField(controller: _bankBin),
-
-          const SizedBox(height: 12),
-
-          TextFormField(
-            controller: _accountNumber,
-            decoration: const InputDecoration(
-              labelText: 'Account number',
-              prefixIcon: Icon(Icons.numbers_outlined),
-            ),
-            keyboardType: TextInputType.number,
-            validator: _requiredValidator,
-          ),
           const SizedBox(height: 12),
           TextFormField(
             controller: _accountNumber,
@@ -275,10 +263,10 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
               onPressed: data.loading ? null : () => _submit(context),
               icon: data.loading
                   ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.upload_file),
               label: Text(
                 data.loading ? 'Submitting...' : 'Submit verification',
@@ -291,8 +279,8 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   }
 
   Future<void> _redirectApprovedTutorIfAlreadySeen(
-      TutorVerificationModel? verification,
-      ) async {
+    TutorVerificationModel? verification,
+  ) async {
     if (_handledApprovedRedirect || verification == null) return;
 
     final status = verification.verificationStatus.toLowerCase();
@@ -314,8 +302,8 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   }
 
   Future<void> _continueAfterApproval(
-      TutorVerificationModel? verification,
-      ) async {
+    TutorVerificationModel? verification,
+  ) async {
     if (verification != null) {
       await context
           .read<AppDataProvider>()
@@ -345,7 +333,8 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
         _certificatePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please upload CCCD front, CCCD back, and certificate.'),
+          content:
+              Text('Please upload CCCD front, CCCD back, and certificate.'),
         ),
       );
 
@@ -354,16 +343,16 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
 
     try {
       await context.read<AppDataProvider>().submitTutorVerification(
-        nationalIdNumber: _nationalId.text.trim(),
-        cccdFrontPath: _cccdFrontPath!,
-        cccdBackPath: _cccdBackPath!,
-        certificatePath: _certificatePath!,
-        bankName: _bankName.text.trim(),
-        bankBin: _bankBin.text.trim(),
-        accountNumber: _accountNumber.text.trim(),
-        accountHolderName: _accountHolderName.text.trim(),
-        branchName: _branchName.text.trim(),
-      );
+            nationalIdNumber: _nationalId.text.trim(),
+            cccdFrontPath: _cccdFrontPath!,
+            cccdBackPath: _cccdBackPath!,
+            certificatePath: _certificatePath!,
+            bankName: _bankName.text.trim(),
+            bankBin: _bankBin.text.trim(),
+            accountNumber: _accountNumber.text.trim(),
+            accountHolderName: _accountHolderName.text.trim(),
+            branchName: _branchName.text.trim(),
+          );
 
       if (!context.mounted) return;
 
@@ -435,7 +424,7 @@ class _StatusCard extends StatelessWidget {
       icon = Icons.assignment_outlined;
       title = 'Verification required';
       subtitle =
-      'Submit your CCCD, certificate, and bank information before creating availability.';
+          'Submit your CCCD, certificate, and bank information before creating availability.';
     }
 
     return Card(
@@ -455,8 +444,8 @@ class _StatusCard extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                          fontWeight: FontWeight.w800,
+                        ),
                   ),
                   const SizedBox(height: 4),
                   Text(subtitle),
@@ -490,8 +479,8 @@ class _PendingMessage extends StatelessWidget {
             Text(
               'Waiting for admin approval',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+                    fontWeight: FontWeight.w800,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
