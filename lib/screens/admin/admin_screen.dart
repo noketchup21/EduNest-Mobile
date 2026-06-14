@@ -852,12 +852,12 @@ class _PayoutsTab extends StatelessWidget {
 
     final paid = data.adminPayouts
         .where((p) =>
-        ['paid', 'completed', 'approved'].contains(p.status.toLowerCase()))
+            ['paid', 'completed', 'approved'].contains(p.status.toLowerCase()))
         .toList();
 
     final failed = data.adminPayouts
         .where((p) => ['failed', 'rejected', 'cancelled']
-        .contains(p.status.toLowerCase()))
+            .contains(p.status.toLowerCase()))
         .toList();
 
     final others = data.adminPayouts.where((p) {
@@ -884,14 +884,13 @@ class _PayoutsTab extends StatelessWidget {
           _AdminHeroCard(
             title: 'Payout requests',
             subtitle:
-            'Approve tutor withdrawals with payOS Chi. If automatic payout fails, use the QR/manual backup.',
+                'Approve tutor withdrawals with payOS Chi. If automatic payout fails, use the QR/manual backup.',
             icon: Icons.payments_outlined,
             trailing:
-            _CountBadge(count: data.adminPayouts.length, label: 'requests'),
+                _CountBadge(count: data.adminPayouts.length, label: 'requests'),
           ),
           const SizedBox(height: 16),
-          if (data.adminPayouts.isEmpty && data.loading)
-            const _LoadingCard(),
+          if (data.adminPayouts.isEmpty && data.loading) const _LoadingCard(),
           if (data.adminPayouts.isEmpty && !data.loading)
             const _EmptyStateCard(
               icon: Icons.payments_outlined,
@@ -1014,9 +1013,9 @@ class _PayoutSection extends StatelessWidget {
               ),
             ),
           ...payouts.map((payout) => _PayoutItem(
-            payout: payout,
-            statusColor: statusColor,
-          )),
+                payout: payout,
+                statusColor: statusColor,
+              )),
         ],
       ),
     );
@@ -1137,8 +1136,6 @@ class _ReportsTab extends StatelessWidget {
     return const AdminReportsPanel();
   }
 }
-
-
 
 class _AdminReportStatusFilter extends StatelessWidget {
   final String selected;
@@ -2226,8 +2223,9 @@ class _RevenueBarChart extends StatelessWidget {
     }
 
     final maxYRaw = (maxVal / divisor) * 1.25;
-    final maxY = maxYRaw.ceilToDouble();
-    final interval = (maxY / 4).ceilToDouble();
+    final maxY = maxYRaw.ceilToDouble().clamp(1, double.infinity).toDouble();
+    final interval =
+        (maxY / 4).ceilToDouble().clamp(1, double.infinity).toDouble();
 
     return BarChart(
       BarChartData(
