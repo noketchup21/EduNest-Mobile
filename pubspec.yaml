@@ -4,7 +4,7 @@ description: EduNest Mobile MVP connected to EduNest_Backend APIs.
 
 publish_to: 'none'
 
-version: 0.2.0+2
+version: 0.2.0+3
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -47,7 +47,7 @@ msix_config:
   publisher_display_name: noketchup
   identity_name: noketchup.EduNest
   publisher: CN=3BFDBE1D-EB63-4751-BE37-562E52FE8B7A
-  msix_version: 1.0.0.0
+  msix_version: 1.0.1.0
   logo_path: assets/images/Logo.png
   output_name: EduNest
   store: true
