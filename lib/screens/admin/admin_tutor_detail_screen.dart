@@ -580,6 +580,13 @@ class _DocumentsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final certificateUrls = detail.certificateImageUrls.isNotEmpty
+        ? detail.certificateImageUrls
+        : [
+            if ((detail.certificateImageUrl ?? '').trim().isNotEmpty)
+              detail.certificateImageUrl!,
+          ];
+
     return _SectionCard(
       title: context.l10n.text('Submitted documents'),
       subtitle: context.l10n.text('Tap an image to inspect it in detail'),
@@ -593,10 +600,17 @@ class _DocumentsCard extends StatelessWidget {
           title: context.l10n.text('CCCD back'),
           imageUrl: detail.cccdBackImageUrl,
         ),
-        _ImageDocumentTile(
-          title: context.l10n.text('Certificate / university document'),
-          imageUrl: detail.certificateImageUrl,
-        ),
+        if (certificateUrls.isEmpty)
+          _ImageDocumentTile(
+            title: context.l10n.text('Upload Certificates'),
+            imageUrl: null,
+          ),
+        for (final entry in certificateUrls.indexed)
+          _ImageDocumentTile(
+            title:
+                '${context.l10n.text('Upload Certificates')} ${entry.$1 + 1}',
+            imageUrl: entry.$2,
+          ),
       ],
     );
   }

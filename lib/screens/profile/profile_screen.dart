@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -28,7 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final accountNumber = TextEditingController();
   final accountHolderName = TextEditingController();
   final branchName = TextEditingController();
-  bool initialized = false;
+  int? filledProfileUserId;
 
   @override
   void initState() {
@@ -76,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: data.loading
                 ? null
                 : () async {
-                    setState(() => initialized = false);
+                    setState(() => filledProfileUserId = null);
                     await context.read<AppDataProvider>().loadProfile();
                   },
             icon: const Icon(Icons.refresh_rounded),
@@ -168,7 +168,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _fillOnce(ProfileModel? profile) {
-    if (initialized || profile == null) return;
+    if (profile == null) {
+      if (filledProfileUserId != null) {
+        name.clear();
+        phone.clear();
+        tutorBio.clear();
+        bankName.clear();
+        bankBin.clear();
+        accountNumber.clear();
+        accountHolderName.clear();
+        branchName.clear();
+        filledProfileUserId = null;
+      }
+      return;
+    }
+
+    if (filledProfileUserId == profile.userId) return;
+
     name.text = profile.name;
     phone.text = profile.phone ?? '';
     tutorBio.text = profile.tutorBio ?? '';
@@ -177,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     accountNumber.text = profile.accountNumber ?? '';
     accountHolderName.text = profile.accountHolderName ?? '';
     branchName.text = profile.branchName ?? '';
-    initialized = true;
+    filledProfileUserId = profile.userId;
   }
 
   Future<void> _saveProfile() async {

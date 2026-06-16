@@ -753,11 +753,12 @@ class _TutorHomeworkCard extends StatelessWidget {
     final homework = item.homework;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final l10n = context.l10n;
     final hasSubmissions = homework.submissions.isNotEmpty;
     final toGrade = homework.submissions
         .where((submission) => homework.isEssay && !submission.isGraded)
         .length;
-    final typeLabel = context.l10n.text(
+    final typeLabel = l10n.text(
       homework.isMultipleChoice ? 'Multiple choice' : 'Essay',
     );
 
@@ -810,13 +811,13 @@ class _TutorHomeworkCard extends StatelessWidget {
                 itemBuilder: (_) => [
                   PopupMenuItem(
                     value: 'view',
-                    child: Text(context.l10n.text('View detail')),
+                    child: Text(l10n.text('View detail')),
                   ),
                   PopupMenuItem(
                     value: 'edit',
                     enabled: !hasSubmissions,
                     child: Text(
-                      context.l10n.text(
+                      l10n.text(
                         hasSubmissions
                             ? 'Edit locked after submission'
                             : 'Edit',
@@ -825,7 +826,7 @@ class _TutorHomeworkCard extends StatelessWidget {
                   ),
                   PopupMenuItem(
                     value: 'delete',
-                    child: Text(context.l10n.delete),
+                    child: Text(l10n.delete),
                   ),
                 ],
               ),

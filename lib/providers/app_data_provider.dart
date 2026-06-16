@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/mvp_models.dart';
 import '../services/api_service.dart';
@@ -75,6 +75,60 @@ class AppDataProvider extends ChangeNotifier {
   ProfileModel? profile;
 
   AppDataProvider({required this.api});
+
+  void clearSessionData() {
+    loading = false;
+    error = null;
+
+    availabilities = [];
+    myAvailabilities = [];
+    bookings = [];
+    lessons = [];
+
+    wallet = null;
+    walletTransactions = [];
+    payouts = [];
+
+    conversations = [];
+    messages.clear();
+    lessonDetails.clear();
+    lessonHomeworks.clear();
+    _lessonHomeworksLoadedAt.clear();
+    _homeworkDashboardLoadedAt = null;
+    _homeworkDashboardLoad = null;
+    _homeworkCourseLoads.clear();
+    courseMaterials.clear();
+    _courseMaterialsLoadedAt.clear();
+    _courseMaterialLoads.clear();
+
+    adminDashboard = null;
+    pendingTutors = [];
+    adminPayouts = [];
+
+    tutorVerification = null;
+    selectedTutor = null;
+    selectedTutorAvailabilities = [];
+    favoriteTutors = [];
+    tutorReviews.clear();
+    myTutorReviews = [];
+
+    adminTutorDetail = null;
+    adminPayoutDetail = null;
+    adminTutors = [];
+    myReports = [];
+    adminReports = [];
+    adminReportDetail = null;
+    tutorReports = [];
+
+    supportReports = [];
+    adminSupportReports = [];
+    adminSupportReportDetail = null;
+
+    _userNameCache.clear();
+    profile = null;
+
+    notifyListeners();
+  }
 
   String subjectNameById(
     int? subjectId, {
@@ -1073,7 +1127,7 @@ class AppDataProvider extends ChangeNotifier {
     required String nationalIdNumber,
     required String cccdFrontPath,
     required String cccdBackPath,
-    required String certificatePath,
+    required List<String> certificatePaths,
     required String bankName,
     required String accountNumber,
     required String accountHolderName,
@@ -1085,7 +1139,7 @@ class AppDataProvider extends ChangeNotifier {
         nationalIdNumber: nationalIdNumber,
         cccdFrontPath: cccdFrontPath,
         cccdBackPath: cccdBackPath,
-        certificatePath: certificatePath,
+        certificatePaths: certificatePaths,
         bankName: bankName,
         accountNumber: accountNumber,
         accountHolderName: accountHolderName,

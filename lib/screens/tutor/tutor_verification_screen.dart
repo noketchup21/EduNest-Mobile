@@ -33,7 +33,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
 
   String? _cccdFrontPath;
   String? _cccdBackPath;
-  String? _certificatePath;
+  final List<String> _certificatePaths = [];
 
   bool _initializedFields = false;
   bool _handledApprovedRedirect = false;
@@ -198,18 +198,18 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             },
           ),
           const SizedBox(height: 12),
-          _ImagePickerTile(
-            title: t.text('Certificate / university document'),
-            subtitle:
-                t.text('Upload degree, certificate, or enrollment document.'),
-            localPath: _certificatePath,
-            existingUrl: verification?.certificateImageUrl,
-            onPick: () async {
-              final path = await _pickImage();
-              if (path == null) return;
-
+          _MultiImagePickerTile(
+            title: t.text('Upload Certificates'),
+            subtitle: t.text(
+              'Certificate of Enrollment or Academic Transcript',
+            ),
+            localPaths: _certificatePaths,
+            existingUrls: _certificateUrlsFor(verification),
+            maxImages: 5,
+            onPick: _pickCertificateImages,
+            onRemoveLocal: (path) {
               setState(() {
-                _certificatePath = path;
+                _certificatePaths.remove(path);
               });
             },
           ),
@@ -339,11 +339,13 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
 
     if (_cccdFrontPath == null ||
         _cccdBackPath == null ||
-        _certificatePath == null) {
+        _certificatePaths.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            t.text('Please upload CCCD front, CCCD back, and certificate.'),
+            t.text(
+              'Please upload CCCD front, CCCD back, and at least one certificate.',
+            ),
           ),
         ),
       );
@@ -356,7 +358,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             nationalIdNumber: _nationalId.text.trim(),
             cccdFrontPath: _cccdFrontPath!,
             cccdBackPath: _cccdBackPath!,
-            certificatePath: _certificatePath!,
+            certificatePaths: _certificatePaths,
             bankName: _bankName.text.trim(),
             bankBin: _bankBin.text.trim(),
             accountNumber: _accountNumber.text.trim(),
@@ -395,6 +397,54 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
     }
 
     return null;
+  }
+
+  Future<void> _pickCertificateImages() async {
+    final t = AppStrings.of(context, listen: false);
+    const maxImages = 5;
+    final remaining = maxImages - _certificatePaths.length;
+
+    if (remaining <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t.text('Maximum 5 certificate images.'))),
+      );
+      return;
+    }
+
+    final files = await _picker.pickMultiImage(
+      imageQuality: 80,
+      maxWidth: 1600,
+    );
+
+    if (files.isEmpty) return;
+
+    final selectedPaths = files.map((file) => file.path).take(remaining);
+
+    setState(() {
+      for (final path in selectedPaths) {
+        if (!_certificatePaths.contains(path)) {
+          _certificatePaths.add(path);
+        }
+      }
+    });
+
+    if (files.length > remaining && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t.text('Maximum 5 certificate images.'))),
+      );
+    }
+  }
+
+  List<String> _certificateUrlsFor(TutorVerificationModel? verification) {
+    if (verification == null) return const [];
+
+    if (verification.certificateImageUrls.isNotEmpty) {
+      return verification.certificateImageUrls;
+    }
+
+    final url = verification.certificateImageUrl?.trim() ?? '';
+
+    return url.isEmpty ? const [] : [url];
   }
 }
 
@@ -594,5 +644,170 @@ class _ImagePickerTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _MultiImagePickerTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final List<String> localPaths;
+  final List<String> existingUrls;
+  final int maxImages;
+  final VoidCallback onPick;
+  final ValueChanged<String> onRemoveLocal;
+
+  const _MultiImagePickerTile({
+    required this.title,
+    required this.subtitle,
+    required this.localPaths,
+    required this.existingUrls,
+    required this.maxImages,
+    required this.onPick,
+    required this.onRemoveLocal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.l10n;
+    final hasLocal = localPaths.isNotEmpty;
+    final count = hasLocal ? localPaths.length : existingUrls.length;
+    final canAdd = localPaths.length < maxImages;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text('$subtitle\n${t.text('Maximum 5 images')}'),
+              trailing: FilledButton.tonalIcon(
+                onPressed: canAdd ? onPick : null,
+                icon: const Icon(Icons.collections_outlined),
+                label: Text(t.text(hasLocal ? 'Add images' : 'Pick')),
+              ),
+            ),
+            if (count > 0) ...[
+              const SizedBox(height: 6),
+              Text(
+                t.text('{count} image(s) selected').replaceFirst(
+                      '{count}',
+                      count.toString(),
+                    ),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 10),
+              _CertificateImageGrid(
+                localPaths: localPaths,
+                existingUrls: hasLocal ? const [] : existingUrls,
+                onRemoveLocal: onRemoveLocal,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CertificateImageGrid extends StatelessWidget {
+  final List<String> localPaths;
+  final List<String> existingUrls;
+  final ValueChanged<String> onRemoveLocal;
+
+  const _CertificateImageGrid({
+    required this.localPaths,
+    required this.existingUrls,
+    required this.onRemoveLocal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      ...localPaths.map((path) => _CertificateImageItem.local(path)),
+      ...existingUrls.map((url) => _CertificateImageItem.remote(url)),
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: items.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.1,
+      ),
+      itemBuilder: (context, index) {
+        final item = items[index];
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (item.isLocal)
+                Image.file(
+                  File(item.value),
+                  fit: BoxFit.cover,
+                )
+              else
+                Image.network(
+                  item.value,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) {
+                    return ColoredBox(
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                      child: Center(
+                        child: Text(
+                          context.l10n.text('Unable to load existing image'),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              if (item.isLocal)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: IconButton.filledTonal(
+                    onPressed: () => onRemoveLocal(item.value),
+                    icon: const Icon(Icons.close, size: 18),
+                    tooltip: context.l10n.text('Remove'),
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(34, 34),
+                      fixedSize: const Size(34, 34),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CertificateImageItem {
+  final String value;
+  final bool isLocal;
+
+  const _CertificateImageItem._({
+    required this.value,
+    required this.isLocal,
+  });
+
+  factory _CertificateImageItem.local(String path) {
+    return _CertificateImageItem._(value: path, isLocal: true);
+  }
+
+  factory _CertificateImageItem.remote(String url) {
+    return _CertificateImageItem._(value: url, isLocal: false);
   }
 }

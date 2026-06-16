@@ -60,6 +60,7 @@ class EduNestApp extends StatefulWidget {
 
 class _EduNestAppState extends State<EduNestApp> {
   late final GoRouter _router;
+  int? _activeUserId;
 
   @override
   void initState() {
@@ -68,6 +69,27 @@ class _EduNestAppState extends State<EduNestApp> {
     // Build router only once.
     // AuthProvider is already passed as refreshListenable in AppRouter.
     _router = AppRouter.build(widget.authProvider);
+    _activeUserId =
+        widget.authProvider.isAuthenticated ? widget.authProvider.userId : null;
+    widget.authProvider.addListener(_handleAuthChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.authProvider.removeListener(_handleAuthChanged);
+    super.dispose();
+  }
+
+  void _handleAuthChanged() {
+    final nextUserId =
+        widget.authProvider.isAuthenticated ? widget.authProvider.userId : null;
+
+    if (_activeUserId == nextUserId) {
+      return;
+    }
+
+    _activeUserId = nextUserId;
+    widget.appDataProvider.clearSessionData();
   }
 
   @override

@@ -1063,18 +1063,29 @@ class ApiService {
     required String nationalIdNumber,
     required String cccdFrontPath,
     required String cccdBackPath,
-    required String certificatePath,
+    required List<String> certificatePaths,
     required String bankName,
     required String accountNumber,
     required String accountHolderName,
     String? branchName,
     String? bankBin,
   }) async {
+    final certificateFiles = <MultipartFile>[];
+
+    for (final path in certificatePaths) {
+      certificateFiles.add(await MultipartFile.fromFile(path));
+    }
+
+    final legacyCertificateFile = certificatePaths.isEmpty
+        ? null
+        : await MultipartFile.fromFile(certificatePaths.first);
+
     final formData = FormData.fromMap({
       'nationalIdNumber': nationalIdNumber,
       'cccdFrontImage': await MultipartFile.fromFile(cccdFrontPath),
       'cccdBackImage': await MultipartFile.fromFile(cccdBackPath),
-      'certificateImage': await MultipartFile.fromFile(certificatePath),
+      if (legacyCertificateFile != null)
+        'certificateImage': legacyCertificateFile,
       'bankName': bankName,
       'accountNumber': accountNumber,
       'accountHolderName': accountHolderName,
@@ -1083,6 +1094,10 @@ class ApiService {
       if (bankBin != null && bankBin.trim().isNotEmpty)
         'bankBin': bankBin.trim(),
     });
+
+    for (final file in certificateFiles) {
+      formData.files.add(MapEntry('certificateImages', file));
+    }
 
     final res = await dio.post(
       '/api/tutor/verification',

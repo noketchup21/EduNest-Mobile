@@ -1,4 +1,4 @@
-﻿import 'package:file_picker/file_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -593,6 +593,7 @@ class _MaterialSectionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final l10n = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -649,15 +650,15 @@ class _MaterialSectionTile extends StatelessWidget {
                   itemBuilder: (menuContext) => [
                     PopupMenuItem(
                       value: 'add',
-                      child: Text(menuContext.l10n.text('Add material')),
+                      child: Text(l10n.text('Add material')),
                     ),
                     PopupMenuItem(
                       value: 'edit',
-                      child: Text(menuContext.l10n.text('Edit section')),
+                      child: Text(l10n.text('Edit section')),
                     ),
                     PopupMenuItem(
                       value: 'delete',
-                      child: Text(menuContext.l10n.text('Delete section')),
+                      child: Text(l10n.text('Delete section')),
                     ),
                   ],
                 )
@@ -728,6 +729,7 @@ class _MaterialItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final l10n = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -790,11 +792,11 @@ class _MaterialItemCard extends StatelessWidget {
               itemBuilder: (menuContext) => [
                 PopupMenuItem(
                   value: 'edit',
-                  child: Text(menuContext.l10n.text('Edit')),
+                  child: Text(l10n.text('Edit')),
                 ),
                 PopupMenuItem(
                   value: 'delete',
-                  child: Text(menuContext.l10n.text('Delete')),
+                  child: Text(l10n.text('Delete')),
                 ),
               ],
             ),
