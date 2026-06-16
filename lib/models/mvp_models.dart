@@ -1194,6 +1194,7 @@ class TutorVerificationModel {
   final String? cccdFrontImageUrl;
   final String? cccdBackImageUrl;
   final String? certificateImageUrl;
+  final List<String> certificateImageUrls;
 
   final String? bankName;
   final String? accountNumber;
@@ -1215,6 +1216,7 @@ class TutorVerificationModel {
     this.cccdFrontImageUrl,
     this.cccdBackImageUrl,
     this.certificateImageUrl,
+    this.certificateImageUrls = const [],
     this.bankName,
     this.accountNumber,
     this.accountHolderName,
@@ -1237,6 +1239,7 @@ class TutorVerificationModel {
       cccdFrontImageUrl: json['cccdFrontImageUrl']?.toString(),
       cccdBackImageUrl: json['cccdBackImageUrl']?.toString(),
       certificateImageUrl: json['certificateImageUrl']?.toString(),
+      certificateImageUrls: _asStringList(json['certificateImageUrls']),
       bankName: json['bankName']?.toString(),
       accountNumber: json['accountNumber']?.toString(),
       accountHolderName: json['accountHolderName']?.toString(),
@@ -1246,6 +1249,19 @@ class TutorVerificationModel {
       isActive: json['isActive'] == true,
     );
   }
+}
+
+List<String> _asStringList(dynamic value) {
+  if (value is Iterable) {
+    return value
+        .map((item) => item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+
+  final text = value?.toString().trim() ?? '';
+
+  return text.isEmpty ? const [] : [text];
 }
 
 class AdminPayoutDetailModel {

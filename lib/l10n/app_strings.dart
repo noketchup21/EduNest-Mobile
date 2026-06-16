@@ -549,10 +549,20 @@ const Map<String, String> _viPhrases = {
   'Upload the back side of your CCCD.': 'Tải lên mặt sau CCCD của bạn.',
   'Upload degree, certificate, or enrollment document.':
       'Tải lên bằng cấp, chứng chỉ hoặc giấy xác nhận nhập học.',
+  'Upload Certificates': 'Tải lên chứng chỉ',
+  'Certificate of Enrollment or Academic Transcript':
+      'Giấy xác nhận đang học hoặc bảng điểm học tập',
+  'Maximum 5 images': 'Tối đa 5 ảnh',
+  'Maximum 5 certificate images.': 'Tối đa 5 ảnh chứng chỉ.',
+  '{count} image(s) selected': 'Đã chọn {count} ảnh',
+  'Add images': 'Thêm ảnh',
+  'Remove': 'Xóa',
   'Branch name optional': 'Tên chi nhánh (tùy chọn)',
   'Submit verification': 'Gửi xác minh',
   'Please upload CCCD front, CCCD back, and certificate.':
       'Vui lòng tải lên mặt trước CCCD, mặt sau CCCD và chứng chỉ.',
+  'Please upload CCCD front, CCCD back, and at least one certificate.':
+      'Vui lòng tải lên mặt trước CCCD, mặt sau CCCD và ít nhất một chứng chỉ.',
   'Verification submitted. Please wait for admin approval.':
       'Đã gửi xác minh. Vui lòng chờ quản trị viên duyệt.',
   'Your tutor profile is approved. You can create availability.':

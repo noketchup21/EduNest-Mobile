@@ -654,6 +654,7 @@ class _TutorListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final status = tutor.verificationStatus.isEmpty
         ? 'NotSubmitted'
         : tutor.verificationStatus;
@@ -718,15 +719,15 @@ class _TutorListItem extends StatelessWidget {
                 itemBuilder: (_) => [
                   PopupMenuItem(
                     value: 'detail',
-                    child: Text(context.l10n.text('View detail')),
+                    child: Text(l10n.text('View detail')),
                   ),
                   PopupMenuItem(
                     value: 'approve',
-                    child: Text(context.l10n.text('Approve')),
+                    child: Text(l10n.text('Approve')),
                   ),
                   PopupMenuItem(
                     value: 'reject',
-                    child: Text(context.l10n.text('Reject')),
+                    child: Text(l10n.text('Reject')),
                   ),
                 ],
               )
