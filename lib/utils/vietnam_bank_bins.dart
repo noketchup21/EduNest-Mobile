@@ -1,5 +1,4 @@
-
-class VietnamBankBin {
+﻿class VietnamBankBin {
   final String name;
   final String code;
   final String bin;
@@ -48,7 +47,8 @@ const realVietnamBankBins = <VietnamBankBin>[
   VietnamBankBin(name: 'KienLongBank', code: 'KLB', bin: '970452'),
   VietnamBankBin(name: 'KBank', code: 'KBank', bin: '668888'),
   VietnamBankBin(name: 'HongLeong Bank', code: 'HLBVN', bin: '970442'),
-  VietnamBankBin(name: 'KEB Hana Bank Hà Nội', code: 'KEBHANAHN', bin: '970467'),
+  VietnamBankBin(
+      name: 'KEB Hana Bank Hà Nội', code: 'KEBHANAHN', bin: '970467'),
   VietnamBankBin(name: 'KEB Hana Bank HCM', code: 'KEBHANAHCM', bin: '970466'),
   VietnamBankBin(name: 'Citibank', code: 'CITIBANK', bin: '533948'),
   VietnamBankBin(name: 'CBBank', code: 'CBB', bin: '970444'),

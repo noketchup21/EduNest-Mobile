@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
@@ -29,6 +30,7 @@ class _BookingScreenState extends State<BookingScreen> {
     final data = context.watch<AppDataProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
@@ -38,7 +40,7 @@ class _BookingScreenState extends State<BookingScreen> {
         elevation: 0,
         titleSpacing: 20,
         title: Text(
-          'My Bookings',
+          t.myBookings,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             letterSpacing: -0.5,
@@ -97,13 +99,13 @@ class _BookingScreenState extends State<BookingScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No Bookings Found',
+                        t.noBookingsFound,
                         style: theme.textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Your registered classes or scheduled sessions will appear here.',
+                        t.bookingsEmptyMessage,
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colors.onSurfaceVariant,
@@ -140,6 +142,7 @@ class _BookingCard extends StatelessWidget {
     final data = context.watch<AppDataProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
 
     final status = booking.status.toLowerCase();
     final canPay = status == 'pending';
@@ -150,7 +153,7 @@ class _BookingCard extends StatelessWidget {
 
     final subjectName = data.subjectNameById(
       booking.subjectId,
-      fallback: 'Subject #${booking.subjectId ?? '-'}',
+      fallback: '${t.text('Subject')} #${booking.subjectId ?? '-'}',
     );
 
     final statusColor = _getIndicatorColor(status);
@@ -216,19 +219,20 @@ class _BookingCard extends StatelessWidget {
                     children: [
                       _MetaRow(
                         icon: Icons.tag_rounded,
-                        label: 'Booking ID: #${booking.bookingId}',
+                        label: '${t.bookingId}: #${booking.bookingId}',
                         iconColor: Colors.blue,
                       ),
                       const SizedBox(height: 6),
                       _MetaRow(
                         icon: Icons.person_outline_rounded,
-                        label: 'Tutor ID: #${booking.tutorId}',
+                        label: '${t.tutorId}: #${booking.tutorId}',
                         iconColor: Colors.purple,
                       ),
                       const SizedBox(height: 6),
                       _MetaRow(
                         icon: Icons.calendar_month_outlined,
-                        label: 'Availability ID: #${booking.availabilityId}',
+                        label:
+                            '${t.availabilityId}: #${booking.availabilityId}',
                         iconColor: Colors.teal,
                       ),
                     ],
@@ -245,7 +249,7 @@ class _BookingCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Tuition Fee',
+                            t.tuitionFee,
                             style: TextStyle(
                                 fontSize: 11, color: colors.onSurfaceVariant),
                           ),
@@ -281,7 +285,7 @@ class _BookingCard extends StatelessWidget {
                           Expanded(
                             child: _ActionButton(
                               icon: Icons.credit_card_rounded,
-                              label: _payButtonText(status),
+                              label: _payButtonText(context, status),
                               enabled: canPay && !data.loading,
                               variant: _ButtonVariant.filled,
                               onPressed: () => _pay(context, booking.bookingId),
@@ -292,7 +296,7 @@ class _BookingCard extends StatelessWidget {
                             Expanded(
                               child: _ActionButton(
                                 icon: Icons.close_rounded,
-                                label: 'Cancel Booking',
+                                label: t.cancelBooking,
                                 enabled: !data.loading,
                                 variant: _ButtonVariant.outlined,
                                 onPressed: () =>
@@ -308,7 +312,7 @@ class _BookingCard extends StatelessWidget {
                           width: double.infinity,
                           child: _ActionButton(
                             icon: Icons.flag_rounded,
-                            label: 'Report Tutor',
+                            label: t.reportTutor,
                             enabled: !data.loading,
                             variant: _ButtonVariant.danger,
                             onPressed: () => context.push(
@@ -325,7 +329,7 @@ class _BookingCard extends StatelessWidget {
                             icon: reviewed
                                 ? Icons.check_circle_rounded
                                 : Icons.rate_review_rounded,
-                            label: reviewed ? 'Reviewed' : 'Review Tutor',
+                            label: reviewed ? t.reviewed : t.reviewTutor,
                             enabled: !reviewed && !data.loading,
                             variant: _ButtonVariant.outlined,
                             onPressed: () => _review(context, booking),
@@ -369,23 +373,24 @@ class _BookingCard extends StatelessWidget {
     }
   }
 
-  String _payButtonText(String status) {
+  String _payButtonText(BuildContext context, String status) {
+    final t = AppStrings.of(context, listen: false);
     switch (status) {
       case 'pending':
-        return 'Pay Now';
+        return t.payNow;
       case 'paid':
       case 'confirmed':
-        return 'Paid';
+        return t.paid;
       case 'completed':
-        return 'Completed';
+        return t.completed;
       case 'cancelled':
-        return 'Cancelled';
+        return t.cancelled;
       case 'expired':
-        return 'Expired';
+        return t.expired;
       case 'failed':
-        return 'Failed';
+        return t.failed;
       default:
-        return 'Unavailable';
+        return t.unavailable;
     }
   }
 
@@ -403,12 +408,14 @@ class _BookingCard extends StatelessWidget {
       context: context,
       bookingId: booking.bookingId,
       tutorId: booking.tutorId,
-      tutorName: 'Tutor #${booking.tutorId}',
+      tutorName:
+          '${AppStrings.of(context, listen: false).tutor} #${booking.tutorId}',
     );
 
     if (created == true && context.mounted) {
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review submitted')),
+        SnackBar(content: Text(t.reviewSubmitted)),
       );
     }
   }
@@ -425,6 +432,7 @@ class _BookingCard extends StatelessWidget {
       builder: (sheetContext) {
         final theme = Theme.of(sheetContext);
         final colors = theme.colorScheme;
+        final t = AppStrings.of(sheetContext, listen: false);
         return Padding(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
           child: Column(
@@ -440,14 +448,14 @@ class _BookingCard extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Cancel Booking Request?',
+                t.cancelBookingTitle,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 10),
               Text(
-                'This action will cancel the pending booking request. You can book this slot again later if needed.',
+                t.cancelBookingMessage,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colors.onSurfaceVariant,
@@ -466,7 +474,7 @@ class _BookingCard extends StatelessWidget {
                         ),
                         minimumSize: const Size(0, 48),
                       ),
-                      child: const Text('Keep Booking'),
+                      child: Text(t.keepBooking),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -480,7 +488,7 @@ class _BookingCard extends StatelessWidget {
                         ),
                         minimumSize: const Size(0, 48),
                       ),
-                      child: const Text('Confirm Cancel'),
+                      child: Text(t.confirmCancel),
                     ),
                   ),
                 ],
@@ -499,9 +507,10 @@ class _BookingCard extends StatelessWidget {
     try {
       await data.cancelBooking(bookingId);
       if (!context.mounted) return;
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Booking request cancelled successfully'),
+          content: Text(t.bookingCancelled),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -641,6 +650,7 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = _statusColors(status);
+    final t = context.l10n;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -649,7 +659,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        _statusTranslation(status),
+        t.status(status),
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
@@ -657,27 +667,6 @@ class _StatusChip extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _statusTranslation(String val) {
-    switch (val.toLowerCase()) {
-      case 'pending':
-        return 'Pending';
-      case 'paid':
-        return 'Paid';
-      case 'confirmed':
-        return 'Confirmed';
-      case 'completed':
-        return 'Completed';
-      case 'cancelled':
-        return 'Cancelled';
-      case 'expired':
-        return 'Expired';
-      case 'failed':
-        return 'Failed';
-      default:
-        return val.toUpperCase();
-    }
   }
 
   (Color, Color) _statusColors(String value) {

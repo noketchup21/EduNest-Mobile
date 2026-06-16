@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_strings.dart';
 import '../providers/app_data_provider.dart';
 
 Future<bool?> showTutorReviewSheet({
@@ -72,6 +73,7 @@ class _TutorReviewSheetState extends State<_TutorReviewSheet> {
     final data = context.watch<AppDataProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     final tutorName = widget.tutorName.trim().isEmpty
         ? 'Tutor #${widget.tutorId}'
@@ -95,14 +97,14 @@ class _TutorReviewSheetState extends State<_TutorReviewSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Review $tutorName',
+            t.reviewTutorName(tutorName),
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            'Booking #${widget.bookingId}',
+            t.bookingNumber(widget.bookingId),
             style: TextStyle(color: colors.onSurfaceVariant),
           ),
           const SizedBox(height: 18),
@@ -127,7 +129,7 @@ class _TutorReviewSheetState extends State<_TutorReviewSheet> {
                     size: 34,
                     color: Colors.amber.shade700,
                   ),
-                  tooltip: '$value star',
+                  tooltip: t.starTooltip(value),
                 );
               },
             ),
@@ -139,8 +141,8 @@ class _TutorReviewSheetState extends State<_TutorReviewSheet> {
             maxLines: 5,
             textInputAction: TextInputAction.newline,
             decoration: InputDecoration(
-              labelText: 'Comment',
-              hintText: 'Share what worked well or what could improve',
+              labelText: t.comment,
+              hintText: t.reviewHint,
               alignLabelWithHint: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -160,7 +162,7 @@ class _TutorReviewSheetState extends State<_TutorReviewSheet> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Cancel'),
+                  child: Text(t.cancel),
                 ),
               ),
               const SizedBox(width: 12),
@@ -174,7 +176,7 @@ class _TutorReviewSheetState extends State<_TutorReviewSheet> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.rate_review_rounded),
-                  label: Text(data.loading ? 'Sending...' : 'Submit'),
+                  label: Text(data.loading ? t.sending : t.submit),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 48),
                     shape: RoundedRectangleBorder(

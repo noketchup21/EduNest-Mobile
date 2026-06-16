@@ -1,9 +1,10 @@
-import 'package:file_picker/file_picker.dart';
+﻿import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -86,86 +87,105 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
   Future<void> _addSection() async {
     final availabilityId = selectedAvailabilityId;
     if (availabilityId == null) return;
+    final data = context.read<AppDataProvider>();
+    final t = AppStrings.of(context, listen: false);
+    final successMessage = t.text('Section added');
 
     final payload = await _showSectionEditor(context);
     if (payload == null || !mounted) return;
 
     try {
-      await context.read<AppDataProvider>().createMaterialSection(
-            availabilityId: availabilityId,
-            title: payload.title,
-            description: payload.description,
-          );
-      _showSnack('Section added');
+      await data.createMaterialSection(
+        availabilityId: availabilityId,
+        title: payload.title,
+        description: payload.description,
+      );
+      _showSnack(successMessage);
     } catch (_) {}
   }
 
   Future<void> _editSection(CourseMaterialSectionModel section) async {
+    final t = AppStrings.of(context, listen: false);
+
     if (section.sectionId == 0) {
       _showSnack(
-          'This default section can be edited after backend sections are enabled.');
+        t.text(
+          'This default section can be edited after backend sections are enabled.',
+        ),
+      );
       return;
     }
 
+    final data = context.read<AppDataProvider>();
+    final successMessage = t.text('Section updated');
     final payload = await _showSectionEditor(context, section: section);
     if (payload == null || !mounted) return;
 
     try {
-      await context.read<AppDataProvider>().updateMaterialSection(
-            availabilityId: section.availabilityId,
-            sectionId: section.sectionId,
-            title: payload.title,
-            description: payload.description,
-          );
-      _showSnack('Section updated');
+      await data.updateMaterialSection(
+        availabilityId: section.availabilityId,
+        sectionId: section.sectionId,
+        title: payload.title,
+        description: payload.description,
+      );
+      _showSnack(successMessage);
     } catch (_) {}
   }
 
   Future<void> _deleteSection(CourseMaterialSectionModel section) async {
+    final t = AppStrings.of(context, listen: false);
+
     if (section.sectionId == 0) {
-      _showSnack('This default section cannot be deleted.');
+      _showSnack(t.text('This default section cannot be deleted.'));
       return;
     }
 
+    final data = context.read<AppDataProvider>();
+    final successMessage = t.text('Section deleted');
     final confirmed = await _confirm(
-      title: 'Delete section?',
-      message: 'Delete "${section.title}" and all materials inside it?',
+      title: t.text('Delete section?'),
+      message: t.deleteSectionMessage(section.title),
     );
     if (confirmed != true || !mounted) return;
 
     try {
-      await context.read<AppDataProvider>().deleteMaterialSection(
-            availabilityId: section.availabilityId,
-            sectionId: section.sectionId,
-          );
-      _showSnack('Section deleted');
+      await data.deleteMaterialSection(
+        availabilityId: section.availabilityId,
+        sectionId: section.sectionId,
+      );
+      _showSnack(successMessage);
     } catch (_) {}
   }
 
   Future<void> _addMaterial(CourseMaterialSectionModel section) async {
     final availabilityId = selectedAvailabilityId;
     if (availabilityId == null) return;
+    final data = context.read<AppDataProvider>();
+    final t = AppStrings.of(context, listen: false);
+    final successMessage = t.text('Material added');
 
     final payload = await _showMaterialEditor(context);
     if (payload == null || !mounted) return;
 
     try {
-      await context.read<AppDataProvider>().createMaterialItem(
-            availabilityId: availabilityId,
-            sectionId: section.sectionId,
-            title: payload.title,
-            description: payload.description,
-            linkUrl: payload.linkUrl,
-            filePath: payload.filePath,
-          );
-      _showSnack('Material added');
+      await data.createMaterialItem(
+        availabilityId: availabilityId,
+        sectionId: section.sectionId,
+        title: payload.title,
+        description: payload.description,
+        linkUrl: payload.linkUrl,
+        filePath: payload.filePath,
+      );
+      _showSnack(successMessage);
     } catch (_) {}
   }
 
   Future<void> _editMaterial(CourseMaterialItemModel item) async {
-    final sections =
-        context.read<AppDataProvider>().courseMaterials[item.availabilityId] ??
-            <CourseMaterialSectionModel>[];
+    final data = context.read<AppDataProvider>();
+    final t = AppStrings.of(context, listen: false);
+    final successMessage = t.text('Material updated');
+    final sections = data.courseMaterials[item.availabilityId] ??
+        <CourseMaterialSectionModel>[];
     final payload = await _showMaterialEditor(
       context,
       item: item,
@@ -174,45 +194,51 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
     if (payload == null || !mounted) return;
 
     try {
-      await context.read<AppDataProvider>().updateMaterialItem(
-            availabilityId: item.availabilityId,
-            materialId: item.materialId,
-            title: payload.title,
-            description: payload.description,
-            linkUrl: payload.linkUrl,
-            filePath: payload.filePath,
-            sectionId: payload.sectionId,
-          );
-      _showSnack('Material updated');
+      await data.updateMaterialItem(
+        availabilityId: item.availabilityId,
+        materialId: item.materialId,
+        title: payload.title,
+        description: payload.description,
+        linkUrl: payload.linkUrl,
+        filePath: payload.filePath,
+        sectionId: payload.sectionId,
+      );
+      _showSnack(successMessage);
     } catch (_) {}
   }
 
   Future<void> _deleteMaterial(CourseMaterialItemModel item) async {
+    final data = context.read<AppDataProvider>();
+    final t = AppStrings.of(context, listen: false);
+    final successMessage = t.text('Material deleted');
     final confirmed = await _confirm(
-      title: 'Delete material?',
-      message: 'Delete "${item.title}"?',
+      title: t.text('Delete material?'),
+      message: t.deleteMaterialMessage(item.title),
     );
     if (confirmed != true || !mounted) return;
 
     try {
-      await context.read<AppDataProvider>().deleteMaterialItem(
-            availabilityId: item.availabilityId,
-            materialId: item.materialId,
-          );
-      _showSnack('Material deleted');
+      await data.deleteMaterialItem(
+        availabilityId: item.availabilityId,
+        materialId: item.materialId,
+      );
+      _showSnack(successMessage);
     } catch (_) {}
   }
 
   Future<void> _openMaterial(CourseMaterialItemModel item) async {
+    final t = AppStrings.of(context, listen: false);
     final uri = _materialUri(item);
     if (uri == null) {
-      _showSnack('No file or link is available for this material.');
+      _showSnack(
+        t.text('No file or link is available for this material.'),
+      );
       return;
     }
 
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened && mounted) {
-      _showSnack('Could not open this material.');
+      _showSnack(t.text('Could not open this material.'));
     }
   }
 
@@ -220,6 +246,8 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
     required String title,
     required String message,
   }) {
+    final t = AppStrings.of(context, listen: false);
+
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -228,11 +256,11 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(t.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(t.delete),
           ),
         ],
       ),
@@ -266,6 +294,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
     final auth = context.watch<AuthProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
     final courses = _coursesFor(data, auth);
     final selectedId = _selectedOrDefaultCourseId(courses);
     final sections = selectedId == null
@@ -275,13 +304,13 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
     return Scaffold(
       backgroundColor: colors.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text('Materials'),
+        title: Text(t.materials),
         backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,
         actions: [
           IconButton.outlined(
             onPressed: data.loading ? null : _reload,
-            tooltip: 'Refresh',
+            tooltip: t.refresh,
             icon: const Icon(Icons.refresh_rounded, size: 20),
           ),
           if (auth.isTutor)
@@ -291,7 +320,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
                 onPressed:
                     selectedId == null || data.loading ? null : _addSection,
                 icon: const Icon(Icons.create_new_folder_outlined, size: 18),
-                label: const Text('Section'),
+                label: Text(t.section),
               ),
             )
           else
@@ -321,8 +350,8 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
               _EmptyMaterialsState(
                 icon: Icons.school_outlined,
                 text: auth.isTutor
-                    ? 'No courses are available for materials yet.'
-                    : 'No enrolled courses are available yet.',
+                    ? t.noMaterialCoursesTutor
+                    : t.noMaterialCoursesLearner,
               )
             else if (data.loading && sections.isEmpty)
               const Padding(
@@ -333,8 +362,10 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
               _EmptyMaterialsState(
                 icon: Icons.folder_open_outlined,
                 text: auth.isTutor
-                    ? 'No material sections in this course yet.'
-                    : 'No materials have been shared for this course yet.',
+                    ? t.text('No material sections in this course yet.')
+                    : t.text(
+                        'No materials have been shared for this course yet.',
+                      ),
               )
             else
               ...sections.asMap().entries.map(
@@ -389,7 +420,9 @@ class _MaterialsIntro extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isTutor ? 'Manage course materials' : 'Course materials',
+                  context.l10n.text(
+                    isTutor ? 'Manage course materials' : 'Course materials',
+                  ),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -397,8 +430,12 @@ class _MaterialsIntro extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   isTutor
-                      ? 'Organize files and links by section for each class.'
-                      : 'Open shared files and links from your enrolled classes.',
+                      ? context.l10n.text(
+                          'Organize files and links by section for each class.',
+                        )
+                      : context.l10n.text(
+                          'Open shared files and links from your enrolled classes.',
+                        ),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),
@@ -440,7 +477,7 @@ class _CourseDropdown extends StatelessWidget {
       isExpanded: true,
       menuMaxHeight: 360,
       decoration: InputDecoration(
-        labelText: 'Class',
+        labelText: context.l10n.text('Class'),
         prefixIcon: const Icon(Icons.school_outlined),
         filled: true,
         fillColor: colors.surface,
@@ -594,7 +631,7 @@ class _MaterialSectionTile extends StatelessWidget {
           subtitle: Text(
             section.description?.trim().isNotEmpty == true
                 ? section.description!
-                : '${section.items.length} material${section.items.length == 1 ? '' : 's'}',
+                : context.l10n.materialsN(section.items.length),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -609,11 +646,19 @@ class _MaterialSectionTile extends StatelessWidget {
                     if (value == 'edit') onEditSection();
                     if (value == 'delete') onDeleteSection();
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'add', child: Text('Add material')),
-                    PopupMenuItem(value: 'edit', child: Text('Edit section')),
+                  itemBuilder: (menuContext) => [
                     PopupMenuItem(
-                        value: 'delete', child: Text('Delete section')),
+                      value: 'add',
+                      child: Text(menuContext.l10n.text('Add material')),
+                    ),
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Text(menuContext.l10n.text('Edit section')),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text(menuContext.l10n.text('Delete section')),
+                    ),
                   ],
                 )
               else
@@ -630,7 +675,7 @@ class _MaterialSectionTile extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onAddMaterial,
                     icon: const Icon(Icons.upload_file_outlined, size: 18),
-                    label: const Text('Add material'),
+                    label: Text(context.l10n.text('Add material')),
                   ),
                 ),
               ),
@@ -638,7 +683,7 @@ class _MaterialSectionTile extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  'No materials in this section yet.',
+                  context.l10n.text('No materials in this section yet.'),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),
@@ -733,7 +778,7 @@ class _MaterialItemCard extends StatelessWidget {
           ),
           IconButton(
             onPressed: item.canOpen ? onOpen : null,
-            tooltip: 'Open',
+            tooltip: context.l10n.text('Open'),
             icon: const Icon(Icons.open_in_new_rounded),
           ),
           if (isTutor)
@@ -742,9 +787,15 @@ class _MaterialItemCard extends StatelessWidget {
                 if (value == 'edit') onEdit();
                 if (value == 'delete') onDelete();
               },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'edit', child: Text('Edit')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
+              itemBuilder: (menuContext) => [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text(menuContext.l10n.text('Edit')),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text(menuContext.l10n.text('Delete')),
+                ),
               ],
             ),
         ],
@@ -843,26 +894,30 @@ Future<_SectionEditorResult?> _showSectionEditor(
   BuildContext context, {
   CourseMaterialSectionModel? section,
 }) {
+  final t = AppStrings.of(context, listen: false);
   final title = TextEditingController(text: section?.title ?? '');
   final description = TextEditingController(text: section?.description ?? '');
 
   return showDialog<_SectionEditorResult>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text(section == null ? 'Add section' : 'Edit section'),
+      title: Text(
+        t.text(section == null ? 'Add section' : 'Edit section'),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: title,
-            decoration: const InputDecoration(labelText: 'Title'),
+            decoration: InputDecoration(labelText: t.text('Title')),
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: description,
-            decoration:
-                const InputDecoration(labelText: 'Description optional'),
+            decoration: InputDecoration(
+              labelText: t.text('Description optional'),
+            ),
             maxLines: 3,
           ),
         ],
@@ -870,7 +925,7 @@ Future<_SectionEditorResult?> _showSectionEditor(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(t.cancel),
         ),
         FilledButton(
           onPressed: () {
@@ -883,7 +938,7 @@ Future<_SectionEditorResult?> _showSectionEditor(
               ),
             );
           },
-          child: const Text('Save'),
+          child: Text(t.text('Save')),
         ),
       ],
     ),
@@ -895,6 +950,7 @@ Future<_MaterialEditorResult?> _showMaterialEditor(
   CourseMaterialItemModel? item,
   List<CourseMaterialSectionModel> sections = const [],
 }) {
+  final t = AppStrings.of(context, listen: false);
   final title = TextEditingController(text: item?.title ?? '');
   final description = TextEditingController(text: item?.description ?? '');
   final link = TextEditingController(text: item?.fileUrl ?? '');
@@ -917,29 +973,33 @@ Future<_MaterialEditorResult?> _showMaterialEditor(
       return StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            title: Text(item == null ? 'Add material' : 'Edit material'),
+            title: Text(
+              t.text(item == null ? 'Add material' : 'Edit material'),
+            ),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: title,
-                    decoration: const InputDecoration(labelText: 'Title'),
+                    decoration: InputDecoration(
+                      labelText: t.text('Title'),
+                    ),
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: description,
-                    decoration: const InputDecoration(
-                      labelText: 'Description optional',
+                    decoration: InputDecoration(
+                      labelText: t.text('Description optional'),
                     ),
                     maxLines: 3,
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: link,
-                    decoration: const InputDecoration(
-                      labelText: 'Link or existing file URL',
+                    decoration: InputDecoration(
+                      labelText: t.text('Link or existing file URL'),
                     ),
                     keyboardType: TextInputType.url,
                   ),
@@ -948,9 +1008,9 @@ Future<_MaterialEditorResult?> _showMaterialEditor(
                     DropdownButtonFormField<int>(
                       initialValue: selectedSectionId,
                       isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Section',
-                        prefixIcon: Icon(Icons.folder_outlined),
+                      decoration: InputDecoration(
+                        labelText: t.section,
+                        prefixIcon: const Icon(Icons.folder_outlined),
                       ),
                       items: editableSections.map((section) {
                         return DropdownMenuItem<int>(
@@ -980,8 +1040,9 @@ Future<_MaterialEditorResult?> _showMaterialEditor(
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text(
-                                'Material file must be 10MB or smaller.',
+                              content: Text(
+                                t.text(
+                                    'Material file must be 10MB or smaller.'),
                               ),
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
@@ -999,7 +1060,7 @@ Future<_MaterialEditorResult?> _showMaterialEditor(
                       });
                     },
                     icon: const Icon(Icons.attach_file_rounded, size: 18),
-                    label: Text(fileName ?? 'Choose file'),
+                    label: Text(fileName ?? t.text('Choose file')),
                   ),
                 ],
               ),
@@ -1007,7 +1068,7 @@ Future<_MaterialEditorResult?> _showMaterialEditor(
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(t.cancel),
               ),
               FilledButton(
                 onPressed: () {
@@ -1027,7 +1088,7 @@ Future<_MaterialEditorResult?> _showMaterialEditor(
                     ),
                   );
                 },
-                child: const Text('Save'),
+                child: Text(t.text('Save')),
               ),
             ],
           );

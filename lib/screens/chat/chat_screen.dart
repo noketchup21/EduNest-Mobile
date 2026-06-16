@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/user_avatar.dart';
@@ -22,7 +23,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback(
-          (_) => context.read<AppDataProvider>().loadConversations(),
+      (_) => context.read<AppDataProvider>().loadConversations(),
     );
   }
 
@@ -39,6 +40,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLowest,
@@ -48,7 +50,7 @@ class _ChatScreenState extends State<ChatScreen> {
         elevation: 0,
         titleSpacing: 20,
         title: Text(
-          'Chat',
+          t.chat,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
             letterSpacing: -0.3,
@@ -84,7 +86,6 @@ class _ChatScreenState extends State<ChatScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
             ErrorBanner(data.error),
-
             Container(
               margin: const EdgeInsets.only(bottom: 14),
               decoration: BoxDecoration(
@@ -117,7 +118,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         controller: otherUserEmail,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          hintText: 'User email',
+                          hintText: t.userEmail,
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -130,50 +131,50 @@ class _ChatScreenState extends State<ChatScreen> {
                       onPressed: data.loading
                           ? null
                           : () async {
-                        final email = otherUserEmail.text.trim();
+                              final email = otherUserEmail.text.trim();
 
-                        if (email.isEmpty || !email.contains('@')) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Enter a valid user email')),
-                          );
-                          return;
-                        }
+                              if (email.isEmpty || !email.contains('@')) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(t.enterValidUserEmail)),
+                                );
+                                return;
+                              }
 
-                        try {
-                          final conversation = await data.startConversationByEmail(email);
+                              try {
+                                final conversation =
+                                    await data.startConversationByEmail(email);
 
-                          if (context.mounted) {
-                            otherUserEmail.clear();
-                            context.push('/chat/${conversation.conversationId}');
-                          }
-                        } catch (_) {
-                          // ErrorBanner will show provider error.
-                        }
-                      },
+                                if (context.mounted) {
+                                  otherUserEmail.clear();
+                                  context.push(
+                                      '/chat/${conversation.conversationId}');
+                                }
+                              } catch (_) {
+                                // ErrorBanner will show provider error.
+                              }
+                            },
                       icon: const Icon(Icons.send_rounded),
-                      label: const Text('Start'),
+                      label: Text(t.start),
                     ),
                   ],
                 ),
               ),
             ),
-
             ...data.conversations.map((c) {
-              final otherIds = c.userIds
-                  .where((id) => id != data.profile?.userId)
-                  .toList();
+              final otherIds =
+                  c.userIds.where((id) => id != data.profile?.userId).toList();
 
               final fallbackName = otherIds.isEmpty
-                  ? 'Conversation #${c.conversationId}'
+                  ? t.conversationNumber(c.conversationId)
                   : otherIds.map((id) => data.userName(id)).join(', ');
 
               final displayName = c.otherUserName.trim().isNotEmpty
                   ? c.otherUserName
                   : fallbackName;
 
-              final roleText = c.otherUserRole.trim().isEmpty
-                  ? ''
-                  : ' • ${c.otherUserRole}';
+              final roleText =
+                  c.otherUserRole.trim().isEmpty ? '' : ' • ${c.otherUserRole}';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
@@ -220,13 +221,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               );
             }),
-
             if (data.loading && data.conversations.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 48),
                 child: Center(child: CircularProgressIndicator()),
               ),
-
             if (!data.loading && data.conversations.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 48),

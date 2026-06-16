@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -54,24 +55,26 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   Future<void> _openMeeting(String link) async {
+    final t = AppStrings.of(context, listen: false);
     final uri = Uri.tryParse(link.trim());
     if (uri == null) {
       if (!mounted) return;
-      _showSnack('Invalid meeting link');
+      _showSnack(t.invalidMeetingLink);
       return;
     }
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && mounted) _showSnack('Could not open meeting link');
+    if (!opened && mounted) _showSnack(t.couldNotOpenMeeting);
   }
 
   Future<void> _saveMeetingLink() async {
+    final t = AppStrings.of(context, listen: false);
     try {
       await context.read<AppDataProvider>().setLessonMeetingLink(
             lessonId: widget.lessonId,
             meetingLink: meetingLink.text.trim(),
           );
       if (!mounted) return;
-      _showSnack('Meeting link saved');
+      _showSnack(t.text('Meeting link saved'));
     } catch (_) {}
   }
 
@@ -79,6 +82,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     required int studentLessonId,
     required String status,
   }) async {
+    final t = AppStrings.of(context, listen: false);
     try {
       await context.read<AppDataProvider>().markStudentAttendance(
             mainLessonId: widget.lessonId,
@@ -86,21 +90,23 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             status: status,
           );
       if (!mounted) return;
-      _showSnack('Marked as $status');
+      _showSnack('${t.text('Marked as')} ${t.status(status)}');
     } catch (_) {}
   }
 
   Future<void> _completeLesson() async {
+    final t = AppStrings.of(context, listen: false);
     try {
       await context
           .read<AppDataProvider>()
           .completeLessonGroup(widget.lessonId);
       if (!mounted) return;
-      _showSnack('Lesson completed');
+      _showSnack(t.text('Lesson completed'));
     } catch (_) {}
   }
 
   Future<void> _createHomework() async {
+    final t = AppStrings.of(context, listen: false);
     final body = await _showHomeworkEditorSheet(context);
     if (body == null || !mounted) return;
 
@@ -110,13 +116,16 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             body: body,
           );
       if (!mounted) return;
-      _showSnack('Homework created');
+      _showSnack(t.text('Homework created'));
     } catch (_) {}
   }
 
   Future<void> _editHomework(HomeworkModel homework) async {
+    final t = AppStrings.of(context, listen: false);
     if (homework.submissions.isNotEmpty) {
-      _showSnack('Homework cannot be edited after a submission is received');
+      _showSnack(
+        t.text('Homework cannot be edited after a submission is received'),
+      );
       return;
     }
 
@@ -130,24 +139,25 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             body: body,
           );
       if (!mounted) return;
-      _showSnack('Homework updated');
+      _showSnack(t.text('Homework updated'));
     } catch (_) {}
   }
 
   Future<void> _deleteHomework(HomeworkModel homework) async {
+    final t = AppStrings.of(context, listen: false);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete homework?'),
-        content: Text('Delete "${homework.title}" and its submissions?'),
+        title: Text(t.text('Delete homework?')),
+        content: Text(t.text('Delete homework and its submissions?')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(t.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(t.delete),
           ),
         ],
       ),
@@ -161,7 +171,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             homeworkId: homework.homeworkId,
           );
       if (!mounted) return;
-      _showSnack('Homework deleted');
+      _showSnack(t.text('Homework deleted'));
     } catch (_) {}
   }
 
@@ -170,6 +180,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   Future<void> _submitHomework(HomeworkModel homework) async {
+    final t = AppStrings.of(context, listen: false);
     final payload = await _showHomeworkSubmitSheet(context, homework);
     if (payload == null || !mounted) return;
 
@@ -181,7 +192,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             essayAnswers: payload.essayAnswers,
           );
       if (!mounted) return;
-      _showSnack('Homework submitted');
+      _showSnack(t.text('Homework submitted'));
     } catch (_) {}
   }
 
@@ -189,6 +200,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     required HomeworkModel homework,
     required HomeworkSubmissionModel submission,
   }) async {
+    final t = AppStrings.of(context, listen: false);
     final payload = await _showEssayGradeSheet(
       context,
       homework: homework,
@@ -205,7 +217,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             feedback: payload.feedback,
           );
       if (!mounted) return;
-      _showSnack('Submission graded');
+      _showSnack(t.text('Submission graded'));
     } catch (_) {}
   }
 
@@ -222,6 +234,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final data = context.watch<AppDataProvider>();
     final auth = context.watch<AuthProvider>();
     final detail = data.lessonDetails[widget.lessonId];
@@ -238,7 +251,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         elevation: 0,
         titleSpacing: 4,
         title: Text(
-          'Lesson detail',
+          t.text('Lesson detail'),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
             letterSpacing: -0.3,
@@ -309,7 +322,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                       child: Row(
                         children: [
                           Text(
-                            'Students',
+                            t.text('Students'),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                               letterSpacing: -0.2,
@@ -361,9 +374,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Lesson Header Card
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 class _TutorHomeworkShortcutCard extends StatelessWidget {
   final int lessonId;
@@ -372,6 +385,7 @@ class _TutorHomeworkShortcutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -407,14 +421,16 @@ class _TutorHomeworkShortcutCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Homework is managed separately',
+                  t.text('Homework is managed separately'),
                   style: theme.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Create assignments and grade submissions in the Homework tab.',
+                  t.text(
+                    'Create assignments and grade submissions in the Homework tab.',
+                  ),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colors.onSurface.withValues(alpha: 0.55),
                     height: 1.35,
@@ -427,7 +443,7 @@ class _TutorHomeworkShortcutCard extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () => context.go('/homework?lessonId=$lessonId'),
             icon: const Icon(Icons.open_in_new_rounded, size: 16),
-            label: const Text('Open'),
+            label: Text(t.open),
           ),
         ],
       ),
@@ -463,6 +479,7 @@ class _HomeworkSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -473,7 +490,7 @@ class _HomeworkSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Homework',
+                t.homework,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.2,
@@ -483,7 +500,7 @@ class _HomeworkSection extends StatelessWidget {
             if (isTutor)
               IconButton.outlined(
                 onPressed: loading ? null : onCreate,
-                tooltip: 'Add homework',
+                tooltip: t.text('Add homework'),
                 icon: const Icon(Icons.add_rounded, size: 20),
                 style: IconButton.styleFrom(
                   side: BorderSide(color: colors.outlineVariant, width: 0.5),
@@ -509,8 +526,9 @@ class _HomeworkSection extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Text(
               isTutor
-                  ? 'No homework yet. Add an assignment for this session.'
-                  : 'No homework assigned for this session yet.',
+                  ? t.text(
+                      'No homework yet. Add an assignment for this session.')
+                  : t.text('No homework assigned for this session yet.'),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.6),
               ),
@@ -563,11 +581,14 @@ class _HomeworkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final submitted = homework.mySubmission;
     final hasSubmissions = homework.submissions.isNotEmpty;
-    final typeLabel = homework.isMultipleChoice ? 'Multiple choice' : 'Essay';
+    final typeLabel = t.text(
+      homework.isMultipleChoice ? 'Multiple choice' : 'Essay',
+    );
     final due =
         DateFormat('dd/MM/yyyy HH:mm').format(homework.dueDate.toLocal());
 
@@ -613,7 +634,7 @@ class _HomeworkCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '$typeLabel - ${homework.totalPoints.g} pts - due $due',
+                      '$typeLabel - ${t.points(homework.totalPoints.g)} - ${t.dueAt(due)}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.55),
                       ),
@@ -629,20 +650,20 @@ class _HomeworkCard extends StatelessWidget {
                     if (value == 'delete') onDelete();
                   },
                   itemBuilder: (_) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'view',
-                      child: Text('View detail'),
+                      child: Text(t.text('View detail')),
                     ),
                     PopupMenuItem(
                       value: 'edit',
                       enabled: !hasSubmissions,
                       child: Text(
                         hasSubmissions
-                            ? 'Edit locked after submission'
-                            : 'Edit',
+                            ? t.text('Edit locked after submission')
+                            : t.text('Edit'),
                       ),
                     ),
-                    const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                    PopupMenuItem(value: 'delete', child: Text(t.delete)),
                   ],
                 ),
             ],
@@ -690,6 +711,7 @@ class _LearnerHomeworkAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -699,7 +721,7 @@ class _LearnerHomeworkAction extends StatelessWidget {
         child: FilledButton.icon(
           onPressed: loading ? null : onSubmit,
           icon: const Icon(Icons.upload_file_rounded, size: 17),
-          label: const Text('Submit homework'),
+          label: Text(t.text('Submit homework')),
           style: FilledButton.styleFrom(
             minimumSize: const Size(0, 40),
             shape:
@@ -709,7 +731,7 @@ class _LearnerHomeworkAction extends StatelessWidget {
       );
     }
 
-    final status = submission!.isGraded ? 'Graded' : 'Submitted';
+    final status = t.text(submission!.isGraded ? 'Graded' : 'Submitted');
     final score = '${submission!.totalScore.g}/${submission!.maxScore.g}';
 
     return Container(
@@ -723,7 +745,7 @@ class _LearnerHomeworkAction extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '$status - $score pts',
+            '$status - ${t.points(score)}',
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -752,12 +774,13 @@ class _TutorHomeworkSubmissions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
     if (homework.submissions.isEmpty) {
       return Text(
-        'No submissions yet',
+        t.text('No submissions yet'),
         style: theme.textTheme.bodySmall?.copyWith(
           color: colors.onSurface.withValues(alpha: 0.55),
         ),
@@ -782,19 +805,18 @@ class _TutorHomeworkSubmissions extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '${submission.studentName} - '
-                    '${submission.totalScore.g}/${submission.maxScore.g} pts',
+                    '${submission.studentName} - ${t.points('${submission.totalScore.g}/${submission.maxScore.g}')}',
                     style: theme.textTheme.bodyMedium,
                   ),
                 ),
                 if (needsGrade)
                   TextButton(
                     onPressed: loading ? null : () => onGrade(submission),
-                    child: const Text('Grade'),
+                    child: Text(t.text('Grade')),
                   )
                 else
                   Text(
-                    submission.isGraded ? 'Graded' : 'Auto scored',
+                    t.text(submission.isGraded ? 'Graded' : 'Auto scored'),
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: colors.onSurface.withValues(alpha: 0.55),
                     ),
@@ -874,6 +896,7 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
   BuildContext context, {
   HomeworkModel? homework,
 }) async {
+  final t = AppStrings.of(context, listen: false);
   final title = TextEditingController(text: homework?.title ?? '');
   final description = TextEditingController(text: homework?.description ?? '');
   var type = homework?.type == 'Essay' ? 'Essay' : 'MultipleChoice';
@@ -980,7 +1003,8 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      homework == null ? 'Add homework' : 'Edit homework',
+                      t.text(
+                          homework == null ? 'Add homework' : 'Edit homework'),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -988,23 +1012,26 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                     const SizedBox(height: 12),
                     TextField(
                       controller: title,
-                      decoration: const InputDecoration(labelText: 'Title'),
+                      decoration: InputDecoration(labelText: t.text('Title')),
                     ),
                     TextField(
                       controller: description,
                       decoration:
-                          const InputDecoration(labelText: 'Description'),
+                          InputDecoration(labelText: t.text('Description')),
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
                       initialValue: type,
-                      decoration: const InputDecoration(labelText: 'Type'),
-                      items: const [
+                      decoration: InputDecoration(labelText: t.text('Type')),
+                      items: [
                         DropdownMenuItem(
                           value: 'MultipleChoice',
-                          child: Text('Multiple choice'),
+                          child: Text(t.text('Multiple choice')),
                         ),
-                        DropdownMenuItem(value: 'Essay', child: Text('Essay')),
+                        DropdownMenuItem(
+                          value: 'Essay',
+                          child: Text(t.text('Essay')),
+                        ),
                       ],
                       onChanged: (value) {
                         if (value == null) return;
@@ -1016,7 +1043,7 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                       onPressed: pickDueDate,
                       icon: const Icon(Icons.event_outlined),
                       label: Text(
-                        'Due ${DateFormat('dd/MM/yyyy').format(dueDate)}',
+                        t.dueAt(DateFormat('dd/MM/yyyy').format(dueDate)),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1032,7 +1059,10 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                               Row(
                                 children: [
                                   Expanded(
-                                      child: Text('Question ${index + 1}')),
+                                    child: Text(
+                                      '${t.text('Question')} ${index + 1}',
+                                    ),
+                                  ),
                                   IconButton(
                                     onPressed: questionDrafts.length == 1
                                         ? null
@@ -1046,15 +1076,16 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                               ),
                               TextField(
                                 controller: question.text,
-                                decoration: const InputDecoration(
-                                  labelText: 'Question text',
+                                decoration: InputDecoration(
+                                  labelText: t.text('Question text'),
                                 ),
                               ),
                               TextField(
                                 controller: question.points,
                                 keyboardType: TextInputType.number,
-                                decoration:
-                                    const InputDecoration(labelText: 'Points'),
+                                decoration: InputDecoration(
+                                  labelText: t.text('Points'),
+                                ),
                               ),
                               const SizedBox(height: 6),
                               ...question.options.asMap().entries.map((option) {
@@ -1072,7 +1103,8 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                                       child: TextField(
                                         controller: option.value.text,
                                         decoration: InputDecoration(
-                                          labelText: 'Option ${option.key + 1}',
+                                          labelText:
+                                              '${t.text('Option')} ${option.key + 1}',
                                         ),
                                       ),
                                     ),
@@ -1092,7 +1124,7 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                                                 }
                                               }),
                                       icon: const Icon(Icons.close_rounded),
-                                      tooltip: 'Remove option',
+                                      tooltip: t.text('Remove option'),
                                     ),
                                   ],
                                 );
@@ -1102,7 +1134,7 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                                   () => question.options.add(_OptionDraft()),
                                 ),
                                 icon: const Icon(Icons.add_rounded),
-                                label: const Text('Add option'),
+                                label: Text(t.text('Add option')),
                               ),
                             ],
                           ),
@@ -1120,7 +1152,11 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                             children: [
                               Row(
                                 children: [
-                                  Expanded(child: Text('Essay ${index + 1}')),
+                                  Expanded(
+                                    child: Text(
+                                      '${t.text('Essay')} ${index + 1}',
+                                    ),
+                                  ),
                                   IconButton(
                                     onPressed: essayDrafts.length == 1
                                         ? null
@@ -1128,7 +1164,7 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                                               () => essayDrafts.removeAt(index),
                                             ),
                                     icon: const Icon(Icons.delete_outline),
-                                    tooltip: 'Remove essay',
+                                    tooltip: t.text('Remove essay'),
                                   ),
                                 ],
                               ),
@@ -1136,15 +1172,16 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                                 controller: essay.prompt,
                                 minLines: 2,
                                 maxLines: 4,
-                                decoration: const InputDecoration(
-                                  labelText: 'Essay prompt',
+                                decoration: InputDecoration(
+                                  labelText: t.text('Essay prompt'),
                                 ),
                               ),
                               TextField(
                                 controller: essay.points,
                                 keyboardType: TextInputType.number,
-                                decoration:
-                                    const InputDecoration(labelText: 'Points'),
+                                decoration: InputDecoration(
+                                  labelText: t.text('Points'),
+                                ),
                               ),
                             ],
                           ),
@@ -1156,7 +1193,7 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                           () => questionDrafts.add(_QuestionDraft()),
                         ),
                         icon: const Icon(Icons.add_rounded),
-                        label: const Text('Add question'),
+                        label: Text(t.text('Add question')),
                       )
                     else
                       TextButton.icon(
@@ -1164,14 +1201,16 @@ Future<Map<String, dynamic>?> _showHomeworkEditorSheet(
                           () => essayDrafts.add(_EssayDraft()),
                         ),
                         icon: const Icon(Icons.add_rounded),
-                        label: const Text('Add essay'),
+                        label: Text(t.text('Add essay')),
                       ),
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: save,
-                        child: Text(homework == null ? 'Create' : 'Save'),
+                        child: Text(
+                          t.text(homework == null ? 'Create' : 'Save'),
+                        ),
                       ),
                     ),
                   ],
@@ -1189,6 +1228,7 @@ Future<_HomeworkSubmitPayload?> _showHomeworkSubmitSheet(
   BuildContext context,
   HomeworkModel homework,
 ) async {
+  final t = AppStrings.of(context, listen: false);
   final selected = <int, int>{};
   final essayControllers = {
     for (final essay in homework.essays) essay.essayId: TextEditingController(),
@@ -1307,7 +1347,7 @@ Future<_HomeworkSubmitPayload?> _showHomeworkSubmitSheet(
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: submit,
-                        child: const Text('Submit'),
+                        child: Text(t.submit),
                       ),
                     ),
                   ],
@@ -1326,6 +1366,7 @@ Future<_EssayGradePayload?> _showEssayGradeSheet(
   required HomeworkModel homework,
   required HomeworkSubmissionModel submission,
 }) async {
+  final t = AppStrings.of(context, listen: false);
   final scoreControllers = {
     for (final answer in submission.essayAnswers)
       answer.essayAnswerId:
@@ -1356,7 +1397,7 @@ Future<_EssayGradePayload?> _showEssayGradeSheet(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Grade ${submission.studentName}',
+                  '${t.text('Grade')} ${submission.studentName}',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -1368,7 +1409,7 @@ Future<_EssayGradePayload?> _showEssayGradeSheet(
                         (essay) => essay.essayId == answer.essayId,
                         orElse: () => HomeworkEssayModel(
                           essayId: answer.essayId,
-                          questionText: 'Essay',
+                          questionText: t.text('Essay'),
                           points: submission.maxScore,
                         ),
                       )
@@ -1388,12 +1429,15 @@ Future<_EssayGradePayload?> _showEssayGradeSheet(
                         TextField(
                           controller: scoreControllers[answer.essayAnswerId],
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Score'),
+                          decoration: InputDecoration(
+                            labelText: t.text('Score'),
+                          ),
                         ),
                         TextField(
                           controller: feedbackControllers[answer.essayAnswerId],
-                          decoration:
-                              const InputDecoration(labelText: 'Feedback'),
+                          decoration: InputDecoration(
+                            labelText: t.text('Feedback'),
+                          ),
                         ),
                       ],
                     ),
@@ -1401,8 +1445,9 @@ Future<_EssayGradePayload?> _showEssayGradeSheet(
                 }),
                 TextField(
                   controller: overallFeedback,
-                  decoration:
-                      const InputDecoration(labelText: 'Overall feedback'),
+                  decoration: InputDecoration(
+                    labelText: t.text('Overall feedback'),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
@@ -1432,7 +1477,7 @@ Future<_EssayGradePayload?> _showEssayGradeSheet(
                         ),
                       );
                     },
-                    child: const Text('Save grade'),
+                    child: Text(t.text('Save grade')),
                   ),
                 ),
               ],
@@ -1450,6 +1495,7 @@ class _LessonHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -1503,7 +1549,7 @@ class _LessonHeaderCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${detail.duration} minutes',
+                  '${detail.duration} ${t.text('minutes')}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colors.onSurface.withValues(alpha: 0.5),
                   ),
@@ -1520,7 +1566,7 @@ class _LessonHeaderCard extends StatelessWidget {
               border: Border.all(color: statusBorder, width: 0.5),
             ),
             child: Text(
-              detail.status,
+              t.status(detail.status),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -1572,9 +1618,9 @@ class _LessonHeaderCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Meeting Link Card
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 class _MeetingLinkCard extends StatelessWidget {
   final TextEditingController controller;
@@ -1595,6 +1641,7 @@ class _MeetingLinkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final hasMeetingLink = detail.meetingLink.trim().isNotEmpty;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -1626,7 +1673,7 @@ class _MeetingLinkCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  'Google Meet link',
+                  t.text('Google Meet link'),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -1650,8 +1697,8 @@ class _MeetingLinkCard extends StatelessWidget {
                     controller: controller,
                     style: theme.textTheme.bodyMedium,
                     decoration: InputDecoration(
-                      labelText: 'Meeting link',
-                      hintText: 'Paste Google Meet link here',
+                      labelText: t.text('Meeting link'),
+                      hintText: t.text('Paste Google Meet link here'),
                       prefixIcon: const Icon(Icons.link_rounded, size: 20),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 12),
@@ -1677,7 +1724,7 @@ class _MeetingLinkCard extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'No meeting link yet',
+                      t.text('No meeting link yet'),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.55),
                       ),
@@ -1697,7 +1744,9 @@ class _MeetingLinkCard extends StatelessWidget {
                                       strokeWidth: 2, color: Colors.white),
                                 )
                               : const Icon(Icons.save_outlined, size: 17),
-                          label: Text(loading ? 'Saving...' : 'Save link'),
+                          label: Text(
+                            loading ? t.text('Saving...') : t.text('Save link'),
+                          ),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size(0, 42),
                             shape: RoundedRectangleBorder(
@@ -1715,7 +1764,7 @@ class _MeetingLinkCard extends StatelessWidget {
                             ? () => onOpenMeeting(detail.meetingLink)
                             : null,
                         icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                        label: const Text('Open'),
+                        label: Text(t.open),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(0, 42),
                           side: BorderSide(
@@ -1738,9 +1787,9 @@ class _MeetingLinkCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Student Attendance Card
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 class _StudentAttendanceCard extends StatelessWidget {
   final LessonDetailModel detail;
@@ -1760,6 +1809,7 @@ class _StudentAttendanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -1769,9 +1819,9 @@ class _StudentAttendanceCard extends StatelessWidget {
 
     String? trailingLabel;
     if (lessonCompleted) {
-      trailingLabel = 'Locked';
+      trailingLabel = t.text('Locked');
     } else if (!detail.canTakeAttendance) {
-      trailingLabel = 'Not started';
+      trailingLabel = t.text('Not started');
     }
 
     final (attBg, attFg, attBorder) =
@@ -1832,7 +1882,7 @@ class _StudentAttendanceCard extends StatelessWidget {
                         border: Border.all(color: attBorder, width: 0.5),
                       ),
                       child: Text(
-                        student.attendanceStatus,
+                        t.status(student.attendanceStatus),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -1842,7 +1892,7 @@ class _StudentAttendanceCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '· ${student.lessonStatus}',
+                      '- ${t.status(student.lessonStatus)}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.5),
                       ),
@@ -1864,10 +1914,10 @@ class _StudentAttendanceCard extends StatelessWidget {
               ),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'Present', child: Text('Present')),
-                PopupMenuItem(value: 'Absent', child: Text('Absent')),
-                PopupMenuItem(value: 'Late', child: Text('Late')),
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'Present', child: Text(t.text('Present'))),
+                PopupMenuItem(value: 'Absent', child: Text(t.text('Absent'))),
+                PopupMenuItem(value: 'Late', child: Text(t.text('Late'))),
               ],
               child: Container(
                 padding:
@@ -1880,7 +1930,7 @@ class _StudentAttendanceCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Mark',
+                      t.text('Mark'),
                       style: theme.textTheme.labelMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -1950,9 +2000,9 @@ class _StudentAttendanceCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Complete Lesson Button
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 class _CompleteLessonButton extends StatelessWidget {
   final LessonDetailModel detail;
@@ -1967,6 +2017,7 @@ class _CompleteLessonButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -2006,14 +2057,16 @@ class _CompleteLessonButton extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Lesson completed',
+                    t.text('Lesson completed'),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Attendance and completion actions are now locked.',
+                    t.text(
+                      'Attendance and completion actions are now locked.',
+                    ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors.onSurface.withValues(alpha: 0.55),
                       height: 1.5,
@@ -2055,14 +2108,16 @@ class _CompleteLessonButton extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Complete lesson unavailable',
+                    t.text('Complete lesson unavailable'),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'You can complete this lesson after the lesson end time.',
+                    t.text(
+                      'You can complete this lesson after the lesson end time.',
+                    ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors.onSurface.withValues(alpha: 0.55),
                       height: 1.5,
@@ -2089,7 +2144,9 @@ class _CompleteLessonButton extends StatelessWidget {
                     strokeWidth: 2, color: Colors.white),
               )
             : const Icon(Icons.check_circle_outline_rounded, size: 18),
-        label: Text(loading ? 'Completing...' : 'Complete lesson'),
+        label: Text(
+          loading ? t.text('Completing...') : t.text('Complete lesson'),
+        ),
         style: FilledButton.styleFrom(
           minimumSize: const Size(0, 48),
           shape:

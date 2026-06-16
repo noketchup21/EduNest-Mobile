@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/error_banner.dart';
@@ -41,6 +42,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     if (!formKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
+    final t = AppStrings.of(context, listen: false);
 
     try {
       await auth.verifyEmail(
@@ -51,8 +53,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Email verified successfully. Please login.')),
+        SnackBar(content: Text(t.emailVerified)),
       );
 
       context.go(loginRoute);
@@ -61,6 +62,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   Future<void> _resend() async {
     final auth = context.read<AuthProvider>();
+    final t = AppStrings.of(context, listen: false);
 
     setState(() => resendLoading = true);
 
@@ -70,8 +72,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Verification code resent. Check your email.')),
+        SnackBar(content: Text(t.verificationCodeResent)),
       );
     } catch (_) {
       // AuthProvider already stores error.
@@ -83,6 +84,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final t = context.l10n;
     final accent = authAccentForTutor(isTutor);
 
     return AuthScaffold(
@@ -93,7 +95,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go(loginRoute),
         ),
-        title: const Text('Verify'),
+        title: Text(t.verify),
       ),
       child: AuthPanel(
         child: Form(
@@ -103,8 +105,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             children: [
               AuthHeader(
                 icon: Icons.mark_email_read_rounded,
-                eyebrow: 'Verify',
-                title: 'Check your email',
+                eyebrow: t.verify,
+                title: t.checkYourEmail,
                 color: accent,
               ),
               const SizedBox(height: 18),
@@ -135,20 +137,20 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               const SizedBox(height: 14),
               AuthTextField(
                 controller: code,
-                labelText: 'Verification code',
-                hintText: 'Code',
+                labelText: t.verificationCode,
+                hintText: t.code,
                 icon: Icons.password_rounded,
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
-                    return 'Verification code is required';
+                    return t.verificationCodeRequired;
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 20),
               AppButton(
-                label: 'Verify',
+                label: t.verify,
                 icon: Icons.verified_rounded,
                 loading: auth.isLoading && !resendLoading,
                 onPressed: _verify,
@@ -164,7 +166,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.refresh_rounded),
-                  label: const Text('Resend code'),
+                  label: Text(t.resendCode),
                   style: TextButton.styleFrom(
                     textStyle: const TextStyle(fontWeight: FontWeight.w800),
                   ),
@@ -173,7 +175,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               Center(
                 child: AuthLinkButton(
                   icon: Icons.arrow_back_rounded,
-                  label: 'Login',
+                  label: t.login,
                   onPressed: () => context.go(loginRoute),
                 ),
               ),

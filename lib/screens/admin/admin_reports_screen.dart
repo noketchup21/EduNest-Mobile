@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
@@ -13,7 +14,7 @@ class AdminReportsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Reports'),
+        title: Text(context.l10n.text('Manage Reports')),
       ),
       body: const AdminReportsPanel(),
     );
@@ -55,35 +56,34 @@ class _AdminReportsPanelState extends State<AdminReportsPanel> {
       child: Column(
         children: [
           ErrorBanner(data.error),
-
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: _SummaryRow(reports: reports),
           ),
-
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: TextField(
               controller: search,
-              decoration: const InputDecoration(
-                labelText: 'Search reports',
-                hintText: 'Search tutor, reporter, category, title, booking...',
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                labelText: context.l10n.text('Search reports'),
+                hintText: context.l10n.text(
+                  'Search tutor, reporter, category, title, booking...',
+                ),
+                prefixIcon: const Icon(Icons.search),
               ),
               onChanged: (_) => setState(() {}),
             ),
           ),
-
           TabBar(
             isScrollable: true,
             tabs: [
               for (final tab in _tabs)
                 Tab(
-                  text: '${tab.label} (${_count(reports, tab.status)})',
+                  text:
+                      '${context.l10n.text(tab.label)} (${_count(reports, tab.status)})',
                 ),
             ],
           ),
-
           Expanded(
             child: TabBarView(
               children: [
@@ -105,15 +105,15 @@ class _AdminReportsPanelState extends State<AdminReportsPanel> {
   }
 
   List<TutorReportModel> _filter(
-      List<TutorReportModel> reports, {
-        required String status,
-        required String query,
-      }) {
+    List<TutorReportModel> reports, {
+    required String status,
+    required String query,
+  }) {
     var result = status == 'all'
         ? reports
         : reports
-        .where((r) => r.status.toLowerCase() == status.toLowerCase())
-        .toList();
+            .where((r) => r.status.toLowerCase() == status.toLowerCase())
+            .toList();
 
     final q = query.trim().toLowerCase();
 
@@ -169,31 +169,31 @@ class _SummaryRow extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         children: [
           _SummaryCard(
-            label: 'Total',
+            label: context.l10n.text('Total'),
             value: reports.length,
             icon: Icons.assignment_outlined,
             color: Colors.blueGrey,
           ),
           _SummaryCard(
-            label: 'Pending',
+            label: context.l10n.text('Pending'),
             value: _count('pending'),
             icon: Icons.pending_actions_outlined,
             color: Colors.orange,
           ),
           _SummaryCard(
-            label: 'Reviewing',
+            label: context.l10n.text('Reviewing'),
             value: _count('reviewing'),
             icon: Icons.manage_search_outlined,
             color: Colors.blue,
           ),
           _SummaryCard(
-            label: 'Resolved',
+            label: context.l10n.text('Resolved'),
             value: _count('resolved'),
             icon: Icons.check_circle_outline,
             color: Colors.green,
           ),
           _SummaryCard(
-            label: 'Rejected',
+            label: context.l10n.text('Rejected'),
             value: _count('rejected'),
             icon: Icons.cancel_outlined,
             color: Colors.red,
@@ -288,8 +288,8 @@ class _AdminReportList extends StatelessWidget {
     }
 
     if (reports.isEmpty) {
-      return const Center(
-        child: Text('No reports found.'),
+      return Center(
+        child: Text(context.l10n.text('No reports found.')),
       );
     }
 
@@ -367,11 +367,12 @@ class _AdminReportCard extends StatelessWidget {
                 children: [
                   _MiniInfo(
                     icon: Icons.person_outline,
-                    text: 'Tutor: ${report.tutorName}',
+                    text: '${context.l10n.tutor}: ${report.tutorName}',
                   ),
                   _MiniInfo(
                     icon: Icons.account_circle_outlined,
-                    text: 'Reporter: ${report.reporterName}',
+                    text:
+                        '${context.l10n.text('Reporter')}: ${report.reporterName}',
                   ),
                   _MiniInfo(
                     icon: Icons.category_outlined,
@@ -379,7 +380,7 @@ class _AdminReportCard extends StatelessWidget {
                   ),
                   _MiniInfo(
                     icon: Icons.receipt_long_outlined,
-                    text: 'Booking #${report.bookingId}',
+                    text: context.l10n.bookingNumber(report.bookingId),
                   ),
                   _MiniInfo(
                     icon: Icons.schedule_outlined,
@@ -450,7 +451,7 @@ class _StatusChip extends StatelessWidget {
 
     return Chip(
       label: Text(
-        status,
+        context.l10n.status(status),
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w800,

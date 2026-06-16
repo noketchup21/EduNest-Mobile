@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -78,9 +79,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       final warning = context.read<AppDataProvider>().error;
 
       if (mounted && warning == AppDataProvider.restrictedChatWarning) {
+        final t = AppStrings.of(context, listen: false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(AppDataProvider.restrictedChatWarning),
+          SnackBar(
+            content: Text(t.restrictedChatWarning),
           ),
         );
       }
@@ -110,9 +112,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         data.showRestrictedChatWarning();
 
         if (mounted) {
+          final t = AppStrings.of(context, listen: false);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AppDataProvider.restrictedChatWarning),
+            SnackBar(
+              content: Text(t.restrictedChatWarning),
             ),
           );
         }
@@ -205,6 +208,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLowest,
@@ -236,7 +240,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   ),
                   if (otherRole.isNotEmpty)
                     Text(
-                      otherRole,
+                      t.role(otherRole),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.55),
                         fontWeight: FontWeight.w500,
@@ -291,7 +295,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'No messages yet',
+                              t.noMessagesYet,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -319,7 +323,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             message.userId == auth.userId;
 
                         final senderName = mine
-                            ? 'You'
+                            ? t.you
                             : _senderName(
                                 data: data,
                                 conversation: conversation,
@@ -359,7 +363,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _sendMessage(),
                       decoration: InputDecoration(
-                        hintText: 'Type a message...',
+                        hintText: t.messageHint,
                         filled: true,
                         fillColor: colors.surfaceContainerLowest,
                         border: OutlineInputBorder(

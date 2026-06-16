@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../l10n/app_strings.dart';
 import '../providers/auth_provider.dart';
 import '../screens/admin/admin_screen.dart';
 import '../screens/auth/auth_flow_type.dart';
@@ -398,54 +399,55 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final items = <_NavItem>[
       if (auth.isAdmin)
-        const _NavItem(
+        _NavItem(
           '/admin',
           Icons.admin_panel_settings_outlined,
           Icons.admin_panel_settings,
-          'Admin',
+          t.admin,
         ),
       if (!auth.isAdmin)
-        const _NavItem(
+        _NavItem(
           '/home',
           Icons.home_outlined,
           Icons.home,
-          'Home',
+          t.home,
         ),
       if (!auth.isAdmin && !auth.isTutor)
-        const _NavItem(
+        _NavItem(
           '/bookings',
           Icons.event_note_outlined,
           Icons.event_note,
-          'Booking',
+          t.booking,
         ),
       if ((auth.isLearner || auth.isTutor) && !auth.isAdmin)
-        const _NavItem(
+        _NavItem(
           '/course-tools',
           Icons.auto_stories_outlined,
           Icons.auto_stories,
-          'Course',
+          t.course,
           opensCourseTools: true,
         ),
-      const _NavItem(
+      _NavItem(
         '/chat',
         Icons.chat_bubble_outline,
         Icons.chat_bubble,
-        'Chat',
+        t.chat,
       ),
       if (auth.isTutor && !auth.isAdmin)
-        const _NavItem(
+        _NavItem(
           '/wallet',
           Icons.account_balance_wallet_outlined,
           Icons.account_balance_wallet,
-          'Wallet',
+          t.wallet,
         ),
-      const _NavItem(
+      _NavItem(
         '/profile',
         Icons.person_outline,
         Icons.person,
-        'Profile',
+        t.profile,
       ),
     ];
 
@@ -514,6 +516,7 @@ class _CourseQuickSwitchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final t = context.l10n;
 
     return Material(
       color: colors.surface,
@@ -531,7 +534,7 @@ class _CourseQuickSwitchBar extends StatelessWidget {
           children: [
             _QuickCourseButton(
               icon: Icons.school_outlined,
-              label: 'Lesson',
+              label: t.lesson,
               selected:
                   location == '/lessons' || location.startsWith('/lessons/'),
               onTap: () => context.go('/lessons'),
@@ -539,7 +542,7 @@ class _CourseQuickSwitchBar extends StatelessWidget {
             const SizedBox(width: 8),
             _QuickCourseButton(
               icon: Icons.assignment_outlined,
-              label: 'Homework',
+              label: t.homework,
               selected:
                   location == '/homework' || location.startsWith('/homework/'),
               onTap: () => context.go('/homework'),
@@ -547,7 +550,7 @@ class _CourseQuickSwitchBar extends StatelessWidget {
             const SizedBox(width: 8),
             _QuickCourseButton(
               icon: Icons.folder_copy_outlined,
-              label: 'Materials',
+              label: t.materials,
               selected: location == '/materials' ||
                   location.startsWith('/materials/'),
               onTap: () => context.go('/materials'),
@@ -633,11 +636,12 @@ class _QuickCourseButton extends StatelessWidget {
 Future<void> _showCourseTools(BuildContext shellContext, String location) {
   final theme = Theme.of(shellContext);
   final colors = theme.colorScheme;
+  final t = AppStrings.of(shellContext, listen: false);
 
   return showGeneralDialog<void>(
     context: shellContext,
     barrierDismissible: true,
-    barrierLabel: 'Course tools',
+    barrierLabel: t.courseTools,
     barrierColor: Colors.transparent,
     transitionDuration: const Duration(milliseconds: 160),
     pageBuilder: (dialogContext, animation, secondaryAnimation) {
@@ -678,7 +682,7 @@ Future<void> _showCourseTools(BuildContext shellContext, String location) {
                       _CourseToolAction(
                         icon: Icons.school_outlined,
                         selectedIcon: Icons.school,
-                        label: 'Lesson',
+                        label: t.lesson,
                         selected: location == '/lessons' ||
                             location.startsWith('/lessons/'),
                         onTap: () {
@@ -689,7 +693,7 @@ Future<void> _showCourseTools(BuildContext shellContext, String location) {
                       _CourseToolAction(
                         icon: Icons.assignment_outlined,
                         selectedIcon: Icons.assignment,
-                        label: 'Homework',
+                        label: t.homework,
                         selected: location == '/homework' ||
                             location.startsWith('/homework/'),
                         onTap: () {
@@ -700,7 +704,7 @@ Future<void> _showCourseTools(BuildContext shellContext, String location) {
                       _CourseToolAction(
                         icon: Icons.folder_copy_outlined,
                         selectedIcon: Icons.folder_copy,
-                        label: 'Materials',
+                        label: t.materials,
                         selected: location == '/materials' ||
                             location.startsWith('/materials/'),
                         onTap: () {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../utils/support_report_categories.dart';
@@ -13,7 +14,7 @@ class AdminSupportReportsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Support Reports'),
+        title: Text(context.l10n.text('Support Reports')),
       ),
       body: const AdminSupportReportsPanel(),
     );
@@ -54,19 +55,17 @@ class _AdminSupportReportsPanelState extends State<AdminSupportReportsPanel> {
     return Column(
       children: [
         ErrorBanner(data.error),
-
         Padding(
           padding: const EdgeInsets.all(12),
           child: TextField(
             controller: search,
-            decoration: const InputDecoration(
-              labelText: 'Search tutor support reports',
-              prefixIcon: Icon(Icons.search),
+            decoration: InputDecoration(
+              labelText: context.l10n.text('Search tutor support reports'),
+              prefixIcon: const Icon(Icons.search),
             ),
             onChanged: (_) => setState(() {}),
           ),
         ),
-
         Expanded(
           child: RefreshIndicator(
             onRefresh: () =>
@@ -74,16 +73,17 @@ class _AdminSupportReportsPanelState extends State<AdminSupportReportsPanel> {
             child: data.loading && reports.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : reports.isEmpty
-                ? const Center(
-              child: Text('No support reports found.'),
-            )
-                : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: reports.length,
-              itemBuilder: (context, index) {
-                return _SupportReportCard(report: reports[index]);
-              },
-            ),
+                    ? Center(
+                        child: Text(
+                            context.l10n.text('No support reports found.')),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: reports.length,
+                        itemBuilder: (context, index) {
+                          return _SupportReportCard(report: reports[index]);
+                        },
+                      ),
           ),
         ),
       ],
@@ -133,7 +133,7 @@ class _SupportReportCard extends StatelessWidget {
           '${report.role} • ${supportCategoryLabel(report.category)} • ${report.userName}',
         ),
         trailing: Chip(
-          label: Text(report.status),
+          label: Text(context.l10n.status(report.status)),
           backgroundColor: color.withOpacity(0.12),
         ),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -143,27 +143,34 @@ class _SupportReportCard extends StatelessWidget {
             child: Text(report.description),
           ),
           const SizedBox(height: 12),
-
-          _InfoRow(label: 'Report ID', value: '#${report.supportReportId}'),
-          _InfoRow(label: 'Tutor/User', value: report.userName),
-          _InfoRow(label: 'Email', value: report.userEmail),
-          _InfoRow(label: 'Category', value: supportCategoryLabel(report.category)),
-
+          _InfoRow(
+              label: context.l10n.text('Report ID'),
+              value: '#${report.supportReportId}'),
+          _InfoRow(
+              label: context.l10n.text('Tutor/User'), value: report.userName),
+          _InfoRow(label: context.l10n.text('Email'), value: report.userEmail),
+          _InfoRow(
+              label: context.l10n.text('Category'),
+              value: supportCategoryLabel(report.category)),
           if (report.payoutId != null)
-            _InfoRow(label: 'Payout', value: '#${report.payoutId}'),
+            _InfoRow(
+                label: context.l10n.text('Payout'),
+                value: '#${report.payoutId}'),
           if (report.bookingId != null)
-            _InfoRow(label: 'Booking', value: '#${report.bookingId}'),
+            _InfoRow(
+                label: context.l10n.text('Booking'),
+                value: '#${report.bookingId}'),
           if (report.lessonId != null)
-            _InfoRow(label: 'Lesson', value: '#${report.lessonId}'),
-
+            _InfoRow(
+                label: context.l10n.text('Lesson'),
+                value: '#${report.lessonId}'),
           const SizedBox(height: 12),
-
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: () => _showUpdateDialog(context),
               icon: const Icon(Icons.edit_outlined),
-              label: const Text('Update Status'),
+              label: Text(context.l10n.text('Update Status')),
             ),
           ),
         ],
@@ -181,29 +188,36 @@ class _SupportReportCard extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Update Support Report'),
+              title: Text(AppStrings.of(context, listen: false)
+                  .text('Update Support Report')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
                     value: status,
-                    decoration: const InputDecoration(labelText: 'Status'),
-                    items: const [
+                    decoration: InputDecoration(
+                        labelText: AppStrings.of(context, listen: false)
+                            .text('Status')),
+                    items: [
                       DropdownMenuItem(
                         value: 'Pending',
-                        child: Text('Pending'),
+                        child: Text(AppStrings.of(context, listen: false)
+                            .text('Pending')),
                       ),
                       DropdownMenuItem(
                         value: 'Reviewing',
-                        child: Text('Reviewing'),
+                        child: Text(AppStrings.of(context, listen: false)
+                            .text('Reviewing')),
                       ),
                       DropdownMenuItem(
                         value: 'Resolved',
-                        child: Text('Resolved'),
+                        child: Text(AppStrings.of(context, listen: false)
+                            .text('Resolved')),
                       ),
                       DropdownMenuItem(
                         value: 'Rejected',
-                        child: Text('Rejected'),
+                        child: Text(AppStrings.of(context, listen: false)
+                            .text('Rejected')),
                       ),
                     ],
                     onChanged: (value) {
@@ -214,8 +228,9 @@ class _SupportReportCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   TextField(
                     controller: note,
-                    decoration: const InputDecoration(
-                      labelText: 'Admin note',
+                    decoration: InputDecoration(
+                      labelText: AppStrings.of(context, listen: false)
+                          .text('Admin note'),
                     ),
                     minLines: 3,
                     maxLines: 5,
@@ -225,11 +240,12 @@ class _SupportReportCard extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(AppStrings.of(context, listen: false).cancel),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: const Text('Save'),
+                  child:
+                      Text(AppStrings.of(context, listen: false).text('Save')),
                 ),
               ],
             );
@@ -241,10 +257,10 @@ class _SupportReportCard extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
 
     await context.read<AppDataProvider>().adminUpdateSupportReportStatus(
-      supportReportId: report.supportReportId,
-      status: status,
-      adminNote: note.text.trim(),
-    );
+          supportReportId: report.supportReportId,
+          status: status,
+          adminNote: note.text.trim(),
+        );
 
     note.dispose();
   }

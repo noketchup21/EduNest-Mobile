@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/language_switcher.dart';
+
 const _ink = Color(0xFF0F172A);
 const _muted = Color(0xFF64748B);
 const _border = Color(0xFFE2E8F0);
@@ -35,14 +37,23 @@ class AuthScaffold extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 32),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: child,
+          child: Stack(
+            children: [
+              Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(22, 64, 22, 32),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: child,
+                  ),
+                ),
               ),
-            ),
+              const Positioned(
+                top: 10,
+                right: 14,
+                child: LanguageSwitcher(),
+              ),
+            ],
           ),
         ),
       ),

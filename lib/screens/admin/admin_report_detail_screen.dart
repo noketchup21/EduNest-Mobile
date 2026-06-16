@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
@@ -17,7 +18,8 @@ class AdminReportDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<AdminReportDetailScreen> createState() => _AdminReportDetailScreenState();
+  State<AdminReportDetailScreen> createState() =>
+      _AdminReportDetailScreenState();
 }
 
 class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
@@ -40,7 +42,7 @@ class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
       backgroundColor: colors.surface,
       appBar: AppBar(
         title: Text(
-          'Report #${widget.reportId}',
+          '${context.l10n.text('Report ID')} #${widget.reportId}',
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         centerTitle: false,
@@ -51,7 +53,9 @@ class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton.filledTonal(
-              onPressed: data.loading ? null : () => data.adminLoadReportDetail(widget.reportId),
+              onPressed: data.loading
+                  ? null
+                  : () => data.adminLoadReportDetail(widget.reportId),
               icon: const Icon(Icons.refresh),
             ),
           ),
@@ -123,16 +127,19 @@ class _ReportHeader extends StatelessWidget {
                 Text(
                   report.title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.3,
-                  ),
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.3,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _StatusPill(label: report.status, color: statusColor),
+                    _StatusPill(
+                      label: context.l10n.status(report.status),
+                      color: statusColor,
+                    ),
                     _StatusPill(label: report.category, color: colors.primary),
                   ],
                 ),
@@ -153,28 +160,47 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      title: 'Report information',
-      subtitle: 'Core details submitted by the reporter',
+      title: context.l10n.text('Report information'),
+      subtitle: context.l10n.text('Core details submitted by the reporter'),
       icon: Icons.assignment_outlined,
       children: [
-        _InfoRow(label: 'Tutor', value: report.tutorName, icon: Icons.school_outlined),
-        _InfoRow(label: 'Reporter', value: report.reporterName, icon: Icons.person_outline),
-        _InfoRow(label: 'Booking ID', value: '#${report.bookingId}', icon: Icons.event_note_outlined),
-        _InfoRow(label: 'Availability ID', value: '#${report.availabilityId}', icon: Icons.schedule_outlined),
+        _InfoRow(
+            label: context.l10n.tutor,
+            value: report.tutorName,
+            icon: Icons.school_outlined),
+        _InfoRow(
+            label: context.l10n.text('Reporter'),
+            value: report.reporterName,
+            icon: Icons.person_outline),
+        _InfoRow(
+            label: context.l10n.text('Booking ID'),
+            value: '#${report.bookingId}',
+            icon: Icons.event_note_outlined),
+        _InfoRow(
+            label: context.l10n.text('Availability ID'),
+            value: '#${report.availabilityId}',
+            icon: Icons.schedule_outlined),
         if (report.lessonId != null)
-          _InfoRow(label: 'Lesson ID', value: '#${report.lessonId}', icon: Icons.menu_book_outlined),
+          _InfoRow(
+              label: context.l10n.text('Lesson ID'),
+              value: '#${report.lessonId}',
+              icon: Icons.menu_book_outlined),
         if (report.subjectName != null)
-          _InfoRow(label: 'Subject', value: report.subjectName!, icon: Icons.subject_outlined),
+          _InfoRow(
+              label: context.l10n.text('Subject'),
+              value: report.subjectName!,
+              icon: Icons.subject_outlined),
         const _CardDivider(),
         _TextBlock(
-          title: 'Description',
+          title: context.l10n.text('Description'),
           text: report.description,
           icon: Icons.description_outlined,
         ),
-        if (report.adminNote != null && report.adminNote!.trim().isNotEmpty) ...[
+        if (report.adminNote != null &&
+            report.adminNote!.trim().isNotEmpty) ...[
           const _CardDivider(),
           _TextBlock(
-            title: 'Admin note',
+            title: context.l10n.text('Admin note'),
             text: report.adminNote!,
             icon: Icons.admin_panel_settings_outlined,
           ),
@@ -194,16 +220,18 @@ class _ProofImages extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     if (report.proofImages.isEmpty) {
-      return const _EmptyStateCard(
+      return _EmptyStateCard(
         icon: Icons.image_not_supported_outlined,
-        title: 'No proof images',
-        subtitle: 'No image proof was submitted for this report.',
+        title: context.l10n.text('No proof images'),
+        subtitle:
+            context.l10n.text('No image proof was submitted for this report.'),
       );
     }
 
     return _SectionCard(
-      title: 'Proof images',
-      subtitle: '${report.proofImages.length} image(s) attached for review',
+      title: context.l10n.text('Proof images'),
+      subtitle:
+          '${report.proofImages.length} ${context.l10n.text('image(s) attached for review')}',
       icon: Icons.image_outlined,
       children: [
         Wrap(
@@ -265,15 +293,17 @@ class _AdminActionsState extends State<_AdminActions> {
     final data = context.watch<AppDataProvider>();
 
     return _SectionCard(
-      title: 'Admin actions',
-      subtitle: 'Update the review status and leave an optional internal note',
+      title: context.l10n.text('Admin actions'),
+      subtitle: context.l10n.text(
+        'Update the review status and leave an optional internal note',
+      ),
       icon: Icons.rule_outlined,
       children: [
         TextField(
           controller: _note,
           decoration: _inputDecoration(
             context,
-            label: 'Admin note optional',
+            label: context.l10n.text('Admin note optional'),
             icon: Icons.note_alt_outlined,
           ),
           minLines: 1,
@@ -284,17 +314,19 @@ class _AdminActionsState extends State<_AdminActions> {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: data.loading ? null : () => _update(context, 'Reviewing'),
+                onPressed:
+                    data.loading ? null : () => _update(context, 'Reviewing'),
                 icon: const Icon(Icons.rate_review_outlined),
-                label: const Text('Reviewing'),
+                label: Text(context.l10n.text('Reviewing')),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: FilledButton.icon(
-                onPressed: data.loading ? null : () => _update(context, 'Resolved'),
+                onPressed:
+                    data.loading ? null : () => _update(context, 'Resolved'),
                 icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Resolved'),
+                label: Text(context.l10n.text('Resolved')),
               ),
             ),
           ],
@@ -305,7 +337,7 @@ class _AdminActionsState extends State<_AdminActions> {
           child: OutlinedButton.icon(
             onPressed: data.loading ? null : () => _update(context, 'Rejected'),
             icon: const Icon(Icons.close),
-            label: const Text('Reject report'),
+            label: Text(context.l10n.text('Reject report')),
           ),
         ),
       ],
@@ -315,15 +347,19 @@ class _AdminActionsState extends State<_AdminActions> {
   Future<void> _update(BuildContext context, String status) async {
     try {
       await context.read<AppDataProvider>().adminUpdateReportStatus(
-        reportId: widget.report.tutorReportId,
-        status: status,
-        adminNote: _note.text.trim(),
-      );
+            reportId: widget.report.tutorReportId,
+            status: status,
+            adminNote: _note.text.trim(),
+          );
 
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Report marked as $status')),
+        SnackBar(
+          content: Text(
+            '${AppStrings.of(context, listen: false).text('Report marked as')} ${AppStrings.of(context, listen: false).status(status)}',
+          ),
+        ),
       );
     } catch (_) {}
   }
@@ -343,21 +379,37 @@ class _AdminReportTutorCard extends StatelessWidget {
     final accountColor = isActive ? Colors.green : Colors.red;
 
     return _SectionCard(
-      title: 'Reported tutor',
-      subtitle: 'Account and verification details for the reported tutor',
+      title: context.l10n.text('Reported tutor'),
+      subtitle: context.l10n
+          .text('Account and verification details for the reported tutor'),
       icon: Icons.school_outlined,
       children: [
-        _InfoRow(label: 'Tutor name', value: report.tutorName, icon: Icons.person_outline),
-        _InfoRow(label: 'Tutor ID', value: '#${report.tutorId}', icon: Icons.badge_outlined),
-        _InfoRow(label: 'Tutor user ID', value: '#${report.tutorUserId}', icon: Icons.account_circle_outlined),
+        _InfoRow(
+            label: context.l10n.text('Tutor name'),
+            value: report.tutorName,
+            icon: Icons.person_outline),
+        _InfoRow(
+            label: context.l10n.text('Tutor ID'),
+            value: '#${report.tutorId}',
+            icon: Icons.badge_outlined),
+        _InfoRow(
+            label: context.l10n.text('Tutor user ID'),
+            value: '#${report.tutorUserId}',
+            icon: Icons.account_circle_outlined),
         if (report.tutorEmail != null)
-          _InfoRow(label: 'Email', value: report.tutorEmail!, icon: Icons.email_outlined),
+          _InfoRow(
+              label: context.l10n.text('Email'),
+              value: report.tutorEmail!,
+              icon: Icons.email_outlined),
         if (report.tutorPhone != null)
-          _InfoRow(label: 'Phone', value: report.tutorPhone!, icon: Icons.phone_outlined),
+          _InfoRow(
+              label: context.l10n.phone,
+              value: report.tutorPhone!,
+              icon: Icons.phone_outlined),
         if (report.tutorVerificationStatus != null)
           _InfoRow(
-            label: 'Verification',
-            value: report.tutorVerificationStatus!,
+            label: context.l10n.text('Verification'),
+            value: context.l10n.status(report.tutorVerificationStatus!),
             icon: Icons.verified_outlined,
           ),
         Padding(
@@ -370,14 +422,14 @@ class _AdminReportTutorCard extends StatelessWidget {
                 size: 38,
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Account status',
-                  style: TextStyle(fontWeight: FontWeight.w800),
+                  context.l10n.text('Account status'),
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
               _StatusPill(
-                label: isActive ? 'Active' : 'Deactivated',
+                label: context.l10n.text(isActive ? 'Active' : 'Deactivated'),
                 color: accountColor,
               ),
             ],
@@ -391,12 +443,18 @@ class _AdminReportTutorCard extends StatelessWidget {
             onPressed: data.loading
                 ? null
                 : () => _confirmTutorAccountStatus(
-              context,
-              report: report,
-              isActive: !isActive,
-            ),
+                      context,
+                      report: report,
+                      isActive: !isActive,
+                    ),
             icon: Icon(isActive ? Icons.block : Icons.check_circle_outline),
-            label: Text(isActive ? 'Deactivate tutor account' : 'Activate tutor account'),
+            label: Text(
+              context.l10n.text(
+                isActive
+                    ? 'Deactivate tutor account'
+                    : 'Activate tutor account',
+              ),
+            ),
           ),
         ),
       ],
@@ -404,29 +462,39 @@ class _AdminReportTutorCard extends StatelessWidget {
   }
 
   Future<void> _confirmTutorAccountStatus(
-      BuildContext context, {
-        required TutorReportModel report,
-        required bool isActive,
-      }) async {
+    BuildContext context, {
+    required TutorReportModel report,
+    required bool isActive,
+  }) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          title: Text(isActive ? 'Activate tutor?' : 'Deactivate tutor?'),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          title: Text(
+            AppStrings.of(context, listen: false).text(
+              isActive ? 'Activate tutor?' : 'Deactivate tutor?',
+            ),
+          ),
           content: Text(
             isActive
-                ? 'This tutor will be able to login and use tutor features again.'
-                : 'This tutor will not be able to login or receive new bookings. You should only do this if the report proof is serious enough.',
+                ? AppStrings.of(context, listen: false).text(
+                    'This tutor will be able to login and use tutor features again.',
+                  )
+                : AppStrings.of(context, listen: false).text(
+                    'This tutor will not be able to login or receive new bookings. You should only do this if the report proof is serious enough.',
+                  ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(AppStrings.of(context, listen: false).cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(isActive ? 'Activate' : 'Deactivate'),
+              child: Text(AppStrings.of(context, listen: false)
+                  .text(isActive ? 'Activate' : 'Deactivate')),
             ),
           ],
         );
@@ -451,7 +519,13 @@ class _AdminReportTutorCard extends StatelessWidget {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isActive ? 'Tutor account activated' : 'Tutor account deactivated'),
+          content: Text(
+            AppStrings.of(context, listen: false).text(
+              isActive
+                  ? 'Tutor account activated'
+                  : 'Tutor account deactivated',
+            ),
+          ),
         ),
       );
     } catch (_) {}
@@ -496,13 +570,14 @@ class _SectionCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+                      Text(title,
+                          style: const TextStyle(fontWeight: FontWeight.w900)),
                       const SizedBox(height: 3),
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
+                              color: colors.onSurfaceVariant,
+                            ),
                       ),
                     ],
                   ),
@@ -727,7 +802,8 @@ class _EmptyStateCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+                  Text(title,
+                      style: const TextStyle(fontWeight: FontWeight.w900)),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
@@ -744,10 +820,10 @@ class _EmptyStateCard extends StatelessWidget {
 }
 
 InputDecoration _inputDecoration(
-    BuildContext context, {
-      required String label,
-      required IconData icon,
-    }) {
+  BuildContext context, {
+  required String label,
+  required IconData icon,
+}) {
   final colors = Theme.of(context).colorScheme;
 
   return InputDecoration(
@@ -772,10 +848,16 @@ InputDecoration _inputDecoration(
 
 Color _statusColor(String status) {
   final normalized = status.toLowerCase();
-  if (normalized == 'pending' || normalized == 'reviewing') return Colors.orange;
-  if (normalized == 'resolved' || normalized == 'approved' || normalized == 'completed') {
+  if (normalized == 'pending' || normalized == 'reviewing') {
+    return Colors.orange;
+  }
+  if (normalized == 'resolved' ||
+      normalized == 'approved' ||
+      normalized == 'completed') {
     return Colors.green;
   }
-  if (normalized == 'rejected' || normalized == 'cancelled') return Colors.red;
+  if (normalized == 'rejected' || normalized == 'cancelled') {
+    return Colors.red;
+  }
   return Colors.blueGrey;
 }

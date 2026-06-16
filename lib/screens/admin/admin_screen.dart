@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
@@ -33,6 +34,7 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
+    final t = context.l10n;
     final dashboard = data.adminDashboard;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -42,9 +44,9 @@ class _AdminScreenState extends State<AdminScreen> {
       child: Scaffold(
         backgroundColor: colors.surface,
         appBar: AppBar(
-          title: const Text(
-            'Admin Console',
-            style: TextStyle(fontWeight: FontWeight.w900),
+          title: Text(
+            t.text('Admin Console'),
+            style: const TextStyle(fontWeight: FontWeight.w900),
           ),
           centerTitle: false,
           elevation: 0,
@@ -96,25 +98,25 @@ class _AdminScreenState extends State<AdminScreen> {
                       fontSize: 11, fontWeight: FontWeight.w700),
                   unselectedLabelStyle: const TextStyle(
                       fontSize: 11, fontWeight: FontWeight.w500),
-                  tabs: const [
+                  tabs: [
                     Tab(
-                        icon: Icon(Icons.dashboard_outlined, size: 18),
-                        text: 'Dashboard'),
+                        icon: const Icon(Icons.dashboard_outlined, size: 18),
+                        text: t.text('Dashboard')),
                     Tab(
-                        icon: Icon(Icons.menu_book_outlined, size: 18),
-                        text: 'Subjects'),
+                        icon: const Icon(Icons.menu_book_outlined, size: 18),
+                        text: t.text('Subjects')),
                     Tab(
-                        icon: Icon(Icons.school_outlined, size: 18),
-                        text: 'Tutors'),
+                        icon: const Icon(Icons.school_outlined, size: 18),
+                        text: t.text('Tutors')),
                     Tab(
-                        icon: Icon(Icons.payments_outlined, size: 18),
-                        text: 'Payouts'),
+                        icon: const Icon(Icons.payments_outlined, size: 18),
+                        text: t.text('Payouts')),
                     Tab(
-                        icon: Icon(Icons.report_outlined, size: 18),
-                        text: 'Reports'),
+                        icon: const Icon(Icons.report_outlined, size: 18),
+                        text: t.text('Reports')),
                     Tab(
-                      icon: Icon(Icons.support_agent_outlined, size: 18),
-                      text: 'Support',
+                      icon: const Icon(Icons.support_agent_outlined, size: 18),
+                      text: t.text('Support'),
                     ),
                   ],
                 ),
@@ -133,8 +135,8 @@ class _AdminScreenState extends State<AdminScreen> {
                   if (dashboard == null)
                     const _LoadingCard()
                   else ...[
-                    // ── Key metrics ──────────────────────────────────────
-                    const _DashSectionLabel(label: 'Key metrics'),
+                    // Key metrics
+                    _DashSectionLabel(label: t.text('Key metrics')),
                     const SizedBox(height: 8),
                     Builder(
                       builder: (context) {
@@ -143,24 +145,24 @@ class _AdminScreenState extends State<AdminScreen> {
                             icon: Icons.download_outlined,
                             iconColor: const Color(0xFF534AB7),
                             iconBg: const Color(0xFFEEEDFE),
-                            label: 'Downloads',
+                            label: t.text('Downloads'),
                             value: dashboard.totalDownloads.toString(),
                           ),
                           _MetricCard(
                             icon: Icons.phone_android_outlined,
                             iconColor: const Color(0xFF0F6E56),
                             iconBg: const Color(0xFFE1F5EE),
-                            label: 'Installs',
+                            label: t.text('Installs'),
                             value: dashboard.totalInstalls.toString(),
                           ),
                           _MetricCard(
                             icon: Icons.pending_actions_outlined,
                             iconColor: const Color(0xFF854F0B),
                             iconBg: const Color(0xFFFAEEDA),
-                            label: 'Pending tutors',
+                            label: t.text('Pending tutors'),
                             value: dashboard.pendingTutors.toString(),
                             badge: dashboard.pendingTutors > 0
-                                ? 'Needs review'
+                                ? t.text('Needs review')
                                 : null,
                             badgeColor: const Color(0xFF854F0B),
                             badgeBg: const Color(0xFFFAEEDA),
@@ -169,10 +171,10 @@ class _AdminScreenState extends State<AdminScreen> {
                             icon: Icons.payments_outlined,
                             iconColor: const Color(0xFFA32D2D),
                             iconBg: const Color(0xFFFCEBEB),
-                            label: 'Pending payouts',
+                            label: t.text('Pending payouts'),
                             value: dashboard.pendingPayouts.toString(),
                             badge: dashboard.pendingPayouts > 0
-                                ? 'Action needed'
+                                ? t.text('Action needed')
                                 : null,
                             badgeColor: const Color(0xFFA32D2D),
                             badgeBg: const Color(0xFFFCEBEB),
@@ -198,26 +200,26 @@ class _AdminScreenState extends State<AdminScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // ── Revenue breakdown ────────────────────────────────
+                    // Revenue breakdown
                     _DashCard(
-                      title: 'Revenue breakdown',
-                      subtitle: 'Gross · platform 10% · tutor 90%',
+                      title: t.text('Revenue breakdown'),
+                      subtitle: t.text('Gross · platform 20% · tutor 80%'),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
                               _RevStat(
-                                label: 'Gross revenue',
+                                label: t.text('Gross revenue'),
                                 value: dashboard.grossLessonRevenue,
                               ),
                               _RevStat(
-                                label: 'Platform (10%)',
+                                label: t.text('Platform (20%)'),
                                 value: dashboard.platformRevenue,
                                 color: const Color(0xFF534AB7),
                               ),
                               _RevStat(
-                                label: 'Pending payout',
+                                label: t.text('Pending payout'),
                                 value: dashboard.pendingPayoutAmount,
                                 color: const Color(0xFF854F0B),
                               ),
@@ -236,10 +238,10 @@ class _AdminScreenState extends State<AdminScreen> {
                       ),
                     ),
 
-                    // ── Tutor status ─────────────────────────────────────
+                    // Tutor status
                     _DashCard(
-                      title: 'Tutor verification status',
-                      subtitle: 'Across all registered tutors',
+                      title: t.text('Tutor verification status'),
+                      subtitle: t.text('Across all registered tutors'),
                       child: Row(
                         children: [
                           SizedBox(
@@ -263,26 +265,13 @@ class _AdminScreenState extends State<AdminScreen> {
                       ),
                     ),
 
-                    // ── Completed lessons ────────────────────────────────
+                    // Completed lessons
                     _DashCard(
-                      title: 'Lesson activity',
-                      subtitle: 'Completed lessons total',
-                      child: Row(
-                        children: [
-                          _BigStat(
-                            value: dashboard.completedLessons.toString(),
-                            label: 'completed lessons',
-                            icon: Icons.check_circle_outline,
-                            color: const Color(0xFF534AB7),
-                          ),
-                          const SizedBox(width: 16),
-                          _BigStat(
-                            value: dashboard.totalSubjects.toString(),
-                            label: 'subjects active',
-                            icon: Icons.menu_book_outlined,
-                            color: const Color(0xFF0F6E56),
-                          ),
-                        ],
+                      title: t.text('Lesson activity'),
+                      subtitle: t.text('Completed lessons total'),
+                      child: _LessonActivityStats(
+                        completedLessons: dashboard.completedLessons,
+                        totalSubjects: dashboard.totalSubjects,
                       ),
                     ),
                   ],
@@ -323,6 +312,7 @@ class _SubjectsTabState extends State<_SubjectsTab> {
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
     final colors = Theme.of(context).colorScheme;
+    final t = context.l10n;
 
     return RefreshIndicator(
       onRefresh: data.adminLoadDashboard,
@@ -331,21 +321,22 @@ class _SubjectsTabState extends State<_SubjectsTab> {
         children: [
           ErrorBanner(data.error),
           _AdminHeroCard(
-            title: 'Subject management',
-            subtitle:
-                'Create and review subjects that tutors can teach on the platform.',
+            title: t.text('Subject management'),
+            subtitle: t.text(
+              'Create and review subjects that tutors can teach on the platform.',
+            ),
             icon: Icons.menu_book_outlined,
-            trailing:
-                _CountBadge(count: data.subjects.length, label: 'subjects'),
+            trailing: _CountBadge(
+                count: data.subjects.length, label: t.text('subjects')),
           ),
           const SizedBox(height: 16),
           _PanelCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const _SectionTitle(
-                  title: 'Add new subject',
-                  subtitle: 'Keep names short and descriptions clear',
+                _SectionTitle(
+                  title: t.text('Add new subject'),
+                  subtitle: t.text('Keep names short and descriptions clear'),
                   icon: Icons.add_circle_outline,
                 ),
                 const SizedBox(height: 14),
@@ -353,7 +344,7 @@ class _SubjectsTabState extends State<_SubjectsTab> {
                   controller: name,
                   decoration: _adminInputDecoration(
                     context,
-                    label: 'Subject name',
+                    label: t.text('Subject name'),
                     icon: Icons.menu_book_outlined,
                   ),
                 ),
@@ -362,7 +353,7 @@ class _SubjectsTabState extends State<_SubjectsTab> {
                   controller: description,
                   decoration: _adminInputDecoration(
                     context,
-                    label: 'Description',
+                    label: t.text('Description'),
                     icon: Icons.description_outlined,
                   ),
                   minLines: 1,
@@ -385,9 +376,9 @@ class _SubjectsTabState extends State<_SubjectsTab> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.add),
-                    label: const Text(
-                      'Add subject',
-                      style: TextStyle(fontWeight: FontWeight.w800),
+                    label: Text(
+                      t.text('Add subject'),
+                      style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                   ),
                 ),
@@ -395,17 +386,17 @@ class _SubjectsTabState extends State<_SubjectsTab> {
             ),
           ),
           const SizedBox(height: 18),
-          const _SectionTitle(
-            title: 'Current subjects',
-            subtitle: 'Subjects available in the platform catalog',
+          _SectionTitle(
+            title: t.text('Current subjects'),
+            subtitle: t.text('Subjects available in the platform catalog'),
             icon: Icons.list_alt_outlined,
           ),
           const SizedBox(height: 10),
           if (data.subjects.isEmpty && !data.loading)
-            const _EmptyStateCard(
+            _EmptyStateCard(
               icon: Icons.menu_book_outlined,
-              title: 'No subjects yet',
-              subtitle: 'Add your first subject above.',
+              title: t.text('No subjects yet'),
+              subtitle: t.text('Add your first subject above.'),
             ),
           ...data.subjects.map((subject) {
             return Card(
@@ -428,7 +419,7 @@ class _SubjectsTabState extends State<_SubjectsTab> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     subject.description.isEmpty
-                        ? 'No description'
+                        ? t.text('No description')
                         : subject.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -448,7 +439,9 @@ class _SubjectsTabState extends State<_SubjectsTab> {
 
     if (subjectName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Subject name is required')),
+        SnackBar(
+            content: Text(AppStrings.of(context, listen: false)
+                .text('Subject name is required'))),
       );
       return;
     }
@@ -465,7 +458,9 @@ class _SubjectsTabState extends State<_SubjectsTab> {
       description.clear();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Subject added')),
+        SnackBar(
+            content: Text(
+                AppStrings.of(context, listen: false).text('Subject added'))),
       );
     } catch (_) {}
   }
@@ -477,6 +472,7 @@ class _TutorsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
+    final t = context.l10n;
 
     final pending = data.adminTutors.where((t) {
       return t.verificationStatus.toLowerCase() == 'pending';
@@ -514,56 +510,57 @@ class _TutorsTab extends StatelessWidget {
         children: [
           ErrorBanner(data.error),
           _AdminHeroCard(
-            title: 'Tutor verification',
-            subtitle:
-                'Review submitted tutors, approve valid profiles, or reject incomplete applications.',
+            title: t.text('Tutor verification'),
+            subtitle: t.text(
+              'Review submitted tutors, approve valid profiles, or reject incomplete applications.',
+            ),
             icon: Icons.school_outlined,
-            trailing:
-                _CountBadge(count: data.adminTutors.length, label: 'tutors'),
+            trailing: _CountBadge(
+                count: data.adminTutors.length, label: t.text('tutors')),
           ),
           const SizedBox(height: 16),
           if (data.adminTutors.isEmpty && data.loading) const _LoadingCard(),
           if (data.adminTutors.isEmpty && !data.loading)
-            const _EmptyStateCard(
+            _EmptyStateCard(
               icon: Icons.school_outlined,
-              title: 'No tutors found',
-              subtitle: 'Tutor accounts will appear here.',
+              title: t.text('No tutors found'),
+              subtitle: t.text('Tutor accounts will appear here.'),
             ),
           _TutorStatusSection(
-            title: 'Pending approval',
+            title: t.text('Pending approval'),
             icon: Icons.pending_actions_outlined,
             tutors: pending,
-            emptyText: 'No pending tutors.',
+            emptyText: t.text('No pending tutors.'),
             statusColor: Colors.orange,
             initiallyExpanded: true,
           ),
           _TutorStatusSection(
-            title: 'Rejected',
+            title: t.text('Rejected'),
             icon: Icons.cancel_outlined,
             tutors: rejected,
-            emptyText: 'No rejected tutors.',
+            emptyText: t.text('No rejected tutors.'),
             statusColor: Colors.red,
           ),
           _TutorStatusSection(
-            title: 'Approved',
+            title: t.text('Approved'),
             icon: Icons.verified_outlined,
             tutors: approved,
-            emptyText: 'No approved tutors.',
+            emptyText: t.text('No approved tutors.'),
             statusColor: Colors.green,
           ),
           _TutorStatusSection(
-            title: 'Not submitted',
+            title: t.text('Not submitted'),
             icon: Icons.assignment_outlined,
             tutors: notSubmitted,
-            emptyText: 'No not-submitted tutors.',
+            emptyText: t.text('No not-submitted tutors.'),
             statusColor: Colors.grey,
           ),
           if (others.isNotEmpty)
             _TutorStatusSection(
-              title: 'Other status',
+              title: t.text('Other status'),
               icon: Icons.help_outline,
               tutors: others,
-              emptyText: 'No tutors in this group.',
+              emptyText: t.text('No tutors in this group.'),
               statusColor: Colors.blueGrey,
             ),
         ],
@@ -682,20 +679,20 @@ class _TutorListItem extends StatelessWidget {
             Expanded(
               child: Text(
                 tutor.tutorName.isEmpty
-                    ? 'Tutor #${tutor.tutorId}'
+                    ? '${context.l10n.tutor} #${tutor.tutorId}'
                     : tutor.tutorName,
                 style: const TextStyle(fontWeight: FontWeight.w900),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 8),
-            _StatusPill(label: status, color: statusColor),
+            _StatusPill(label: context.l10n.status(status), color: statusColor),
           ],
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 6),
           child: Text(
-            '${tutor.email}\nCCCD: ${tutor.nationalIdNumber ?? 'Not provided'}\nBank: ${tutor.bankName ?? 'Not provided'}',
+            '${tutor.email}\n${context.l10n.text('CCCD')}: ${tutor.nationalIdNumber ?? context.l10n.text('Not provided')}\n${context.l10n.text('Bank')}: ${tutor.bankName ?? context.l10n.text('Not provided')}',
             style: TextStyle(
               height: 1.35,
               color: colors.onSurfaceVariant,
@@ -718,18 +715,18 @@ class _TutorListItem extends StatelessWidget {
                     _showRejectDialog(context, tutor.tutorId);
                   }
                 },
-                itemBuilder: (_) => const [
+                itemBuilder: (_) => [
                   PopupMenuItem(
                     value: 'detail',
-                    child: Text('View detail'),
+                    child: Text(context.l10n.text('View detail')),
                   ),
                   PopupMenuItem(
                     value: 'approve',
-                    child: Text('Approve'),
+                    child: Text(context.l10n.text('Approve')),
                   ),
                   PopupMenuItem(
                     value: 'reject',
-                    child: Text('Reject'),
+                    child: Text(context.l10n.text('Reject')),
                   ),
                 ],
               )
@@ -746,18 +743,22 @@ class _TutorListItem extends StatelessWidget {
         return AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          title: const Text('Approve tutor?'),
-          content: const Text(
-            'This tutor will be able to create availability and receive bookings.',
+          title: Text(
+              AppStrings.of(context, listen: false).text('Approve tutor?')),
+          content: Text(
+            AppStrings.of(context, listen: false).text(
+              'This tutor will be able to create availability and receive bookings.',
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(AppStrings.of(context, listen: false).cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Approve'),
+              child:
+                  Text(AppStrings.of(context, listen: false).text('Approve')),
             ),
           ],
         );
@@ -772,7 +773,9 @@ class _TutorListItem extends StatelessWidget {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tutor approved')),
+        SnackBar(
+            content: Text(
+                AppStrings.of(context, listen: false).text('Tutor approved'))),
       );
     } catch (_) {}
   }
@@ -786,13 +789,16 @@ class _TutorListItem extends StatelessWidget {
         return AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          title: const Text('Reject tutor'),
+          title:
+              Text(AppStrings.of(context, listen: false).text('Reject tutor')),
           content: TextField(
             decoration: _adminInputDecoration(
               context,
-              label: 'Reason optional',
+              label:
+                  AppStrings.of(context, listen: false).text('Reason optional'),
               icon: Icons.edit_note_outlined,
-              hintText: 'Example: CCCD image is unclear',
+              hintText: AppStrings.of(context, listen: false)
+                  .text('Example: CCCD image is unclear'),
             ),
             minLines: 2,
             maxLines: 4,
@@ -803,11 +809,11 @@ class _TutorListItem extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(AppStrings.of(context, listen: false).cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Reject'),
+              child: Text(AppStrings.of(context, listen: false).text('Reject')),
             ),
           ],
         );
@@ -825,7 +831,9 @@ class _TutorListItem extends StatelessWidget {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tutor rejected')),
+        SnackBar(
+            content: Text(
+                AppStrings.of(context, listen: false).text('Tutor rejected'))),
       );
     } catch (_) {}
   }
@@ -837,31 +845,32 @@ class _PayoutsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
+    final t = context.l10n;
 
     final pending = data.adminPayouts
-        .where((p) => p.status.toLowerCase() == 'pending')
+        .where((p) => _normalizedPayoutStatus(p.status) == 'pending')
         .toList();
 
     final processing = data.adminPayouts
-        .where((p) => p.status.toLowerCase() == 'processing')
+        .where((p) => _normalizedPayoutStatus(p.status) == 'processing')
         .toList();
 
     final manualQrRequired = data.adminPayouts
-        .where((p) => p.status.toLowerCase() == 'manualqrrequired')
+        .where((p) => _normalizedPayoutStatus(p.status) == 'manualqrrequired')
         .toList();
 
     final paid = data.adminPayouts
-        .where((p) =>
-            ['paid', 'completed', 'approved'].contains(p.status.toLowerCase()))
+        .where((p) => ['paid', 'completed', 'approved']
+            .contains(_normalizedPayoutStatus(p.status)))
         .toList();
 
     final failed = data.adminPayouts
         .where((p) => ['failed', 'rejected', 'cancelled']
-            .contains(p.status.toLowerCase()))
+            .contains(_normalizedPayoutStatus(p.status)))
         .toList();
 
     final others = data.adminPayouts.where((p) {
-      final s = p.status.toLowerCase();
+      final s = _normalizedPayoutStatus(p.status);
       return ![
         'pending',
         'processing',
@@ -882,66 +891,67 @@ class _PayoutsTab extends StatelessWidget {
         children: [
           ErrorBanner(data.error),
           _AdminHeroCard(
-            title: 'Payout requests',
-            subtitle:
-                'Approve tutor withdrawals with payOS Chi. If automatic payout fails, use the QR/manual backup.',
+            title: t.text('Payout requests'),
+            subtitle: t.text(
+              'Approve tutor withdrawals with payOS Chi. If automatic payout fails, use the QR/manual backup.',
+            ),
             icon: Icons.payments_outlined,
-            trailing:
-                _CountBadge(count: data.adminPayouts.length, label: 'requests'),
+            trailing: _CountBadge(
+                count: data.adminPayouts.length, label: t.text('requests')),
           ),
           const SizedBox(height: 16),
           if (data.adminPayouts.isEmpty && data.loading) const _LoadingCard(),
           if (data.adminPayouts.isEmpty && !data.loading)
-            const _EmptyStateCard(
+            _EmptyStateCard(
               icon: Icons.payments_outlined,
-              title: 'No payouts',
-              subtitle: 'Tutor payout requests will appear here.',
+              title: t.text('No payouts'),
+              subtitle: t.text('Tutor payout requests will appear here.'),
             ),
           if (data.adminPayouts.isNotEmpty) ...[
             _PayoutSection(
-              title: 'Pending',
+              title: t.text('Pending'),
               icon: Icons.pending_actions_outlined,
               payouts: pending,
-              emptyText: 'No pending payouts.',
+              emptyText: t.text('No pending payouts.'),
               statusColor: Colors.orange,
               initiallyExpanded: true,
             ),
             _PayoutSection(
-              title: 'Processing',
+              title: t.text('Processing'),
               icon: Icons.sync_rounded,
               payouts: processing,
-              emptyText: 'No payOS Chi payouts are processing.',
+              emptyText: t.text('No payOS Chi payouts are processing.'),
               statusColor: Colors.blue,
               initiallyExpanded: processing.isNotEmpty,
             ),
             _PayoutSection(
-              title: 'Manual QR required',
+              title: t.text('Manual QR required'),
               icon: Icons.qr_code_2_outlined,
               payouts: manualQrRequired,
-              emptyText: 'No payouts need QR/manual backup.',
+              emptyText: t.text('No payouts need QR/manual backup.'),
               statusColor: Colors.deepOrange,
               initiallyExpanded: manualQrRequired.isNotEmpty,
             ),
             _PayoutSection(
-              title: 'Paid',
+              title: t.text('Paid'),
               icon: Icons.check_circle_outline,
               payouts: paid,
-              emptyText: 'No paid payouts.',
+              emptyText: t.text('No paid payouts.'),
               statusColor: Colors.green,
             ),
             _PayoutSection(
-              title: 'Failed',
+              title: t.text('Failed'),
               icon: Icons.cancel_outlined,
               payouts: failed,
-              emptyText: 'No failed payouts.',
+              emptyText: t.text('No failed payouts.'),
               statusColor: Colors.red,
             ),
             if (others.isNotEmpty)
               _PayoutSection(
-                title: 'Other',
+                title: t.text('Other'),
                 icon: Icons.help_outline,
                 payouts: others,
-                emptyText: 'No payouts in this group.',
+                emptyText: t.text('No payouts in this group.'),
                 statusColor: Colors.blueGrey,
               ),
           ],
@@ -1040,14 +1050,17 @@ class _PayoutItem extends StatelessWidget {
     final approval = payout.payOSChiApprovalState?.trim() ?? '';
     final transaction = payout.payOSChiTransactionState?.trim() ?? '';
     final failure = payout.payOSChiFailureReason?.trim() ?? '';
+    final displayMethod = method == 'ManualQr'
+        ? context.l10n.text('ManualQr')
+        : context.l10n.text(method);
 
     final subtitleLines = <String>[
-      'Tutor #${payout.tutorId}',
-      if (method.isNotEmpty) 'Method: $method',
-      if (reference.isNotEmpty) 'Ref: $reference',
+      '${context.l10n.tutor} #${payout.tutorId}',
+      if (method.isNotEmpty) '${context.l10n.text('Method')}: $displayMethod',
+      if (reference.isNotEmpty) '${context.l10n.text('Ref')}: $reference',
       if (approval.isNotEmpty || transaction.isNotEmpty)
         'payOS: ${approval.isEmpty ? '-' : approval} / ${transaction.isEmpty ? '-' : transaction}',
-      if (failure.isNotEmpty) 'Issue: $failure',
+      if (failure.isNotEmpty) '${context.l10n.text('Issue')}: $failure',
     ];
 
     return Container(
@@ -1067,13 +1080,16 @@ class _PayoutItem extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Payout #${payout.payoutId}',
+                '${context.l10n.text('Payout')} #${payout.payoutId}',
                 style: const TextStyle(fontWeight: FontWeight.w900),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 8),
-            _StatusPill(label: payout.status, color: statusColor),
+            _StatusPill(
+              label: context.l10n.status(payout.status),
+              color: statusColor,
+            ),
           ],
         ),
         subtitle: Padding(
@@ -1108,7 +1124,7 @@ class _PayoutItem extends StatelessWidget {
 }
 
 IconData _payoutStatusIcon(String status) {
-  switch (status.toLowerCase()) {
+  switch (_normalizedPayoutStatus(status)) {
     case 'paid':
     case 'completed':
     case 'approved':
@@ -1126,6 +1142,10 @@ IconData _payoutStatusIcon(String status) {
     default:
       return Icons.payments_outlined;
   }
+}
+
+String _normalizedPayoutStatus(String status) {
+  return status.trim().toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
 }
 
 class _ReportsTab extends StatelessWidget {
@@ -1150,6 +1170,7 @@ class _AdminReportStatusFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     const statuses = ['All', 'Pending', 'Reviewing', 'Resolved', 'Rejected'];
 
     return SingleChildScrollView(
@@ -1159,7 +1180,7 @@ class _AdminReportStatusFilter extends StatelessWidget {
           for (final status in statuses) ...[
             ChoiceChip(
               selected: selected == status,
-              label: Text('$status ${_count(status)}'),
+              label: Text('${t.text(status)} ${_count(status)}'),
               avatar: Icon(
                 _reportStatusIcon(status),
                 size: 16,
@@ -1194,6 +1215,7 @@ class _AdminReportCategorySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final openCount = reports.where((report) {
       final status = report.status.toLowerCase();
       return status == 'pending' || status == 'reviewing';
@@ -1215,7 +1237,7 @@ class _AdminReportCategorySection extends StatelessWidget {
                 ),
               ),
               _StatusPill(
-                label: '$openCount open',
+                label: '$openCount ${t.text('open')}',
                 color: openCount > 0 ? Colors.orange : Colors.green,
               ),
             ],
@@ -1235,6 +1257,7 @@ class _AdminReportQueueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final colors = Theme.of(context).colorScheme;
     final statusColor = _statusColor(report.status);
     final tutorActive = report.tutorIsActive ?? true;
@@ -1295,14 +1318,17 @@ class _AdminReportQueueCard extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _StatusPill(label: report.status, color: statusColor),
                   _StatusPill(
-                    label: tutorActive ? 'Tutor active' : 'Tutor deactivated',
+                      label: t.status(report.status), color: statusColor),
+                  _StatusPill(
+                    label: tutorActive
+                        ? t.text('Tutor active')
+                        : t.text('Tutor deactivated'),
                     color: tutorActive ? Colors.green : Colors.red,
                   ),
                   _ReportMetaChip(
                     icon: Icons.image_outlined,
-                    label: '${report.proofImages.length} proof',
+                    label: '${report.proofImages.length} ${t.text('proof')}',
                   ),
                   _ReportMetaChip(
                     icon: Icons.schedule_outlined,
@@ -1316,7 +1342,7 @@ class _AdminReportQueueCard extends StatelessWidget {
                   Expanded(
                     child: _ReportPersonLine(
                       icon: Icons.school_outlined,
-                      label: 'Tutor',
+                      label: t.tutor,
                       value: report.tutorName,
                     ),
                   ),
@@ -1324,7 +1350,7 @@ class _AdminReportQueueCard extends StatelessWidget {
                   Expanded(
                     child: _ReportPersonLine(
                       icon: Icons.person_outline,
-                      label: 'Reporter',
+                      label: t.text('Reporter'),
                       value: report.reporterName,
                     ),
                   ),
@@ -1337,12 +1363,12 @@ class _AdminReportQueueCard extends StatelessWidget {
                 children: [
                   _ReportMetaChip(
                     icon: Icons.event_note_outlined,
-                    label: 'Booking #${report.bookingId}',
+                    label: '${t.booking} #${report.bookingId}',
                   ),
                   if (report.lessonId != null)
                     _ReportMetaChip(
                       icon: Icons.menu_book_outlined,
-                      label: 'Lesson #${report.lessonId}',
+                      label: '${t.lesson} #${report.lessonId}',
                     ),
                   if (report.subjectName != null)
                     _ReportMetaChip(
@@ -1856,7 +1882,7 @@ Color _statusColor(String status) {
   return Colors.blueGrey;
 }
 
-// ── Dashboard support widgets ──────────────────────────────────────
+// Dashboard support widgets
 
 class _DashSectionLabel extends StatelessWidget {
   final String label;
@@ -2047,6 +2073,58 @@ class _RevStat extends StatelessWidget {
   }
 }
 
+class _LessonActivityStats extends StatelessWidget {
+  final int completedLessons;
+  final int totalSubjects;
+
+  const _LessonActivityStats({
+    required this.completedLessons,
+    required this.totalSubjects,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.l10n;
+    final stats = [
+      _BigStat(
+        value: completedLessons.toString(),
+        label: t.text('completed lessons'),
+        icon: Icons.check_circle_outline,
+        color: const Color(0xFF534AB7),
+      ),
+      _BigStat(
+        value: totalSubjects.toString(),
+        label: t.text('subjects active'),
+        icon: Icons.menu_book_outlined,
+        color: const Color(0xFF0F6E56),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 360) {
+          return Column(
+            children: [
+              for (var index = 0; index < stats.length; index++) ...[
+                SizedBox(width: double.infinity, child: stats[index]),
+                if (index != stats.length - 1) const SizedBox(height: 10),
+              ],
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: stats[0]),
+            const SizedBox(width: 12),
+            Expanded(child: stats[1]),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _BigStat extends StatelessWidget {
   final String value;
   final String label;
@@ -2062,18 +2140,18 @@ class _BigStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.07),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(width: 10),
-            Column(
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -2086,14 +2164,16 @@ class _BigStat extends StatelessWidget {
                 ),
                 Text(
                   label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: color.withOpacity(0.8),
                       ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -2118,19 +2198,19 @@ class _TutorStatusBars extends StatelessWidget {
     return Column(
       children: [
         _MiniBar(
-            label: 'Approved',
+            label: context.l10n.text('Approved'),
             count: approved,
             pct: approved / t,
             color: Colors.green),
         const SizedBox(height: 8),
         _MiniBar(
-            label: 'Pending',
+            label: context.l10n.text('Pending'),
             count: pending,
             pct: pending / t,
             color: Colors.orange),
         const SizedBox(height: 8),
         _MiniBar(
-          label: 'Other',
+          label: context.l10n.text('Other'),
           count: total - approved - pending,
           pct: (total - approved - pending) / t,
           color: colors.onSurfaceVariant,
@@ -2240,7 +2320,11 @@ class _RevenueBarChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               getTitlesWidget: (v, _) {
-                const labels = ['Gross', 'Platform', 'Tutor'];
+                final labels = [
+                  context.l10n.text('Gross'),
+                  context.l10n.text('Platform'),
+                  context.l10n.tutor,
+                ];
                 final i = v.toInt();
                 if (i < 0 || i >= labels.length) return const SizedBox.shrink();
                 return Padding(

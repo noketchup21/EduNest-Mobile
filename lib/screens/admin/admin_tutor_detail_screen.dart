@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
@@ -42,7 +43,7 @@ class _AdminTutorDetailScreenState extends State<AdminTutorDetailScreen> {
       backgroundColor: colors.surface,
       appBar: AppBar(
         title: Text(
-          'Tutor #${widget.tutorId}',
+          '${context.l10n.tutor} #${widget.tutorId}',
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         centerTitle: false,
@@ -55,7 +56,9 @@ class _AdminTutorDetailScreenState extends State<AdminTutorDetailScreen> {
             child: IconButton.filledTonal(
               onPressed: data.loading
                   ? null
-                  : () => context.read<AppDataProvider>().adminLoadTutorDetail(widget.tutorId),
+                  : () => context
+                      .read<AppDataProvider>()
+                      .adminLoadTutorDetail(widget.tutorId),
               icon: const Icon(Icons.refresh),
             ),
           ),
@@ -63,7 +66,9 @@ class _AdminTutorDetailScreenState extends State<AdminTutorDetailScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await context.read<AppDataProvider>().adminLoadTutorDetail(widget.tutorId);
+          await context
+              .read<AppDataProvider>()
+              .adminLoadTutorDetail(widget.tutorId);
         },
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -98,6 +103,7 @@ class _TutorDetailContent extends StatelessWidget {
     final isApproved = detail.isVerified && status == 'approved';
     final isActive = detail.isActive;
     final colors = Theme.of(context).colorScheme;
+    final t = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -123,7 +129,9 @@ class _TutorDetailContent extends StatelessWidget {
                 backgroundColor: colors.surface.withOpacity(0.88),
                 foregroundColor: colors.primary,
                 child: Text(
-                  detail.tutorName.isEmpty ? '?' : detail.tutorName[0].toUpperCase(),
+                  detail.tutorName.isEmpty
+                      ? '?'
+                      : detail.tutorName[0].toUpperCase(),
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
@@ -132,11 +140,13 @@ class _TutorDetailContent extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                detail.tutorName.isEmpty ? 'Tutor #${detail.tutorId}' : detail.tutorName,
+                detail.tutorName.isEmpty
+                    ? '${t.tutor} #${detail.tutorId}'
+                    : detail.tutorName,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.3,
-                ),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.3,
+                    ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 4),
@@ -152,11 +162,12 @@ class _TutorDetailContent extends StatelessWidget {
                 alignment: WrapAlignment.center,
                 children: [
                   _StatusPill(
-                    label: 'Verification: ${detail.verificationStatus}',
+                    label:
+                        '${t.text('Verification')}: ${t.status(detail.verificationStatus)}',
                     color: isApproved ? Colors.green : Colors.orange,
                   ),
                   _StatusPill(
-                    label: isActive ? 'Active' : 'Deactivated',
+                    label: t.text(isActive ? 'Active' : 'Deactivated'),
                     color: isActive ? Colors.green : Colors.red,
                   ),
                 ],
@@ -171,74 +182,74 @@ class _TutorDetailContent extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         _SectionCard(
-          title: 'Tutor information',
-          subtitle: 'Identity, account, and verification information',
+          title: t.text('Tutor information'),
+          subtitle: t.text('Identity, account, and verification information'),
           icon: Icons.badge_outlined,
           children: [
             _InfoTile(
               icon: Icons.badge_outlined,
-              label: 'Tutor ID',
+              label: t.text('Tutor ID'),
               value: detail.tutorId.toString(),
             ),
             _InfoTile(
               icon: Icons.person_outline,
-              label: 'User ID',
+              label: t.text('User ID'),
               value: detail.userId.toString(),
             ),
             _InfoTile(
               icon: Icons.email_outlined,
-              label: 'Email',
+              label: t.text('Email'),
               value: detail.email,
               copyable: true,
             ),
             _InfoTile(
               icon: Icons.credit_card_outlined,
-              label: 'CCCD number',
-              value: detail.nationalIdNumber ?? 'Not provided',
+              label: t.text('CCCD number'),
+              value: detail.nationalIdNumber ?? t.text('Not provided'),
               copyable: detail.nationalIdNumber != null,
             ),
             if ((detail.verificationRejectReason ?? '').isNotEmpty)
               _InfoTile(
                 icon: Icons.error_outline,
-                label: 'Reject reason',
+                label: t.text('Reject reason'),
                 value: detail.verificationRejectReason!,
               ),
           ],
         ),
         const SizedBox(height: 14),
         _SectionCard(
-          title: 'Bank information',
-          subtitle: 'Used for admin payout verification',
+          title: t.text('Bank information'),
+          subtitle: t.text('Used for admin payout verification'),
           icon: Icons.account_balance_outlined,
           children: [
             _InfoTile(
               icon: Icons.account_balance_outlined,
-              label: 'Bank name',
-              value: detail.bankName ?? 'Not provided',
+              label: t.text('Bank name'),
+              value: detail.bankName ?? t.text('Not provided'),
               copyable: detail.bankName != null,
             ),
             _InfoTile(
               icon: Icons.pin_outlined,
-              label: 'Bank BIN',
-              value: detail.bankBin ?? 'Not provided',
+              label: t.text('Bank BIN'),
+              value: detail.bankBin ?? t.text('Not provided'),
               copyable: detail.bankBin != null,
             ),
             _InfoTile(
               icon: Icons.numbers_outlined,
-              label: 'Account number',
-              value: detail.accountNumber ?? 'Not provided',
+              label: t.accountNumber,
+              value: detail.accountNumber ?? t.text('Not provided'),
               copyable: detail.accountNumber != null,
             ),
             _InfoTile(
               icon: Icons.person_pin_outlined,
-              label: 'Account holder',
-              value: detail.accountHolderName ?? 'Not provided',
+              label: t.text('Account holder'),
+              value: detail.accountHolderName ?? t.text('Not provided'),
               copyable: detail.accountHolderName != null,
             ),
             _InfoTile(
               icon: Icons.location_city_outlined,
-              label: 'Branch',
-              value: detail.branchName ?? 'Not provided',
+              label: t.text('Branch'),
+              value: detail.branchName ?? t.text('Not provided'),
               copyable: detail.branchName != null,
             ),
           ],
@@ -250,18 +261,22 @@ class _TutorDetailContent extends StatelessWidget {
           SizedBox(
             height: 50,
             child: FilledButton.icon(
-              onPressed: loading ? null : () => _confirmApprove(context, detail.tutorId),
+              onPressed: loading
+                  ? null
+                  : () => _confirmApprove(context, detail.tutorId),
               icon: const Icon(Icons.verified_outlined),
-              label: const Text('Approve tutor'),
+              label: Text(t.text('Approve tutor')),
             ),
           ),
           const SizedBox(height: 10),
           SizedBox(
             height: 50,
             child: OutlinedButton.icon(
-              onPressed: loading ? null : () => _showRejectDialog(context, detail.tutorId),
+              onPressed: loading
+                  ? null
+                  : () => _showRejectDialog(context, detail.tutorId),
               icon: const Icon(Icons.cancel_outlined),
-              label: const Text('Reject tutor'),
+              label: Text(t.text('Reject tutor')),
             ),
           ),
         ] else
@@ -273,21 +288,26 @@ class _TutorDetailContent extends StatelessWidget {
               side: BorderSide(color: colors.outlineVariant),
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               leading: const _SoftIcon(
                 icon: Icons.verified,
                 color: Colors.green,
               ),
-              title: const Text(
-                'Tutor approved',
-                style: TextStyle(fontWeight: FontWeight.w900),
+              title: Text(
+                t.text('Tutor approved'),
+                style: const TextStyle(fontWeight: FontWeight.w900),
               ),
-              subtitle: const Text(
-                'This tutor can create availability and receive bookings while the account is active.',
+              subtitle: Text(
+                t.text(
+                  'This tutor can create availability and receive bookings while the account is active.',
+                ),
               ),
               trailing: OutlinedButton(
-                onPressed: loading ? null : () => _showRejectDialog(context, detail.tutorId),
-                child: const Text('Reject'),
+                onPressed: loading
+                    ? null
+                    : () => _showRejectDialog(context, detail.tutorId),
+                child: Text(t.text('Reject')),
               ),
             ),
           ),
@@ -300,19 +320,24 @@ class _TutorDetailContent extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          title: const Text('Approve tutor?'),
-          content: const Text(
-            'This tutor will be able to create availability and receive bookings.',
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          title: Text(
+              AppStrings.of(context, listen: false).text('Approve tutor?')),
+          content: Text(
+            AppStrings.of(context, listen: false).text(
+              'This tutor will be able to create availability and receive bookings.',
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(AppStrings.of(context, listen: false).cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Approve'),
+              child:
+                  Text(AppStrings.of(context, listen: false).text('Approve')),
             ),
           ],
         );
@@ -331,7 +356,9 @@ class _TutorDetailContent extends StatelessWidget {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tutor approved')),
+        SnackBar(
+            content: Text(
+                AppStrings.of(context, listen: false).text('Tutor approved'))),
       );
     } catch (_) {}
   }
@@ -343,14 +370,18 @@ class _TutorDetailContent extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          title: const Text('Reject tutor'),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          title:
+              Text(AppStrings.of(context, listen: false).text('Reject tutor')),
           content: TextField(
             decoration: _inputDecoration(
               context,
-              label: 'Reason optional',
+              label:
+                  AppStrings.of(context, listen: false).text('Reason optional'),
               icon: Icons.edit_note_outlined,
-              hintText: 'Example: CCCD image is unclear',
+              hintText: AppStrings.of(context, listen: false)
+                  .text('Example: CCCD image is unclear'),
             ),
             minLines: 2,
             maxLines: 4,
@@ -361,11 +392,11 @@ class _TutorDetailContent extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(AppStrings.of(context, listen: false).cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Reject'),
+              child: Text(AppStrings.of(context, listen: false).text('Reject')),
             ),
           ],
         );
@@ -389,7 +420,9 @@ class _TutorDetailContent extends StatelessWidget {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tutor rejected')),
+        SnackBar(
+            content: Text(
+                AppStrings.of(context, listen: false).text('Tutor rejected'))),
       );
     } catch (_) {}
   }
@@ -431,14 +464,22 @@ class _AccountStatusCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isActive ? 'Tutor account is active' : 'Tutor account is deactivated',
+                    context.l10n.text(
+                      isActive
+                          ? 'Tutor account is active'
+                          : 'Tutor account is deactivated',
+                    ),
                     style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     isActive
-                        ? 'This tutor can login and appear in available courses.'
-                        : 'This tutor cannot login or receive new bookings.',
+                        ? context.l10n.text(
+                            'This tutor can login and appear in available courses.',
+                          )
+                        : context.l10n.text(
+                            'This tutor cannot login or receive new bookings.',
+                          ),
                     style: TextStyle(color: colors.onSurfaceVariant),
                   ),
                 ],
@@ -449,11 +490,12 @@ class _AccountStatusCard extends StatelessWidget {
               onPressed: loading
                   ? null
                   : () => _confirmAccountStatus(
-                context,
-                tutorId: detail.tutorId,
-                isActive: !isActive,
-              ),
-              child: Text(isActive ? 'Deactivate' : 'Activate'),
+                        context,
+                        tutorId: detail.tutorId,
+                        isActive: !isActive,
+                      ),
+              child:
+                  Text(context.l10n.text(isActive ? 'Deactivate' : 'Activate')),
             ),
           ],
         ),
@@ -462,29 +504,39 @@ class _AccountStatusCard extends StatelessWidget {
   }
 
   Future<void> _confirmAccountStatus(
-      BuildContext context, {
-        required int tutorId,
-        required bool isActive,
-      }) async {
+    BuildContext context, {
+    required int tutorId,
+    required bool isActive,
+  }) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          title: Text(isActive ? 'Activate tutor?' : 'Deactivate tutor?'),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          title: Text(
+            AppStrings.of(context, listen: false).text(
+              isActive ? 'Activate tutor?' : 'Deactivate tutor?',
+            ),
+          ),
           content: Text(
             isActive
-                ? 'This tutor will be able to login and use tutor features again.'
-                : 'This tutor will not be able to login. Their courses should also be hidden from learners.',
+                ? AppStrings.of(context, listen: false).text(
+                    'This tutor will be able to login and use tutor features again.',
+                  )
+                : AppStrings.of(context, listen: false).text(
+                    'This tutor will not be able to login. Their courses should also be hidden from learners.',
+                  ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(AppStrings.of(context, listen: false).cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(isActive ? 'Activate' : 'Deactivate'),
+              child: Text(AppStrings.of(context, listen: false)
+                  .text(isActive ? 'Activate' : 'Deactivate')),
             ),
           ],
         );
@@ -509,7 +561,10 @@ class _AccountStatusCard extends StatelessWidget {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isActive ? 'Tutor activated' : 'Tutor deactivated'),
+          content: Text(
+            AppStrings.of(context, listen: false)
+                .text(isActive ? 'Tutor activated' : 'Tutor deactivated'),
+          ),
         ),
       );
     } catch (_) {}
@@ -526,20 +581,20 @@ class _DocumentsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      title: 'Submitted documents',
-      subtitle: 'Tap an image to inspect it in detail',
+      title: context.l10n.text('Submitted documents'),
+      subtitle: context.l10n.text('Tap an image to inspect it in detail'),
       icon: Icons.folder_copy_outlined,
       children: [
         _ImageDocumentTile(
-          title: 'CCCD front',
+          title: context.l10n.text('CCCD front'),
           imageUrl: detail.cccdFrontImageUrl,
         ),
         _ImageDocumentTile(
-          title: 'CCCD back',
+          title: context.l10n.text('CCCD back'),
           imageUrl: detail.cccdBackImageUrl,
         ),
         _ImageDocumentTile(
-          title: 'Certificate / university document',
+          title: context.l10n.text('Certificate / university document'),
           imageUrl: detail.certificateImageUrl,
         ),
       ],
@@ -575,7 +630,9 @@ class _ImageDocumentTile extends StatelessWidget {
           Row(
             children: [
               _SoftIcon(
-                icon: hasImage ? Icons.image_outlined : Icons.image_not_supported_outlined,
+                icon: hasImage
+                    ? Icons.image_outlined
+                    : Icons.image_not_supported_outlined,
                 size: 34,
               ),
               const SizedBox(width: 10),
@@ -586,7 +643,7 @@ class _ImageDocumentTile extends StatelessWidget {
                 ),
               ),
               _StatusPill(
-                label: hasImage ? 'Submitted' : 'Missing',
+                label: context.l10n.text(hasImage ? 'Submitted' : 'Missing'),
                 color: hasImage ? Colors.green : Colors.orange,
               ),
             ],
@@ -602,7 +659,7 @@ class _ImageDocumentTile extends StatelessWidget {
                 border: Border.all(color: colors.outlineVariant),
               ),
               child: Text(
-                'No image submitted',
+                context.l10n.text('No image submitted'),
                 style: TextStyle(color: colors.onSurfaceVariant),
               ),
             )
@@ -627,7 +684,7 @@ class _ImageDocumentTile extends StatelessWidget {
                         border: Border.all(color: colors.outlineVariant),
                       ),
                       child: Text(
-                        'Unable to load image',
+                        context.l10n.text('Unable to load image'),
                         style: TextStyle(color: colors.onSurfaceVariant),
                       ),
                     );
@@ -641,16 +698,17 @@ class _ImageDocumentTile extends StatelessWidget {
   }
 
   void _openImageDialog(
-      BuildContext context,
-      String title,
-      String url,
-      ) {
+    BuildContext context,
+    String title,
+    String url,
+  ) {
     showDialog(
       context: context,
       builder: (_) {
         return Dialog(
           insetPadding: const EdgeInsets.all(12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
           clipBehavior: Clip.antiAlias,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -671,9 +729,10 @@ class _ImageDocumentTile extends StatelessWidget {
                     url,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) {
-                      return const Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Text('Unable to load image'),
+                      return Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(AppStrings.of(context, listen: false)
+                            .text('Unable to load image')),
                       );
                     },
                   ),
@@ -725,13 +784,14 @@ class _SectionCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+                      Text(title,
+                          style: const TextStyle(fontWeight: FontWeight.w900)),
                       const SizedBox(height: 3),
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
+                              color: colors.onSurfaceVariant,
+                            ),
                       ),
                     ],
                   ),
@@ -762,6 +822,7 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final colors = Theme.of(context).colorScheme;
 
     return Container(
@@ -787,21 +848,22 @@ class _InfoTile extends StatelessWidget {
         ),
         trailing: copyable
             ? IconButton(
-          icon: const Icon(Icons.copy),
-          onPressed: () async {
-            await Clipboard.setData(
-              ClipboardData(text: value),
-            );
+                tooltip: t.text('Copy'),
+                icon: const Icon(Icons.copy),
+                onPressed: () async {
+                  await Clipboard.setData(
+                    ClipboardData(text: value),
+                  );
 
-            if (!context.mounted) return;
+                  if (!context.mounted) return;
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Copied $label'),
-              ),
-            );
-          },
-        )
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${t.text('Copied')} $label'),
+                    ),
+                  );
+                },
+              )
             : null,
       ),
     );
@@ -889,11 +951,11 @@ class _LoadingCard extends StatelessWidget {
 }
 
 InputDecoration _inputDecoration(
-    BuildContext context, {
-      required String label,
-      required IconData icon,
-      String? hintText,
-    }) {
+  BuildContext context, {
+  required String label,
+  required IconData icon,
+  String? hintText,
+}) {
   final colors = Theme.of(context).colorScheme;
 
   return InputDecoration(

@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/money_text.dart';
@@ -44,11 +45,15 @@ class _WalletScreenState extends State<WalletScreen> {
     final data = context.watch<AppDataProvider>();
     final wallet = data.wallet;
     final theme = Theme.of(context);
+    final t = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLow,
       appBar: AppBar(
-        title: const Text('My Wallet', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          t.myWallet,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: false,
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -74,7 +79,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    'The Wallet feature is only available for Tutor accounts.',
+                    t.walletTutorOnly,
                     style: TextStyle(color: theme.colorScheme.onErrorContainer),
                   ),
                 ),
@@ -85,7 +90,10 @@ class _WalletScreenState extends State<WalletScreen> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [theme.colorScheme.primary, theme.colorScheme.primaryContainer],
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primaryContainer
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -103,7 +111,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Available Balance',
+                      t.availableBalance,
                       style: TextStyle(
                         color: theme.colorScheme.onPrimary.withOpacity(0.8),
                         fontSize: 14,
@@ -122,11 +130,15 @@ class _WalletScreenState extends State<WalletScreen> {
                     Row(
                       children: [
                         Icon(Icons.hourglass_empty_rounded,
-                            size: 16, color: theme.colorScheme.onPrimary.withOpacity(0.8)),
+                            size: 16,
+                            color:
+                                theme.colorScheme.onPrimary.withOpacity(0.8)),
                         const SizedBox(width: 6),
                         Text(
-                          'Pending Clearance: ',
-                          style: TextStyle(color: theme.colorScheme.onPrimary.withOpacity(0.8)),
+                          t.pendingClearance,
+                          style: TextStyle(
+                              color:
+                                  theme.colorScheme.onPrimary.withOpacity(0.8)),
                         ),
                         Text(
                           currencyFormatter.format(wallet.pendingBalance),
@@ -153,21 +165,28 @@ class _WalletScreenState extends State<WalletScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Payout Request',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      t.payoutRequest,
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: amount,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                       decoration: InputDecoration(
-                        labelText: 'Amount to Withdraw',
-                        helperText: 'Minimum: ${currencyFormatter.format(minimumPayoutAmount)}',
-                        prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        labelText: t.amountToWithdraw,
+                        helperText: t.minimumAmount(
+                          currencyFormatter.format(minimumPayoutAmount),
+                        ),
+                        prefixIcon:
+                            const Icon(Icons.account_balance_wallet_outlined),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         filled: true,
-                        fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                        fillColor: theme.colorScheme.surfaceContainerHighest
+                            .withOpacity(0.3),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -176,17 +195,23 @@ class _WalletScreenState extends State<WalletScreen> {
                       height: 50,
                       child: FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
-                        onPressed: data.loading ? null : () => _requestPayout(wallet.balance),
+                        onPressed: data.loading
+                            ? null
+                            : () => _requestPayout(wallet.balance),
                         icon: data.loading
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
                               )
                             : const Icon(Icons.arrow_upward_rounded),
-                        label: Text(data.loading ? 'Sending Request...' : 'Submit Payout Request'),
+                        label: Text(data.loading
+                            ? t.sendingRequest
+                            : t.submitPayoutRequest),
                       ),
                     ),
                   ],
@@ -195,9 +220,9 @@ class _WalletScreenState extends State<WalletScreen> {
             ],
 
             // --- SECTION 3: TRANSACTIONS LIST ---
-            _buildSectionHeader(context, 'Transaction History'),
+            _buildSectionHeader(context, t.transactionHistory),
             if (data.walletTransactions.isEmpty)
-              _buildEmptyCard(Icons.receipt_long_outlined, 'No transactions yet')
+              _buildEmptyCard(Icons.receipt_long_outlined, t.noTransactionsYet)
             else
               _PaginatedTransactions(
                 transactions: data.walletTransactions,
@@ -206,9 +231,9 @@ class _WalletScreenState extends State<WalletScreen> {
               ),
 
             // --- SECTION 4: PAYOUTS LIST ---
-            _buildSectionHeader(context, 'Payout History'),
+            _buildSectionHeader(context, t.payoutHistory),
             if (data.payouts.isEmpty)
-              _buildEmptyCard(Icons.payments_outlined, 'No payout requests yet')
+              _buildEmptyCard(Icons.payments_outlined, t.noPayoutRequestsYet)
             else
               _PaginatedPayouts(
                 payouts: data.payouts,
@@ -255,6 +280,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Widget _buildStatusBadge(String status) {
     final norm = status.toLowerCase();
+    final t = AppStrings.of(context, listen: false);
     Color color = Colors.orange;
     if (norm == 'paid') color = Colors.green;
     if (norm == 'failed') color = Colors.red;
@@ -266,8 +292,9 @@ class _WalletScreenState extends State<WalletScreen> {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        status.toUpperCase(),
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+        t.status(status).toUpperCase(),
+        style:
+            TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -277,17 +304,23 @@ class _WalletScreenState extends State<WalletScreen> {
     final value = double.tryParse(raw) ?? 0;
 
     if (value < minimumPayoutAmount) {
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('The minimum payout amount is ${currencyFormatter.format(minimumPayoutAmount)}'),
+          content: Text(
+            t.minimumPayoutAmount(
+              currencyFormatter.format(minimumPayoutAmount),
+            ),
+          ),
         ),
       );
       return;
     }
 
     if (value > availableBalance) {
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('The amount requested exceeds your available balance.')),
+        SnackBar(content: Text(t.payoutExceedsBalance)),
       );
       return;
     }
@@ -296,8 +329,9 @@ class _WalletScreenState extends State<WalletScreen> {
       await context.read<AppDataProvider>().requestPayout(value);
       if (!mounted) return;
       amount.clear();
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payout request submitted successfully')),
+        SnackBar(content: Text(t.payoutSubmitted)),
       );
     } catch (_) {}
   }
@@ -388,7 +422,7 @@ class _PaginatedTransactionsState extends State<_PaginatedTransactions> {
 
               return ListTile(
                 contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 leading: CircleAvatar(
                   backgroundColor: color.withOpacity(0.1),
                   child: Icon(
@@ -432,7 +466,8 @@ class _PaginatedTransactionsState extends State<_PaginatedTransactions> {
           total: widget.transactions.length,
           pageSize: _pageSize,
           onPrev: _page > 0 ? () => setState(() => _page--) : null,
-          onNext: _page < _totalPages - 1 ? () => setState(() => _page++) : null,
+          onNext:
+              _page < _totalPages - 1 ? () => setState(() => _page++) : null,
         ),
       ],
     );
@@ -470,6 +505,7 @@ class _PaginatedPayoutsState extends State<_PaginatedPayouts> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
 
     return Column(
       children: [
@@ -503,10 +539,10 @@ class _PaginatedPayoutsState extends State<_PaginatedPayouts> {
 
               return ListTile(
                 contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 leading: _PayoutStatusIcon(status: p.status as String),
                 title: Text(
-                  'Request #${p.payoutId}',
+                  t.payoutRequestNumber(p.payoutId),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
@@ -541,7 +577,7 @@ class _PaginatedPayoutsState extends State<_PaginatedPayouts> {
                         border: Border.all(color: color.withOpacity(0.25)),
                       ),
                       child: Text(
-                        p.status as String,
+                        t.status(p.status as String),
                         style: TextStyle(
                           color: color,
                           fontSize: 10,
@@ -562,7 +598,8 @@ class _PaginatedPayoutsState extends State<_PaginatedPayouts> {
           total: widget.payouts.length,
           pageSize: _pageSize,
           onPrev: _page > 0 ? () => setState(() => _page--) : null,
-          onNext: _page < _totalPages - 1 ? () => setState(() => _page++) : null,
+          onNext:
+              _page < _totalPages - 1 ? () => setState(() => _page++) : null,
         ),
       ],
     );

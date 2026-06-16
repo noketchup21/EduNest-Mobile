@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
 import '../models/mvp_models.dart';
 import '../services/api_service.dart';
@@ -1371,17 +1371,10 @@ class AppDataProvider extends ChangeNotifier {
     await _guard(() async {
       final updated = await api.adminApprovePayoutWithPayOSChi(payoutId);
 
-      final index = adminPayouts.indexWhere(
-        (x) => x.payoutId == updated.payoutId,
-      );
-
-      if (index >= 0) {
-        adminPayouts[index] = updated;
-      } else {
-        adminPayouts.insert(0, updated);
-      }
-
-      await loadAdminPayouts();
+      _upsertAdminPayout(updated);
+      adminPayoutDetail = await api.adminGetPayoutDetail(payoutId);
+      adminPayouts = await api.adminGetPayouts();
+      adminDashboard = await api.adminGetDashboard();
     });
   }
 
@@ -1392,15 +1385,10 @@ class AppDataProvider extends ChangeNotifier {
         status: 'Paid',
       );
 
-      final index = adminPayouts.indexWhere(
-        (x) => x.payoutId == updated.payoutId,
-      );
-
-      if (index >= 0) {
-        adminPayouts[index] = updated;
-      }
-
-      await loadAdminPayouts();
+      _upsertAdminPayout(updated);
+      adminPayoutDetail = await api.adminGetPayoutDetail(payoutId);
+      adminPayouts = await api.adminGetPayouts();
+      adminDashboard = await api.adminGetDashboard();
     });
   }
 
@@ -1411,15 +1399,22 @@ class AppDataProvider extends ChangeNotifier {
         status: 'Failed',
       );
 
-      final index = adminPayouts.indexWhere(
-        (x) => x.payoutId == updated.payoutId,
-      );
-
-      if (index >= 0) {
-        adminPayouts[index] = updated;
-      }
-
-      await loadAdminPayouts();
+      _upsertAdminPayout(updated);
+      adminPayoutDetail = await api.adminGetPayoutDetail(payoutId);
+      adminPayouts = await api.adminGetPayouts();
+      adminDashboard = await api.adminGetDashboard();
     });
+  }
+
+  void _upsertAdminPayout(PayoutModel payout) {
+    final index = adminPayouts.indexWhere(
+      (item) => item.payoutId == payout.payoutId,
+    );
+
+    if (index >= 0) {
+      adminPayouts[index] = payout;
+    } else {
+      adminPayouts.insert(0, payout);
+    }
   }
 }

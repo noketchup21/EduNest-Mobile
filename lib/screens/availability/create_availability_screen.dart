@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/app_button.dart';
@@ -93,6 +94,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final data = context.watch<AppDataProvider>();
     final verification = data.tutorVerification;
 
@@ -101,7 +103,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     if (data.loading && verification == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Create availability'),
+          title: Text(t.text('Create availability')),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -118,7 +120,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create availability'),
+        title: Text(t.text('Create availability')),
         actions: [
           IconButton(
             onPressed: data.loading
@@ -143,12 +145,14 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
             Card(
               child: ListTile(
                 leading: const Icon(Icons.verified),
-                title: const Text('Tutor approved'),
-                subtitle: const Text(
-                  'You can now create teaching availability.',
+                title: Text(t.text('Tutor approved')),
+                subtitle: Text(
+                  t.text('You can now create teaching availability.'),
                 ),
                 trailing: Chip(
-                  label: Text(verification?.verificationStatus ?? 'Approved'),
+                  label: Text(t.status(
+                    verification?.verificationStatus ?? 'Approved',
+                  )),
                 ),
               ),
             ),
@@ -159,9 +163,9 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                 children: [
                   DropdownButtonFormField<int>(
                     initialValue: selectedSubjectId,
-                    decoration: const InputDecoration(
-                      labelText: 'Subject',
-                      hintText: 'Choose a subject',
+                    decoration: InputDecoration(
+                      labelText: t.text('Subject'),
+                      hintText: t.text('Choose a subject'),
                     ),
                     items: data.subjects.map((subject) {
                       return DropdownMenuItem<int>(
@@ -176,7 +180,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     },
                     validator: (value) {
                       if (value == null) {
-                        return 'Please choose a subject';
+                        return t.text('Please choose a subject');
                       }
 
                       return null;
@@ -190,7 +194,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                         onPressed:
                             data.loading ? null : data.loadMyAvailability,
                         icon: const Icon(Icons.refresh),
-                        label: const Text('No subjects loaded. Refresh'),
+                        label: Text(t.text('No subjects loaded. Refresh')),
                       ),
                     ),
                   ],
@@ -199,7 +203,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     initialValue: selectedDaysOfWeek,
                     validator: (_) {
                       if (selectedDaysOfWeek.isEmpty) {
-                        return 'Choose at least one day';
+                        return t.text('Choose at least one day');
                       }
 
                       return null;
@@ -209,7 +213,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
 
                       return InputDecorator(
                         decoration: InputDecoration(
-                          labelText: 'Days of week',
+                          labelText: t.text('Days of week'),
                           errorText: field.errorText,
                           border: const OutlineInputBorder(),
                         ),
@@ -220,7 +224,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                             final selected = selectedDaysOfWeek.contains(day);
 
                             return FilterChip(
-                              label: Text(day),
+                              label: Text(t.text(day)),
                               selected: selected,
                               avatar: selected
                                   ? Icon(
@@ -249,16 +253,16 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: mode,
-                    decoration: const InputDecoration(
-                      labelText: 'Mode',
+                    decoration: InputDecoration(
+                      labelText: t.text('Mode'),
                     ),
-                    items: const [
+                    items: [
                       'Online',
                       'Offline',
                     ].map((item) {
                       return DropdownMenuItem<String>(
                         value: item,
-                        child: Text(item),
+                        child: Text(t.mode(item)),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -274,9 +278,11 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                   if (mode == 'Offline') ...[
                     TextFormField(
                       controller: offlineAreas,
-                      decoration: const InputDecoration(
-                        labelText: 'Offline tutoring areas',
-                        hintText: 'Example: District 1, District 3, Binh Thanh',
+                      decoration: InputDecoration(
+                        labelText: t.text('Offline tutoring areas'),
+                        hintText: t.text(
+                          'Example: District 1, District 3, Binh Thanh',
+                        ),
                       ),
                       minLines: 2,
                       maxLines: 4,
@@ -284,7 +290,9 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                       validator: (value) {
                         if (mode == 'Offline' &&
                             (value == null || value.trim().isEmpty)) {
-                          return 'Enter the areas you are willing to tutor';
+                          return t.text(
+                            'Enter the areas you are willing to tutor',
+                          );
                         }
 
                         return null;
@@ -294,17 +302,17 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                   ],
                   DropdownButtonFormField<String>(
                     initialValue: level,
-                    decoration: const InputDecoration(
-                      labelText: 'Level',
+                    decoration: InputDecoration(
+                      labelText: t.text('Level'),
                     ),
-                    items: const [
+                    items: [
                       'Beginner',
                       'Intermediate',
                       'Advanced',
                     ].map((item) {
                       return DropdownMenuItem<String>(
                         value: item,
-                        child: Text(item),
+                        child: Text(t.level(item)),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -318,7 +326,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     controller: startDate,
                     readOnly: true,
                     decoration: InputDecoration(
-                      labelText: 'Start course date',
+                      labelText: t.text('Start course date'),
                       hintText: 'yyyy-MM-dd',
                       suffixIcon: IconButton(
                         onPressed: () => _pickDate(startDate),
@@ -332,7 +340,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     controller: endDate,
                     readOnly: true,
                     decoration: InputDecoration(
-                      labelText: 'End course date',
+                      labelText: t.text('End course date'),
                       hintText: 'yyyy-MM-dd',
                       suffixIcon: IconButton(
                         onPressed: () => _pickDate(endDate),
@@ -346,7 +354,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     controller: startTime,
                     readOnly: true,
                     decoration: InputDecoration(
-                      labelText: 'Start time',
+                      labelText: t.text('Start time'),
                       hintText: 'HH:mm:ss',
                       suffixIcon: IconButton(
                         onPressed: () => _pickTime(startTime),
@@ -360,7 +368,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     controller: endTime,
                     readOnly: true,
                     decoration: InputDecoration(
-                      labelText: 'End time',
+                      labelText: t.text('End time'),
                       hintText: 'HH:mm:ss',
                       suffixIcon: IconButton(
                         onPressed: () => _pickTime(endTime),
@@ -372,9 +380,9 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: price,
-                    decoration: const InputDecoration(
-                      labelText: 'Price per lesson',
-                      hintText: 'Example: 200000',
+                    decoration: InputDecoration(
+                      labelText: t.text('Price per lesson'),
+                      hintText: t.text('Example: 200000'),
                     ),
                     keyboardType: TextInputType.number,
                     validator: _required,
@@ -383,17 +391,17 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                   Card(
                     child: ListTile(
                       leading: const Icon(Icons.calculate_outlined),
-                      title: const Text('Course price preview'),
+                      title: Text(t.text('Course price preview')),
                       subtitle: Text(
-                        'Lessons: $lessons\n'
-                        'Price per lesson: ${price.text.trim().isEmpty ? '0' : price.text.trim()}',
+                        '${t.text('Lessons')}: $lessons\n'
+                        '${t.text('Price per lesson')}: ${price.text.trim().isEmpty ? '0' : price.text.trim()}',
                       ),
                       trailing: MoneyText(total),
                     ),
                   ),
                   const SizedBox(height: 16),
                   AppButton(
-                    label: 'Create',
+                    label: t.text('Create'),
                     loading: data.loading,
                     onPressed: () => _submit(data),
                   ),
@@ -402,17 +410,19 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'My availability',
+              t.text('My availability'),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
             const SizedBox(height: 8),
             if (data.myAvailabilities.isEmpty && !data.loading)
-              const Card(
+              Card(
                 child: ListTile(
-                  title: Text('No availability yet'),
-                  subtitle: Text('Create your first teaching schedule above.'),
+                  title: Text(t.text('No availability yet')),
+                  subtitle: Text(
+                    t.text('Create your first teaching schedule above.'),
+                  ),
                 ),
               ),
             ...data.myAvailabilities.map((availability) {
@@ -429,12 +439,15 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     ),
                   ),
                   subtitle: Text(
+                    _availabilitySubtitle(availability, t),
+                    /*
                     '${availability.dayOfWeek} '
                     '${availability.startTime}-${availability.endTime}\n'
                     '${availability.mode} • ${availability.level}\n'
                     '${_offlineAreaLine(availability)}'
                     'Lessons: ${availability.slot}\n'
                     'Price per lesson: ${availability.pricePerSlot.toStringAsFixed(0)}',
+                    */
                   ),
                   trailing: MoneyText(totalPrice),
                 ),
@@ -451,6 +464,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     AppDataProvider data,
     TutorVerificationModel? verification,
   ) {
+    final t = AppStrings.of(context, listen: false);
     final status = verification?.verificationStatus ?? 'NotSubmitted';
     final lowerStatus = status.toLowerCase();
 
@@ -459,25 +473,29 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     IconData icon;
 
     if (lowerStatus == 'pending') {
-      title = 'Waiting for admin approval';
-      message =
-          'Your documents have been submitted. You cannot create availability until admin approves your tutor profile.';
+      title = t.text('Waiting for admin approval');
+      message = t.text(
+        'Your documents have been submitted. You cannot create availability until admin approves your tutor profile.',
+      );
       icon = Icons.hourglass_top;
     } else if (lowerStatus == 'rejected') {
-      title = 'Verification rejected';
+      title = t.text('Verification rejected');
       message = verification?.verificationRejectReason ??
-          'Your verification was rejected. Please update your documents and submit again.';
+          t.text(
+            'Your verification was rejected. Please update your documents and submit again.',
+          );
       icon = Icons.cancel_outlined;
     } else {
-      title = 'Tutor verification required';
-      message =
-          'Please submit your CCCD, certificate or university document, and bank information before creating availability.';
+      title = t.text('Tutor verification required');
+      message = t.text(
+        'Please submit your CCCD, certificate or university document, and bank information before creating availability.',
+      );
       icon = Icons.assignment_outlined;
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create availability'),
+        title: Text(t.text('Create availability')),
         actions: [
           IconButton(
             onPressed: data.loading
@@ -513,7 +531,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                   ),
                   const SizedBox(height: 12),
                   Chip(
-                    label: Text('Status: $status'),
+                    label: Text('${t.text('Status')}: ${t.status(status)}'),
                   ),
                   const SizedBox(height: 20),
                   if (lowerStatus != 'pending')
@@ -522,7 +540,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                       child: FilledButton.icon(
                         onPressed: () => context.go('/tutor-verification'),
                         icon: const Icon(Icons.upload_file),
-                        label: const Text('Open verification form'),
+                        label: Text(t.text('Open verification form')),
                       ),
                     ),
                   if (lowerStatus == 'pending')
@@ -535,7 +553,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                                 .read<AppDataProvider>()
                                 .loadMyTutorVerification(),
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Refresh approval status'),
+                        label: Text(t.text('Refresh approval status')),
                       ),
                     ),
                 ],
@@ -548,18 +566,20 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
   }
 
   Future<void> _submit(AppDataProvider data) async {
+    final t = AppStrings.of(context, listen: false);
+
     if (!formKey.currentState!.validate()) return;
 
     final parsedStartDate = DateTime.tryParse(startDate.text.trim());
     final parsedEndDate = DateTime.tryParse(endDate.text.trim());
 
     if (parsedStartDate == null || parsedEndDate == null) {
-      _showMessage('Invalid course date. Use yyyy-MM-dd');
+      _showMessage(t.text('Invalid course date. Use yyyy-MM-dd'));
       return;
     }
 
     if (parsedStartDate.isAfter(parsedEndDate)) {
-      _showMessage('Start date must be before end date');
+      _showMessage(t.text('Start date must be before end date'));
       return;
     }
 
@@ -567,26 +587,28 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     final parsedEndTime = _parseTime(endTime.text.trim());
 
     if (parsedStartTime == null || parsedEndTime == null) {
-      _showMessage('Invalid time. Use HH:mm:ss');
+      _showMessage(t.text('Invalid time. Use HH:mm:ss'));
       return;
     }
 
     if (parsedStartTime >= parsedEndTime) {
-      _showMessage('Start time must be before end time');
+      _showMessage(t.text('Start time must be before end time'));
       return;
     }
 
     final lessonCount = _calculateSlotCount();
 
     if (lessonCount <= 0) {
-      _showMessage('No lesson found for selected days in this date range');
+      _showMessage(
+        t.text('No lesson found for selected days in this date range'),
+      );
       return;
     }
 
     final parsedPrice = double.tryParse(price.text.trim());
 
     if (parsedPrice == null || parsedPrice <= 0) {
-      _showMessage('Invalid price per lesson');
+      _showMessage(t.text('Invalid price per lesson'));
       return;
     }
 
@@ -609,8 +631,8 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Availability created'),
+        SnackBar(
+          content: Text(t.text('Availability created')),
         ),
       );
     } catch (_) {
@@ -653,14 +675,32 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     }
   }
 
-  String _offlineAreaLine(AvailabilityModel availability) {
+  String _availabilitySubtitle(AvailabilityModel availability, AppStrings t) {
+    return '${_daysText(availability.dayOfWeek, t)} '
+        '${availability.startTime}-${availability.endTime}\n'
+        '${t.mode(availability.mode)} - ${t.level(availability.level)}\n'
+        '${_offlineAreaLine(availability, t)}'
+        '${t.text('Lessons')}: ${availability.slot}\n'
+        '${t.text('Price per lesson')}: '
+        '${availability.pricePerSlot.toStringAsFixed(0)}';
+  }
+
+  String _offlineAreaLine(AvailabilityModel availability, AppStrings t) {
     final areas = availability.offlineAreas?.trim() ?? '';
 
     if (availability.mode != 'Offline' || areas.isEmpty) {
       return '';
     }
 
-    return 'Areas: $areas\n';
+    return '${t.text('Areas')}: $areas\n';
+  }
+
+  String _daysText(String value, AppStrings t) {
+    return value
+        .split(',')
+        .map((day) => t.text(day.trim()))
+        .where((day) => day.isNotEmpty)
+        .join(', ');
   }
 
   bool _isApproved(TutorVerificationModel? verification) {
@@ -672,7 +712,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
 
   String? _required(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Required';
+      return AppStrings.of(context, listen: false).requiredField;
     }
 
     return null;

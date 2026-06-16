@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
+import '../l10n/app_strings.dart';
 import '../utils/vietnam_bank_bins.dart';
 
 class BankBinField extends StatelessWidget {
@@ -12,16 +13,18 @@ class BankBinField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
+
     return TextFormField(
       controller: controller,
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
-        labelText: 'Bank BIN',
-        hintText: 'Example: 970422',
-        helperText: 'Required for automatic payout and quick transfer QR.',
+        labelText: t.bankBin,
+        hintText: t.bankBinHint,
+        helperText: t.bankBinHelper,
         prefixIcon: const Icon(Icons.qr_code_2_outlined),
         suffixIcon: IconButton(
-          tooltip: 'View bank BIN list',
+          tooltip: t.viewBankBinList,
           icon: const Icon(Icons.help_outline),
           onPressed: () => _showBankBinList(context),
         ),
@@ -30,13 +33,13 @@ class BankBinField extends StatelessWidget {
         final text = value?.trim() ?? '';
 
         if (text.isEmpty) {
-          return 'Bank BIN is required';
+          return t.bankBinRequired;
         }
 
         final exists = realVietnamBankBins.any((bank) => bank.bin == text);
 
         if (!exists) {
-          return 'Please select a valid Vietnamese bank BIN';
+          return t.validVietnamBankBin;
         }
 
         return null;
@@ -78,6 +81,7 @@ class _BankBinBottomSheetState extends State<_BankBinBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final query = search.text.trim().toLowerCase();
 
     final banks = realVietnamBankBins.where((bank) {
@@ -97,18 +101,18 @@ class _BankBinBottomSheetState extends State<_BankBinBottomSheet> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
               child: TextField(
                 controller: search,
-                decoration: const InputDecoration(
-                  labelText: 'Search bank',
-                  hintText: 'Search by name, code, or BIN',
-                  prefixIcon: Icon(Icons.search),
+                decoration: InputDecoration(
+                  labelText: t.searchBank,
+                  hintText: t.searchBankHint,
+                  prefixIcon: const Icon(Icons.search),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
             ),
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'Select the BIN of the tutor real bank account. Do not use wallet/payment app BINs.',
+                t.selectRealBankBin,
               ),
             ),
             const SizedBox(height: 8),

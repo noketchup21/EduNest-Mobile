@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -30,6 +31,7 @@ class _LessonScreenState extends State<LessonScreen> {
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
+    final t = context.l10n;
     final auth = context.watch<AuthProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -53,7 +55,7 @@ class _LessonScreenState extends State<LessonScreen> {
         elevation: 0,
         titleSpacing: 20,
         title: Text(
-          'Lessons',
+          t.lessonsTitle,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
             letterSpacing: -0.3,
@@ -64,7 +66,7 @@ class _LessonScreenState extends State<LessonScreen> {
             padding: const EdgeInsets.only(right: 12),
             child: IconButton.outlined(
               onPressed: data.loading ? null : data.loadLessons,
-              tooltip: 'Refresh',
+              tooltip: t.refresh,
               icon: const Icon(Icons.refresh_rounded, size: 20),
               style: IconButton.styleFrom(
                 side: BorderSide(color: colors.outlineVariant, width: 0.5),
@@ -101,7 +103,7 @@ class _LessonScreenState extends State<LessonScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                auth.isTutor ? 'My teaching lessons' : 'My learning lessons',
+                auth.isTutor ? t.myTeachingLessons : t.myLearningLessons,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colors.onSurface,
@@ -124,7 +126,7 @@ class _LessonScreenState extends State<LessonScreen> {
                         color: colors.onSurface.withValues(alpha: 0.3)),
                     const SizedBox(height: 12),
                     Text(
-                      'No lessons yet. Pay a booking first.',
+                      t.noLessonsYet,
                       style: theme.textTheme.bodyLarge?.copyWith(
                           color: colors.onSurface.withValues(alpha: 0.5)),
                     ),
@@ -271,6 +273,7 @@ class _TutorReminderBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
     final shown = sessions.take(3).toList();
     final hiddenCount = sessions.length - shown.length;
 
@@ -296,7 +299,7 @@ class _TutorReminderBox extends StatelessWidget {
                 const Icon(Icons.notifications_outlined,
                     size: 20, color: _red800),
                 const SizedBox(width: 8),
-                Text('Attendance reminder',
+                Text(t.attendanceReminder,
                     style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600, color: _red800)),
               ],
@@ -307,7 +310,7 @@ class _TutorReminderBox extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
             child: Text(
-              'These lessons have ended but are not completed yet. Open the detail page, take attendance, then complete the lesson.',
+              t.attendanceReminderMessage,
               style: theme.textTheme.bodyLarge?.copyWith(
                   color: colors.onSurface.withValues(alpha: 0.6), height: 1.6),
             ),
@@ -371,7 +374,7 @@ class _TutorReminderBox extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: const Text('Open'),
+                        child: Text(t.open),
                       ),
                     ],
                   ),
@@ -421,6 +424,7 @@ class _NextLessonBox extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final lesson = info.lesson;
+    final t = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -445,7 +449,7 @@ class _NextLessonBox extends StatelessWidget {
                 const Icon(Icons.calendar_today_outlined,
                     size: 19, color: _green800),
                 const SizedBox(width: 8),
-                Text('Next lesson',
+                Text(t.nextLesson,
                     style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: _green800,
@@ -476,8 +480,8 @@ class _NextLessonBox extends StatelessWidget {
                       ? Icons.people_outline_rounded
                       : Icons.person_outline_rounded,
                   label: isTutor
-                      ? '${info.studentCount} student${info.studentCount == 1 ? '' : 's'}'
-                      : 'Tutor: ${lesson.tutorName}',
+                      ? t.students(info.studentCount)
+                      : t.tutorName(lesson.tutorName),
                 ),
 
                 const SizedBox(height: 14),
@@ -489,7 +493,7 @@ class _NextLessonBox extends StatelessWidget {
                       onPressed: () =>
                           context.push('/lessons/${lesson.lessonId}'),
                       icon: const Icon(Icons.people_outline, size: 16),
-                      label: const Text('Open lesson detail'),
+                      label: Text(t.openLessonDetail),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size(0, 40),
                         shape: RoundedRectangleBorder(
@@ -512,8 +516,8 @@ class _NextLessonBox extends StatelessWidget {
                       label: Text(
                         lesson.meetingLink != null &&
                                 lesson.meetingLink!.trim().isNotEmpty
-                            ? 'Open meeting'
-                            : 'Meeting link not added yet',
+                            ? t.openMeeting
+                            : t.meetingLinkNotAdded,
                       ),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(0, 40),
@@ -551,6 +555,7 @@ class _LearnerTutorCard extends StatelessWidget {
     final first = allLessons.first;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -574,8 +579,7 @@ class _LearnerTutorCard extends StatelessWidget {
                 ?.copyWith(fontWeight: FontWeight.w600),
           ),
           subtitle: Text(
-            '${allLessons.length} lesson${allLessons.length == 1 ? '' : 's'} '
-            'in ${availabilityGroups.length} course${availabilityGroups.length == 1 ? '' : 's'}',
+            '${t.lessonsN(allLessons.length)} - ${t.coursesN(availabilityGroups.length)}',
             style: theme.textTheme.bodyLarge
                 ?.copyWith(color: colors.onSurface.withValues(alpha: 0.55)),
           ),
@@ -602,6 +606,7 @@ class _LearnerAvailabilityGroup extends StatelessWidget {
     final data = context.watch<AppDataProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
     final allCompleted =
         sorted.every((lesson) => lesson.status.toLowerCase() == 'completed');
     final reviewed = data.hasReviewedBooking(first.bookingId);
@@ -626,8 +631,7 @@ class _LearnerAvailabilityGroup extends StatelessWidget {
                   ?.copyWith(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'Availability #${first.availabilityId} · '
-              '${sorted.length} lesson${sorted.length == 1 ? '' : 's'}',
+              '${t.availabilityNumber(first.availabilityId)} - ${t.lessonsN(sorted.length)}',
               style: theme.textTheme.bodyLarge
                   ?.copyWith(color: colors.onSurface.withValues(alpha: 0.5)),
             ),
@@ -662,6 +666,7 @@ class _CourseReviewAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
+    final t = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
@@ -672,7 +677,7 @@ class _CourseReviewAction extends StatelessWidget {
           icon: Icon(
             reviewed ? Icons.check_circle_rounded : Icons.rate_review_rounded,
           ),
-          label: Text(reviewed ? 'Reviewed' : 'Review tutor'),
+          label: Text(reviewed ? t.reviewed : t.reviewTutor),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(0, 42),
             shape: RoundedRectangleBorder(
@@ -693,8 +698,9 @@ class _CourseReviewAction extends StatelessWidget {
     );
 
     if (created == true && context.mounted) {
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review submitted')),
+        SnackBar(content: Text(t.reviewSubmitted)),
       );
     }
   }
@@ -714,6 +720,7 @@ class _TutorAvailabilityCard extends StatelessWidget {
     final totalStudents = lessons.length;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -738,9 +745,8 @@ class _TutorAvailabilityCard extends StatelessWidget {
                 ?.copyWith(fontWeight: FontWeight.w600),
           ),
           subtitle: Text(
-            'Availability #${first.availabilityId} · '
-            '${sessions.length} session${sessions.length == 1 ? '' : 's'} · '
-            '$totalStudents student rows',
+            '${t.availabilityNumber(first.availabilityId)} - '
+            '${t.sessionsN(sessions.length)} - ${t.studentRows(totalStudents)}',
             style: theme.textTheme.bodyLarge
                 ?.copyWith(color: colors.onSurface.withValues(alpha: 0.55)),
           ),
@@ -772,21 +778,22 @@ class _TutorSessionTile extends StatelessWidget {
     final now = DateTime.now();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
 
     String helperText;
     bool isOverdue = false;
     bool isDone = false;
 
     if (status.toLowerCase() == 'completed') {
-      helperText = 'Completed';
+      helperText = t.completed;
       isDone = true;
     } else if (!session.endTime.isAfter(now)) {
-      helperText = 'Ended. Take attendance and complete this lesson.';
+      helperText = t.endedTakeAttendance;
       isOverdue = true;
     } else if (!session.startTime.isAfter(now)) {
-      helperText = 'Lesson started. Completion unlocks after end time.';
+      helperText = t.lessonStartedCompletionLater;
     } else {
-      helperText = 'Starts later';
+      helperText = t.startsLater;
     }
 
     return Padding(
@@ -815,7 +822,7 @@ class _TutorSessionTile extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${session.studentCount} student${session.studentCount == 1 ? '' : 's'}',
+              t.students(session.studentCount),
               style: theme.textTheme.bodyLarge
                   ?.copyWith(color: colors.onSurface.withValues(alpha: 0.55)),
             ),
@@ -880,7 +887,7 @@ class _TutorSessionTile extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: () => context.push('/lessons/${first.lessonId}'),
                 icon: const Icon(Icons.people_outline, size: 16),
-                label: const Text('Open detail'),
+                label: Text(t.openDetail),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(0, 38),
                   shape: RoundedRectangleBorder(
@@ -1007,6 +1014,7 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg, border) = _colors(status);
+    final t = context.l10n;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
       decoration: BoxDecoration(
@@ -1014,7 +1022,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
         border: Border.all(color: border, width: 0.5),
       ),
-      child: Text(status,
+      child: Text(t.status(status),
           style:
               TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: fg)),
     );
@@ -1090,10 +1098,11 @@ String _groupStatus(List<LessonModel> lessons) {
 
 Future<void> _openMeetingLink(BuildContext context, String link) async {
   final uri = Uri.tryParse(link);
+  final t = AppStrings.of(context, listen: false);
   if (uri == null) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Invalid meeting link'),
+        content: Text(t.invalidMeetingLink),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
@@ -1105,7 +1114,7 @@ Future<void> _openMeetingLink(BuildContext context, String link) async {
   if (!opened && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Could not open meeting link'),
+        content: Text(t.couldNotOpenMeeting),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),

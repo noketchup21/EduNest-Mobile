@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/error_banner.dart';
@@ -14,6 +15,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final t = context.l10n;
 
     _showAuthMessageIfNeeded(context, auth);
 
@@ -26,25 +28,25 @@ class LoginScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const AuthHeader(
+                AuthHeader(
                   icon: Icons.waving_hand_rounded,
-                  eyebrow: 'Login',
-                  title: 'Welcome back',
+                  eyebrow: t.login,
+                  title: t.welcomeBack,
                 ),
                 ErrorBanner(auth.error),
                 const SizedBox(height: 22),
                 AuthChoiceCard(
                   icon: Icons.school_rounded,
-                  title: 'Tutor',
-                  subtitle: 'Teach',
+                  title: t.tutor,
+                  subtitle: t.teach,
                   color: authAccentForTutor(true),
                   onTap: () => context.push('/login/tutor'),
                 ),
                 const SizedBox(height: 12),
                 AuthChoiceCard(
                   icon: Icons.groups_2_rounded,
-                  title: 'Parent / Student',
-                  subtitle: 'Learn',
+                  title: t.parentStudent,
+                  subtitle: t.learn,
                   color: authAccentForTutor(false),
                   onTap: () => context.push('/login/learner'),
                 ),
@@ -52,7 +54,7 @@ class LoginScreen extends StatelessWidget {
                 Center(
                   child: AuthLinkButton(
                     icon: Icons.person_add_alt_1_rounded,
-                    label: 'Sign up',
+                    label: t.signUp,
                     onPressed: () => context.go('/register'),
                   ),
                 ),
@@ -93,6 +95,7 @@ class _RoleLoginScreenState extends State<RoleLoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final t = context.l10n;
     final accent = authAccentForTutor(widget.type.isTutor);
 
     _showAuthMessageIfNeeded(context, auth);
@@ -105,7 +108,7 @@ class _RoleLoginScreenState extends State<RoleLoginScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/login'),
         ),
-        title: const Text('Login'),
+        title: Text(t.login),
       ),
       child: AuthPanel(
         child: Form(
@@ -117,20 +120,20 @@ class _RoleLoginScreenState extends State<RoleLoginScreen> {
                 icon: widget.type.isTutor
                     ? Icons.school_rounded
                     : Icons.groups_2_rounded,
-                eyebrow: widget.type.title,
-                title: 'Login',
+                eyebrow: t.authFlowTitle(widget.type.isTutor),
+                title: t.login,
                 color: accent,
               ),
               ErrorBanner(auth.error),
               const SizedBox(height: 14),
               AuthTextField(
                 controller: email,
-                labelText: 'Email',
+                labelText: t.email,
                 icon: Icons.alternate_email_rounded,
                 keyboardType: TextInputType.emailAddress,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
-                    return 'Email is required';
+                    return t.emailRequired;
                   }
 
                   return null;
@@ -139,11 +142,11 @@ class _RoleLoginScreenState extends State<RoleLoginScreen> {
               const SizedBox(height: 12),
               AuthTextField(
                 controller: password,
-                labelText: 'Password',
+                labelText: t.password,
                 icon: Icons.lock_outline_rounded,
                 obscureText: !showPassword,
                 suffixIcon: IconButton(
-                  tooltip: showPassword ? 'Hide password' : 'Show password',
+                  tooltip: showPassword ? t.hidePassword : t.showPassword,
                   icon: Icon(
                     showPassword
                         ? Icons.visibility_off_rounded
@@ -155,7 +158,7 @@ class _RoleLoginScreenState extends State<RoleLoginScreen> {
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) {
-                    return 'Password is required';
+                    return t.passwordRequired;
                   }
 
                   return null;
@@ -163,7 +166,7 @@ class _RoleLoginScreenState extends State<RoleLoginScreen> {
               ),
               const SizedBox(height: 20),
               AppButton(
-                label: 'Login',
+                label: t.login,
                 icon: Icons.login_rounded,
                 loading: auth.isLoading,
                 onPressed: () async {
@@ -192,7 +195,7 @@ class _RoleLoginScreenState extends State<RoleLoginScreen> {
               Center(
                 child: AuthLinkButton(
                   icon: Icons.person_add_alt_1_rounded,
-                  label: 'Sign up',
+                  label: t.signUp,
                   onPressed: () {
                     if (widget.type.isTutor) {
                       context.go('/register/tutor');

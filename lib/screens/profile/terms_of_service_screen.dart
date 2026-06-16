@@ -1,322 +1,38 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_strings.dart';
+
 class TermsOfServiceScreen extends StatelessWidget {
   const TermsOfServiceScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
+    final terms = t.isVi ? _viTerms : _enTerms;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Terms of Service'),
+        title: Text(t.termsOfService),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: const [
-          _Header(),
-          SizedBox(height: 12),
-          _TermSection(
-            title: '1. Introduction to EduNest',
-            body:
-            'EduNest is a platform that connects learners with tutors. '
-                'Users can search for courses, schedule sessions, make payments, attend lessons, '
-                'track attendance, chat with tutors, and submit reports when issues arise. '
-                'EduNest is not a direct teaching provider unless otherwise stated. '
-                'Tutors are independent service providers offering educational services through the platform.',
+        children: [
+          _Header(
+            title: t.isVi ? 'ĐIỀU KHOẢN DỊCH VỤ' : 'TERMS OF SERVICE',
+            intro: t.isVi
+                ? 'Bằng việc đăng ký, truy cập hoặc sử dụng EduNest, bạn xác nhận đã đọc, hiểu và đồng ý với các điều khoản này, bao gồm cách EduNest thu thập và xử lý dữ liệu.'
+                : 'By registering, accessing, or using EduNest, you confirm that you have read, understood, and agreed to these Terms of Service, including our data collection and privacy practices.',
           ),
-          _TermSection(
-            title: '2. User Roles',
-            body:
-            'EduNest has three main roles: parent/student, tutor, and administrator. '
-                'Parent/Student accounts can book sessions and make payments. '
-                'Tutors can create courses after being verified and approved. '
-                'Administrators have the authority to approve tutors, handle reports, manage withdrawal requests, '
-                'and take action on accounts that violate these terms.',
+          const SizedBox(height: 12),
+          ...terms.map((term) => _TermSection(term: term)),
+          const SizedBox(height: 24),
+          Text(
+            t.isVi
+                ? 'Vui lòng đọc kỹ Điều khoản dịch vụ của EduNest trước khi sử dụng nền tảng.'
+                : 'Please read and review the EduNest Terms of Service carefully before using the platform.',
+            style: Theme.of(context).textTheme.bodySmall,
+            textAlign: TextAlign.center,
           ),
-          _TermSection(
-            title: '3. Account Registration & Email Verification',
-            body:
-            'Users must register with a valid email address and verify it before accessing full platform features. '
-                'Users are responsible for maintaining the security of their account credentials and for all activities '
-                'that occur under their account. '
-                'EduNest reserves the right to suspend or disable accounts found to be fraudulent, '
-                'impersonating others, or in violation of these terms. '
-                'Users must be at least 13 years of age to register. Users under 18 must have parental or guardian consent.',
-          ),
-          _TermSection(
-            title: '4. Account Deletion',
-            body:
-            'Users have the right to request deletion of their account and associated personal data at any time. '
-                'Account deletion requests can be submitted through the app settings under "Account" > "Delete Account", '
-                'or by contacting our support email. '
-                'Upon deletion, personal data will be removed or anonymized within 30 days, except where retention '
-                'is required by law, for fraud prevention, or to complete pending transactions. '
-                'Certain transaction records may be retained for legal and financial compliance purposes '
-                'even after account deletion.',
-          ),
-          _TermSection(
-            title: '5. Requirements for Tutors',
-            body:
-            'Tutors must provide accurate information, including personal details, national ID (CCCD/CMND), '
-                'front and back photos of their identification document, relevant certificates or credentials, '
-                'bank account information, and any other required data. '
-                'Tutors may only create courses after their profile has been approved by an administrator. '
-                'Providing false or misleading information during tutor verification is a violation of these terms '
-                'and may result in permanent account suspension.',
-          ),
-          _TermSection(
-            title: '6. Tutor Approval or Rejection',
-            body:
-            'Administrators have the right to approve, reject, or request additional documentation from tutor applicants. '
-                'A profile may be rejected for reasons including missing documents, unclear photos, invalid banking details, '
-                'mismatched personal information, or signs of fraudulent submission. '
-                'Rejected tutors may resubmit their profile if the system permits.',
-          ),
-          _TermSection(
-            title: '7. Creating Courses & Schedules',
-            body:
-            'Approved tutors may create courses with details such as subject, level, teaching format, days of the week, '
-                'start time, end time, course start date, course end date, number of sessions, and price per session. '
-                'Tutors are responsible for ensuring that course information is accurate, feasible, and consistent with '
-                'their teaching capabilities.',
-          ),
-          _TermSection(
-            title: '8. Booking a Session',
-            body:
-            'Learners should carefully review all course details before booking, including subject name, tutor, '
-                'schedule, number of sessions, tuition fee, and teaching format. '
-                'Bookings may carry the following statuses: Pending, Confirmed, Completed, Cancelled, Expired, or Failed. '
-                'Unpaid bookings may be automatically cancelled or expired according to system policy.',
-          ),
-          _TermSection(
-            title: '9. Payments',
-            body:
-            'EduNest may support payment via PayOS, VietQR, or other integrated methods. '
-                'Learners must pay the correct amount, use the correct transaction reference, and complete payment '
-                'within the specified timeframe. '
-                'Once payment is confirmed, the system will update the booking status and generate the corresponding '
-                'lesson sessions. All payment processing is handled by third-party providers subject to their own terms.',
-          ),
-          _TermSection(
-            title: '10. Booking Cancellation & Refunds',
-            body:
-            'Learners may cancel a booking while it is still in a cancellable status, such as Pending. '
-                'For bookings that have been paid or confirmed, cancellations, refunds, or dispute resolution are '
-                'subject to EduNest\'s current policies and the actual status of the course. '
-                'EduNest reserves the right to refuse a refund if a session has already taken place, '
-                'the learner was absent despite the tutor being present, '
-                'or the refund request lacks valid supporting evidence.',
-          ),
-          _TermSection(
-            title: '11. Lessons & Attendance',
-            body:
-            'Once a booking is confirmed, the system will generate the corresponding lesson sessions. '
-                'Tutors are responsible for providing lesson links or session information on time, '
-                'being present punctually, recording student attendance, and marking sessions as completed. '
-                'Learners are responsible for joining on time, preparing their devices, '
-                'ensuring a stable internet connection, and notifying the tutor in advance if they are unable to attend.',
-          ),
-          _TermSection(
-            title: '12. Tutor Wallet & Earnings',
-            body:
-            'After a lesson session is validly marked as completed, the earnings will be credited to the tutor\'s wallet. '
-                'Under the current model, tutors receive 90% of the revenue and the platform retains 10% as a service fee. '
-                'EduNest reserves the right to hold or adjust earnings if there are disputes, reports, '
-                'fraudulent activity, or system errors.',
-          ),
-          _TermSection(
-            title: '13. Tutor Withdrawals',
-            body:
-            'Tutors may submit withdrawal requests to transfer funds from their wallet to their registered bank account. '
-                'Required withdrawal details include the bank name, bank code/BIN, account number, account holder name, '
-                'and the amount to withdraw. '
-                'Withdrawal requests may be processed automatically via a payment partner or manually by an administrator. '
-                'If a withdrawal fails, the amount will be returned to the tutor\'s wallet.',
-          ),
-          _TermSection(
-            title: '14. Chat & Communication',
-            body:
-            'EduNest may provide a chat feature between learners and tutors for educational purposes only. '
-                'Users must not use the chat to harass, insult, threaten, spam, commit fraud, '
-                'exchange illegal content, or solicit payments outside the platform. '
-                'EduNest reserves the right to review and take action on accounts that violate these rules.',
-          ),
-          _TermSection(
-            title: '15. Reporting a Tutor',
-            body:
-            'Learners who have booked sessions with a tutor may submit a report if an issue arises. '
-                'Reports may include the issue type, title, detailed description, related booking, related lesson session, '
-                'and supporting images. Report submitters must provide truthful information and valid evidence. '
-                'False reports or reports intended to cause harm may result in account restrictions.',
-          ),
-          _TermSection(
-            title: '16. Report Processing',
-            body:
-            'Report statuses may include Pending, Reviewing, Resolved, and Rejected. '
-                'Pending means the report has just been submitted. Reviewing means it is being examined by an administrator. '
-                'Resolved means the report has been fully processed. '
-                'Rejected means the report was dismissed due to being invalid or lacking sufficient evidence. '
-                'A Resolved status does not automatically result in the tutor\'s account being disabled.',
-          ),
-          _TermSection(
-            title: '17. Activating & Deactivating Tutor Accounts',
-            body:
-            'Administrators have the right to activate or deactivate tutor accounts based on profile review, '
-                'reports, usage behavior, or risks to the platform. '
-                'A tutor\'s account may be deactivated due to serious reports, failure to attend paid sessions, fraud, '
-                'submission of false information, violation of conduct guidelines, '
-                'or deliberately directing learners to pay outside the platform.',
-          ),
-          _TermSection(
-            title: '18. Learning Content & Materials',
-            body:
-            'Tutors are responsible for ensuring that all uploaded learning materials do not infringe on copyrights, '
-                'do not contain harmful or inappropriate content, and are appropriate for educational purposes. '
-                'Learners may not copy, redistribute, or use tutor-provided materials beyond personal study '
-                'without prior written permission from the tutor.',
-          ),
-          _TermSection(
-            title: '19. Prohibited Conduct',
-            body:
-            'Users must not impersonate others, provide false information, commit payment fraud, attack the system, '
-                'abuse the reporting feature, harass other users, post offensive or illegal content, '
-                'create multiple accounts to manipulate the system, or make payments outside the platform '
-                'to avoid service fees. Violations may result in immediate account suspension or termination.',
-          ),
-          _TermSection(
-            title: '20. Children\'s Privacy',
-            body:
-            'EduNest does not knowingly collect personal data from children under the age of 13 without verified '
-                'parental or guardian consent. Users aged 13–17 must have parental or guardian consent to register and use the platform. '
-                'If we become aware that personal data has been collected from a child under 13 without proper consent, '
-                'we will delete that data promptly. Parents or guardians who believe their child\'s data has been '
-                'collected in error should contact us at the support email listed in the app.',
-          ),
-          _TermSection(
-            title: '21. Personal Data We Collect',
-            body:
-            'EduNest collects and processes the following categories of personal data: '
-                '(a) Account data: full name, email address, phone number, role, and profile photo. '
-                '(b) Tutor verification data: national ID images, certificates, and bank account details. '
-                '(c) Transaction data: booking records, payment history, wallet balances, and withdrawal requests. '
-                '(d) Communication data: chat messages between users. '
-                '(e) Report data: report descriptions and supporting images. '
-                '(f) Usage data: app interaction logs, session data, and device information. '
-                'This data is collected to operate the platform, verify tutors, process bookings and payments, '
-                'resolve disputes, and maintain platform security.',
-          ),
-          _TermSection(
-            title: '22. How We Use Your Data',
-            body:
-            'Your personal data is used to: create and manage your account; verify tutor identities; '
-                'process bookings, payments, and withdrawals; facilitate communication between users; '
-                'handle reports and disputes; send transactional notifications (booking confirmations, payment receipts); '
-                'improve platform features and performance; and comply with legal obligations. '
-                'We do not sell your personal data to third parties for advertising or marketing purposes.',
-          ),
-          _TermSection(
-            title: '23. Data Sharing & Third-Party Services',
-            body:
-            'EduNest may share your data with third-party service providers solely to operate the platform, including: '
-                'PayOS and VietQR for payment processing; Cloudinary for file and image storage; '
-                'Render for cloud hosting; and email delivery services. '
-                'These providers are contractually bound to handle your data securely and only for the purposes '
-                'described. EduNest does not control and is not responsible for the independent operations, '
-                'errors, or policies of these third parties.',
-          ),
-          _TermSection(
-            title: '24. Data Retention & Deletion',
-            body:
-            'We retain your personal data for as long as your account is active or as needed to provide services. '
-                'Account data is deleted or anonymized within 30 days of an account deletion request, '
-                'except where retention is required by law or for legitimate business purposes '
-                'such as resolving disputes or preventing fraud. '
-                'Transaction records may be retained for up to 5 years for financial and legal compliance. '
-                'You may request deletion of your account and data at any time through the app settings '
-                'or by contacting our support email.',
-          ),
-          _TermSection(
-            title: '25. Your Rights Over Your Data',
-            body:
-            'Subject to applicable law, you have the right to: '
-                '(a) Access — request a copy of the personal data we hold about you. '
-                '(b) Correction — request correction of inaccurate or incomplete data. '
-                '(c) Deletion — request deletion of your personal data and account. '
-                '(d) Portability — request your data in a machine-readable format where technically feasible. '
-                '(e) Objection — object to certain types of data processing. '
-                'To exercise any of these rights, contact us at the support email listed in the app. '
-                'We will respond to valid requests within 30 days.',
-          ),
-          _TermSection(
-            title: '26. Storage of Images & Documents',
-            body:
-            'Certain images, such as tutor verification documents or report evidence, are stored on Cloudinary, '
-                'a third-party cloud storage provider. EduNest implements access controls to restrict unauthorized '
-                'access to sensitive images. '
-                'Users must not upload images that violate the law, infringe on third-party rights, '
-                'or are unrelated to the verification or reporting process.',
-          ),
-          _TermSection(
-            title: '27. Data Security',
-            body:
-            'EduNest implements reasonable technical and organizational measures to protect your personal data '
-                'against unauthorized access, loss, alteration, or disclosure. '
-                'These measures include JWT-based authentication, encrypted data transmission (HTTPS), '
-                'and restricted access controls for sensitive data. '
-                'However, no system is completely secure and we cannot guarantee absolute security. '
-                'You are responsible for keeping your login credentials confidential.',
-          ),
-          _TermSection(
-            title: '28. Limitation of Liability',
-            body:
-            'To the extent permitted by applicable law, EduNest is not liable for losses arising from '
-                'incorrect user-entered information, off-platform payments, personal disputes outside the platform, '
-                'misconduct by other users, device failures, network errors, third-party service issues, '
-                'or indirect and consequential damages.',
-          ),
-          _TermSection(
-            title: '29. Account Suspension or Termination',
-            body:
-            'EduNest reserves the right to suspend or terminate accounts if users violate these terms, '
-                'provide false information, engage in fraudulent activity, harm other users, '
-                'abuse the platform, or violate applicable laws. '
-                'Where possible, we will notify users before suspension unless doing so would compromise '
-                'security or an ongoing investigation.',
-          ),
-          _TermSection(
-            title: '30. Changes to These Terms',
-            body:
-            'EduNest reserves the right to update these Terms of Service at any time. '
-                'When significant changes are made, we will notify users via in-app notification, email, '
-                'or other appropriate means at least 7 days before the changes take effect. '
-                'Continued use of the platform after the updated terms take effect constitutes '
-                'the user\'s acceptance of the revised terms.',
-          ),
-          _TermSection(
-            title: '31. Governing Law & Dispute Resolution',
-            body:
-            'These terms are governed by the laws of the Socialist Republic of Vietnam. '
-                'Any disputes arising will be prioritized for resolution through direct negotiation between '
-                'the user and EduNest. If a dispute cannot be resolved through negotiation, '
-                'it may be referred to the competent courts or authorities in accordance with Vietnamese law.',
-          ),
-          _TermSection(
-            title: '32. Contact Us',
-            body:
-            'If you have any questions about these Terms of Service, your personal data, or wish to exercise '
-                'your data rights, please contact us at: '
-                'Support Email: [Support email] '
-                'We aim to respond to all inquiries within 5 business days.',
-          ),
-          _TermSection(
-            title: '33. User Acknowledgment',
-            body:
-            'By creating an account, logging in, making a booking, completing a payment, teaching a session, '
-                'requesting a withdrawal, or using any feature of EduNest, users confirm that they have read, '
-                'understood, and agreed to comply with these Terms of Service and our data collection practices '
-                'as described above.',
-          ),
-          SizedBox(height: 24),
-          _Footer(),
         ],
       ),
     );
@@ -324,10 +40,18 @@ class TermsOfServiceScreen extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header();
+  final String title;
+  final String intro;
+
+  const _Header({
+    required this.title,
+    required this.intro,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -335,21 +59,24 @@ class _Header extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'TERMS OF SERVICE',
+              title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+                    fontWeight: FontWeight.w900,
+                  ),
             ),
             const SizedBox(height: 8),
-            const Text('Platform: EduNest'),
-            const Text('Effective Date: [Enter effective date]'),
-            const Text('Operated by: [Team/Company/Individual name]'),
-            const Text('Support Email: [Support email]'),
+            Text('${t.isVi ? 'Nền tảng' : 'Platform'}: EduNest'),
+            Text(t.isVi
+                ? 'Ngày hiệu lực: [Nhập ngày hiệu lực]'
+                : 'Effective Date: [Enter effective date]'),
+            Text(t.isVi
+                ? 'Đơn vị vận hành: [Nhóm/Công ty/Cá nhân]'
+                : 'Operated by: [Team/Company/Individual name]'),
+            Text(t.isVi
+                ? 'Email hỗ trợ: [Email hỗ trợ]'
+                : 'Support Email: [Support email]'),
             const SizedBox(height: 12),
-            const Text(
-              'By registering, accessing, or using EduNest, you confirm that you have read, understood, '
-                  'and agreed to these Terms of Service, including our data collection and privacy practices.',
-            ),
+            Text(intro),
           ],
         ),
       ),
@@ -358,13 +85,9 @@ class _Header extends StatelessWidget {
 }
 
 class _TermSection extends StatelessWidget {
-  final String title;
-  final String body;
+  final _Term term;
 
-  const _TermSection({
-    required this.title,
-    required this.body,
-  });
+  const _TermSection({required this.term});
 
   @override
   Widget build(BuildContext context) {
@@ -376,19 +99,18 @@ class _TermSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              title,
+              term.title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+                    fontWeight: FontWeight.w900,
+                  ),
             ),
             const SizedBox(height: 8),
             SelectableText(
-              body,
-              textAlign: TextAlign.start,
+              term.body,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                height: 1.45,
-                letterSpacing: 0,
-              ),
+                    height: 1.45,
+                    letterSpacing: 0,
+                  ),
             ),
           ],
         ),
@@ -397,15 +119,159 @@ class _TermSection extends StatelessWidget {
   }
 }
 
-class _Footer extends StatelessWidget {
-  const _Footer();
+class _Term {
+  final String title;
+  final String body;
 
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      'Please read and review the EduNest Terms of Service carefully before using the platform.',
-      style: Theme.of(context).textTheme.bodySmall,
-      textAlign: TextAlign.center,
-    );
-  }
+  const _Term(this.title, this.body);
 }
+
+const _viTerms = [
+  _Term(
+    '1. Giới thiệu về EduNest',
+    'EduNest là nền tảng kết nối người học với gia sư. Người dùng có thể tìm khóa học, đặt lịch, thanh toán, tham gia buổi học, theo dõi điểm danh, trò chuyện và gửi báo cáo khi có sự cố. Gia sư là nhà cung cấp dịch vụ giáo dục độc lập trên nền tảng.',
+  ),
+  _Term(
+    '2. Vai trò người dùng',
+    'EduNest có các vai trò chính: phụ huynh/học sinh, gia sư và quản trị viên. Người học có thể đặt lịch và thanh toán. Gia sư có thể tạo khóa học sau khi được xác minh và phê duyệt. Quản trị viên xử lý duyệt gia sư, báo cáo, yêu cầu rút tiền và vi phạm.',
+  ),
+  _Term(
+    '3. Đăng ký tài khoản và xác minh email',
+    'Người dùng phải đăng ký bằng email hợp lệ và xác minh email trước khi sử dụng đầy đủ tính năng. Người dùng chịu trách nhiệm bảo mật thông tin đăng nhập và mọi hoạt động dưới tài khoản của mình.',
+  ),
+  _Term(
+    '4. Xóa tài khoản và dữ liệu',
+    'Người dùng có quyền yêu cầu xóa tài khoản và dữ liệu cá nhân. Dữ liệu sẽ được xóa hoặc ẩn danh trong thời hạn hợp lý, trừ khi cần lưu giữ theo pháp luật, phòng chống gian lận hoặc hoàn tất giao dịch đang chờ.',
+  ),
+  _Term(
+    '5. Yêu cầu đối với gia sư',
+    'Gia sư phải cung cấp thông tin chính xác, bao gồm thông tin cá nhân, giấy tờ định danh, chứng chỉ liên quan và thông tin ngân hàng. Cung cấp thông tin sai lệch có thể dẫn đến đình chỉ tài khoản.',
+  ),
+  _Term(
+    '6. Tạo khóa học và lịch học',
+    'Gia sư đã được duyệt có thể tạo khóa học với môn học, trình độ, hình thức học, ngày học, thời gian, số buổi và học phí. Gia sư chịu trách nhiệm đảm bảo thông tin chính xác và khả thi.',
+  ),
+  _Term(
+    '7. Đặt lịch và thanh toán',
+    'Người học cần kiểm tra kỹ thông tin khóa học trước khi đặt lịch. Thanh toán có thể được xử lý qua PayOS, VietQR hoặc phương thức tích hợp khác. Khi thanh toán được xác nhận, hệ thống cập nhật trạng thái và tạo các buổi học tương ứng.',
+  ),
+  _Term(
+    '8. Hủy lịch, hoàn tiền và tranh chấp',
+    'Việc hủy lịch, hoàn tiền hoặc xử lý tranh chấp phụ thuộc trạng thái đặt lịch, thời điểm buổi học và bằng chứng liên quan. EduNest có thể từ chối hoàn tiền khi buổi học đã diễn ra hoặc yêu cầu không có căn cứ hợp lệ.',
+  ),
+  _Term(
+    '9. Buổi học và điểm danh',
+    'Gia sư chịu trách nhiệm cung cấp liên kết học, tham gia đúng giờ, điểm danh học sinh và hoàn tất buổi học. Người học chịu trách nhiệm tham gia đúng giờ, chuẩn bị thiết bị và thông báo trước nếu không thể tham gia.',
+  ),
+  _Term(
+    '10. Ví gia sư và rút tiền',
+    'Sau khi buổi học hợp lệ được hoàn tất, thu nhập sẽ được ghi nhận vào ví gia sư. Gia sư có thể gửi yêu cầu rút tiền về tài khoản ngân hàng đã đăng ký. EduNest có thể tạm giữ hoặc điều chỉnh thu nhập khi có tranh chấp, báo cáo, gian lận hoặc lỗi hệ thống.',
+  ),
+  _Term(
+    '11. Trò chuyện và giao tiếp',
+    'Tính năng trò chuyện chỉ phục vụ mục đích học tập. Người dùng không được quấy rối, lăng mạ, đe dọa, spam, gian lận, trao đổi nội dung trái pháp luật hoặc yêu cầu thanh toán ngoài nền tảng.',
+  ),
+  _Term(
+    '12. Báo cáo và xử lý vi phạm',
+    'Người học có thể gửi báo cáo khi có sự cố với gia sư hoặc buổi học. Báo cáo cần trung thực và có bằng chứng phù hợp. Báo cáo sai sự thật hoặc nhằm gây hại có thể dẫn đến hạn chế tài khoản.',
+  ),
+  _Term(
+    '13. Tài liệu học tập',
+    'Gia sư chịu trách nhiệm đảm bảo tài liệu tải lên không vi phạm bản quyền, không chứa nội dung độc hại hoặc không phù hợp. Người học không được sao chép hoặc phân phối lại tài liệu ngoài mục đích học cá nhân nếu chưa được phép.',
+  ),
+  _Term(
+    '14. Dữ liệu cá nhân và bảo mật',
+    'EduNest thu thập dữ liệu tài khoản, xác minh gia sư, giao dịch, trò chuyện, báo cáo và dữ liệu sử dụng để vận hành nền tảng, xử lý thanh toán, giải quyết tranh chấp và bảo mật hệ thống. EduNest không bán dữ liệu cá nhân cho bên thứ ba vì mục đích quảng cáo.',
+  ),
+  _Term(
+    '15. Dịch vụ bên thứ ba',
+    'EduNest có thể sử dụng PayOS, VietQR, Cloudinary, Render và dịch vụ email để vận hành nền tảng. Các nhà cung cấp này xử lý dữ liệu theo mục đích cung cấp dịch vụ và chính sách riêng của họ.',
+  ),
+  _Term(
+    '16. Tạm khóa hoặc chấm dứt tài khoản',
+    'EduNest có quyền tạm khóa hoặc chấm dứt tài khoản khi người dùng vi phạm điều khoản, cung cấp thông tin sai, gian lận, gây hại cho người khác, lạm dụng nền tảng hoặc vi phạm pháp luật.',
+  ),
+  _Term(
+    '17. Luật áp dụng và giải quyết tranh chấp',
+    'Các điều khoản này được điều chỉnh bởi pháp luật Việt Nam. Tranh chấp sẽ được ưu tiên giải quyết thông qua thương lượng; nếu không thể giải quyết, có thể chuyển đến cơ quan có thẩm quyền theo quy định pháp luật.',
+  ),
+  _Term(
+    '18. Liên hệ',
+    'Nếu có câu hỏi về Điều khoản dịch vụ hoặc dữ liệu cá nhân, vui lòng liên hệ email hỗ trợ được hiển thị trong ứng dụng. EduNest sẽ cố gắng phản hồi trong thời gian sớm nhất.',
+  ),
+];
+
+const _enTerms = [
+  _Term(
+    '1. Introduction to EduNest',
+    'EduNest connects learners with tutors. Users can search for courses, schedule sessions, make payments, attend lessons, track attendance, chat, and submit reports when issues arise. Tutors are independent education providers on the platform.',
+  ),
+  _Term(
+    '2. User Roles',
+    'EduNest supports parent/student, tutor, and administrator roles. Learners can book and pay. Tutors can create courses after verification and approval. Administrators review tutors, reports, payouts, and account violations.',
+  ),
+  _Term(
+    '3. Accounts and Email Verification',
+    'Users must register with a valid email and verify it before using full platform features. Users are responsible for account security and all activity under their account.',
+  ),
+  _Term(
+    '4. Account and Data Deletion',
+    'Users may request deletion of their account and personal data. Data will be deleted or anonymized within a reasonable period except where retention is required by law, fraud prevention, or pending transactions.',
+  ),
+  _Term(
+    '5. Tutors',
+    'Tutors must provide accurate personal, identity, credential, and bank information. False or misleading verification information may result in account suspension.',
+  ),
+  _Term(
+    '6. Courses and Schedules',
+    'Approved tutors may create courses with subject, level, format, schedule, number of sessions, and tuition. Tutors are responsible for accurate and feasible course information.',
+  ),
+  _Term(
+    '7. Bookings and Payments',
+    'Learners should review course details before booking. Payments may be processed through PayOS, VietQR, or other integrated methods. Confirmed payment updates booking status and creates lesson sessions.',
+  ),
+  _Term(
+    '8. Cancellations, Refunds, and Disputes',
+    'Cancellations, refunds, and disputes depend on booking status, lesson timing, and supporting evidence. EduNest may refuse refunds when a lesson has occurred or the request lacks valid evidence.',
+  ),
+  _Term(
+    '9. Lessons and Attendance',
+    'Tutors provide lesson links, attend on time, record attendance, and complete lessons. Learners join on time, prepare devices, and notify tutors in advance when unable to attend.',
+  ),
+  _Term(
+    '10. Tutor Wallet and Withdrawals',
+    'Tutor earnings are credited after valid lesson completion. Tutors may request withdrawals to registered bank accounts. EduNest may hold or adjust earnings during disputes, reports, fraud checks, or system errors.',
+  ),
+  _Term(
+    '11. Chat and Communication',
+    'Chat is for educational purposes only. Users must not harass, threaten, spam, commit fraud, exchange illegal content, or request off-platform payments.',
+  ),
+  _Term(
+    '12. Reports and Enforcement',
+    'Learners may submit reports with truthful information and evidence. False or harmful reports may result in account restrictions.',
+  ),
+  _Term(
+    '13. Learning Materials',
+    'Tutors must ensure uploaded materials do not infringe copyright or contain harmful content. Learners may not redistribute materials beyond personal study without permission.',
+  ),
+  _Term(
+    '14. Personal Data and Security',
+    'EduNest processes account, verification, transaction, chat, report, and usage data to operate the platform, process payments, resolve disputes, and protect security. EduNest does not sell personal data for advertising.',
+  ),
+  _Term(
+    '15. Third-Party Services',
+    'EduNest may use PayOS, VietQR, Cloudinary, Render, and email services. These providers process data for service delivery and under their own policies.',
+  ),
+  _Term(
+    '16. Suspension or Termination',
+    'EduNest may suspend or terminate accounts for terms violations, false information, fraud, harm to others, platform abuse, or legal violations.',
+  ),
+  _Term(
+    '17. Governing Law and Disputes',
+    'These terms are governed by Vietnamese law. Disputes should first be resolved through negotiation and may be referred to competent authorities when necessary.',
+  ),
+  _Term(
+    '18. Contact',
+    'For questions about these terms or personal data, contact the support email listed in the app. EduNest will respond as soon as reasonably possible.',
+  ),
+];

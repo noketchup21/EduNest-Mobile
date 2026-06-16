@@ -69,10 +69,10 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> login(
-      String inputEmail,
-      String password, {
-        List<String>? allowedRoles,
-      }) async {
+    String inputEmail,
+    String password, {
+    List<String>? allowedRoles,
+  }) async {
     authMessage = null;
 
     await _guard(() async {
@@ -110,7 +110,8 @@ class AuthProvider extends ChangeNotifier {
 
           _clearUserState();
 
-          final displayRole = currentRole.isEmpty ? 'unknown role' : currentRole;
+          final displayRole =
+              currentRole.isEmpty ? 'unknown role' : currentRole;
 
           throw Exception(
             'This account is $displayRole. Please use the correct login type.',
@@ -175,9 +176,8 @@ class AuthProvider extends ChangeNotifier {
 
     error = null;
 
-    authMessage = sessionExpired
-        ? 'Session has expired. Please sign in again.'
-        : null;
+    authMessage =
+        sessionExpired ? 'Session has expired. Please sign in again.' : null;
 
     _handlingSessionExpired = false;
 
@@ -293,15 +293,14 @@ class AuthProvider extends ChangeNotifier {
           data['sub'] ??
           data['userId'] ??
           data[
-          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+              'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
 
       final roleValue = data['role'] ??
-          data[
-          'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+          data['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
 
       final emailValue = data['email'] ??
           data[
-          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
+              'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
 
       final parsedUserId = int.tryParse(idValue?.toString() ?? '');
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/error_banner.dart';
@@ -13,11 +14,13 @@ class RegisterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
+
     return AuthScaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Sign up'),
+        title: Text(t.signUp),
       ),
       child: Column(
         children: [
@@ -27,24 +30,24 @@ class RegisterScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const AuthHeader(
+                AuthHeader(
                   icon: Icons.auto_awesome_rounded,
-                  eyebrow: 'Sign up',
-                  title: 'Choose your role',
+                  eyebrow: t.signUp,
+                  title: t.chooseYourRole,
                 ),
                 const SizedBox(height: 22),
                 AuthChoiceCard(
                   icon: Icons.school_rounded,
-                  title: 'Tutor',
-                  subtitle: 'Teach',
+                  title: t.tutor,
+                  subtitle: t.teach,
                   color: authAccentForTutor(true),
                   onTap: () => context.push('/register/tutor'),
                 ),
                 const SizedBox(height: 12),
                 AuthChoiceCard(
                   icon: Icons.groups_2_rounded,
-                  title: 'Parent / Student',
-                  subtitle: 'Learn',
+                  title: t.parentStudent,
+                  subtitle: t.learn,
                   color: authAccentForTutor(false),
                   onTap: () => context.push('/register/learner'),
                 ),
@@ -52,7 +55,7 @@ class RegisterScreen extends StatelessWidget {
                 Center(
                   child: AuthLinkButton(
                     icon: Icons.login_rounded,
-                    label: 'Login',
+                    label: t.login,
                     onPressed: () => context.go('/login'),
                   ),
                 ),
@@ -114,6 +117,7 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
     if (!formKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
+    final t = AppStrings.of(context, listen: false);
 
     try {
       await auth.register(
@@ -133,7 +137,7 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$role registered. Please verify your email.'),
+          content: Text('${_roleLabel(role, t)} ${t.verifyYourEmail}'),
         ),
       );
 
@@ -149,6 +153,7 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final t = context.l10n;
     final accent = authAccentForTutor(isTutor);
 
     return AuthScaffold(
@@ -159,7 +164,7 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/register'),
         ),
-        title: const Text('Sign up'),
+        title: Text(t.signUp),
       ),
       child: AuthPanel(
         child: Form(
@@ -169,15 +174,15 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
             children: [
               AuthHeader(
                 icon: isTutor ? Icons.school_rounded : Icons.groups_2_rounded,
-                eyebrow: widget.type.title,
-                title: 'Create account',
+                eyebrow: t.authFlowTitle(widget.type.isTutor),
+                title: t.createAccount,
                 color: accent,
               ),
               ErrorBanner(auth.error),
               const SizedBox(height: 14),
               if (!isTutor) ...[
                 Text(
-                  'Register as',
+                  t.registerAs,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -186,16 +191,16 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: SegmentedButton<String>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: 'Parent',
-                        icon: Icon(Icons.supervisor_account_rounded),
-                        label: Text('Parent'),
+                        icon: const Icon(Icons.supervisor_account_rounded),
+                        label: Text(t.parent),
                       ),
                       ButtonSegment(
                         value: 'Student',
-                        icon: Icon(Icons.menu_book_rounded),
-                        label: Text('Student'),
+                        icon: const Icon(Icons.menu_book_rounded),
+                        label: Text(t.student),
                       ),
                     ],
                     selected: {learnerRole},
@@ -210,14 +215,14 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
               ],
               AuthTextField(
                 controller: name,
-                labelText: 'Full name',
+                labelText: t.fullName,
                 icon: Icons.badge_outlined,
                 validator: _required,
               ),
               const SizedBox(height: 12),
               AuthTextField(
                 controller: email,
-                labelText: 'Email',
+                labelText: t.email,
                 icon: Icons.alternate_email_rounded,
                 keyboardType: TextInputType.emailAddress,
                 validator: _emailValidator,
@@ -225,7 +230,7 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
               const SizedBox(height: 12),
               AuthTextField(
                 controller: phone,
-                labelText: 'Phone',
+                labelText: t.phone,
                 icon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
                 validator: _required,
@@ -233,11 +238,11 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
               const SizedBox(height: 12),
               AuthTextField(
                 controller: password,
-                labelText: 'Password',
+                labelText: t.password,
                 icon: Icons.lock_outline_rounded,
                 obscureText: !showPassword,
                 suffixIcon: IconButton(
-                  tooltip: showPassword ? 'Hide password' : 'Show password',
+                  tooltip: showPassword ? t.hidePassword : t.showPassword,
                   icon: Icon(
                     showPassword
                         ? Icons.visibility_off_rounded
@@ -256,8 +261,8 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
                     ? AuthTextField(
                         key: const ValueKey('bio'),
                         controller: bio,
-                        labelText: 'Tutor bio',
-                        hintText: 'Short intro',
+                        labelText: t.tutorBio,
+                        hintText: t.shortIntro,
                         icon: Icons.edit_note_rounded,
                         minLines: 2,
                         maxLines: 4,
@@ -266,19 +271,19 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
                         ? AuthTextField(
                             key: const ValueKey('school'),
                             controller: school,
-                            labelText: 'School',
+                            labelText: t.school,
                             icon: Icons.apartment_rounded,
                           )
                         : AuthTextField(
                             key: const ValueKey('address'),
                             controller: address,
-                            labelText: 'Address',
+                            labelText: t.address,
                             icon: Icons.location_on_outlined,
                           ),
               ),
               const SizedBox(height: 20),
               AppButton(
-                label: 'Create account',
+                label: t.createAccount,
                 icon: Icons.person_add_alt_1_rounded,
                 loading: auth.isLoading,
                 onPressed: _register,
@@ -287,7 +292,7 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
               Center(
                 child: AuthLinkButton(
                   icon: Icons.login_rounded,
-                  label: 'Login',
+                  label: t.login,
                   onPressed: () => context.go(loginRoute),
                 ),
               ),
@@ -300,7 +305,7 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
 
   String? _required(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Required';
+      return AppStrings.of(context, listen: false).requiredField;
     }
 
     return null;
@@ -308,11 +313,11 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
 
   String? _emailValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Email is required';
+      return AppStrings.of(context, listen: false).emailRequired;
     }
 
     if (!value.contains('@')) {
-      return 'Invalid email';
+      return AppStrings.of(context, listen: false).invalidEmail;
     }
 
     return null;
@@ -320,11 +325,11 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
 
   String? _passwordValidator(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Password is required';
+      return AppStrings.of(context, listen: false).passwordRequired;
     }
 
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return AppStrings.of(context, listen: false).passwordTooShort;
     }
 
     return null;
@@ -333,5 +338,18 @@ class _RoleRegisterScreenState extends State<RoleRegisterScreen> {
   String? _nullableText(TextEditingController controller) {
     final text = controller.text.trim();
     return text.isEmpty ? null : text;
+  }
+
+  String _roleLabel(String role, AppStrings t) {
+    switch (role.toLowerCase()) {
+      case 'tutor':
+        return t.tutor;
+      case 'parent':
+        return t.parent;
+      case 'student':
+        return t.student;
+      default:
+        return role;
+    }
   }
 }

@@ -1,12 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/bank_bin_field.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/language_switcher.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -55,14 +57,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = context.watch<AuthProvider>();
     final profile = data.profile;
     final theme = Theme.of(context);
+    final t = context.l10n;
     _fillOnce(profile);
     final isTutor = auth.isTutor || profile?.role == 'Tutor';
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLow,
       appBar: AppBar(
-        title: const Text(
-          'Personal Profile',
+        title: Text(
+          t.personalProfile,
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
@@ -99,6 +102,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onUploadAvatar: _pickAndUploadAvatar,
                 onDeleteAvatar: _deleteAvatar,
               ),
+              const SizedBox(height: 20),
+              const _LanguagePreferenceCard(),
               const SizedBox(height: 20),
               _ProfileForm(
                 formKey: profileFormKey,
@@ -145,8 +150,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     context.go('/login');
                   },
                   icon: const Icon(Icons.logout_rounded),
-                  label: const Text(
-                    'Log Out',
+                  label: Text(
+                    t.logOut,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -184,8 +189,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             tutorBio: tutorBio.text.trim(),
           );
       if (!mounted) return;
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
+        SnackBar(content: Text(t.profileUpdated)),
       );
     } catch (_) {}
   }
@@ -201,8 +207,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             branchName: branchName.text.trim(),
           );
       if (!mounted) return;
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bank account updated successfully')),
+        SnackBar(content: Text(t.bankAccountUpdated)),
       );
     } catch (_) {}
   }
@@ -218,13 +225,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (picked == null) return;
       await data.uploadAvatar(picked.path);
       if (!mounted) return;
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avatar updated successfully')),
+        SnackBar(content: Text(t.avatarUpdated)),
       );
     } catch (e) {
       if (!mounted) return;
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not upload avatar: $e')),
+        SnackBar(content: Text(t.couldNotUploadAvatar(e))),
       );
     }
   }
@@ -234,8 +243,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profile = data.profile;
     final avatarUrl = profile?.avatarUrl?.trim() ?? '';
     if (avatarUrl.isEmpty) {
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No avatar to delete')),
+        SnackBar(content: Text(t.noAvatarToDelete)),
       );
       return;
     }
@@ -243,17 +253,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        final t = AppStrings.of(dialogContext, listen: false);
         return AlertDialog(
-          title: const Text('Delete avatar?'),
-          content: const Text('Your profile image will be removed.'),
+          title: Text(t.deleteAvatarTitle),
+          content: Text(t.deleteAvatarMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(t.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Delete'),
+              child: Text(t.delete),
             ),
           ],
         );
@@ -264,8 +275,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await data.deleteAvatar();
       if (!mounted) return;
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avatar deleted')),
+        SnackBar(content: Text(t.avatarDeleted)),
       );
     } catch (_) {}
   }
@@ -274,6 +286,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
 // ─────────────────────────────────────────────────────────────────────────────
 // Header Card
 // ─────────────────────────────────────────────────────────────────────────────
+
+class _LanguagePreferenceCard extends StatelessWidget {
+  const _LanguagePreferenceCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final t = context.l10n;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t.languagePreference,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            t.chooseAppLanguage,
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 14),
+          const LanguageSwitcher(showLabel: true),
+        ],
+      ),
+    );
+  }
+}
 
 class _HeaderCard extends StatelessWidget {
   final ProfileModel? profile;
@@ -297,6 +345,7 @@ class _HeaderCard extends StatelessWidget {
     final role = profile?.role ?? auth.role ?? '';
     final avatarUrl = profile?.avatarUrl?.trim() ?? '';
     final hasAvatar = avatarUrl.isNotEmpty;
+    final t = context.l10n;
 
     return Container(
       width: double.infinity,
@@ -352,24 +401,24 @@ class _HeaderCard extends StatelessWidget {
                     if (value == 'delete') onDeleteAvatar();
                   },
                   itemBuilder: (_) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'upload',
                       child: Row(
                         children: [
-                          Icon(Icons.upload_outlined),
-                          SizedBox(width: 10),
-                          Text('Upload / Update avatar'),
+                          const Icon(Icons.upload_outlined),
+                          const SizedBox(width: 10),
+                          Text(t.uploadUpdateAvatar),
                         ],
                       ),
                     ),
                     PopupMenuItem(
                       value: 'delete',
                       enabled: hasAvatar,
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.delete_outline),
-                          SizedBox(width: 10),
-                          Text('Delete avatar'),
+                          const Icon(Icons.delete_outline),
+                          const SizedBox(width: 10),
+                          Text(t.deleteAvatar),
                         ],
                       ),
                     ),
@@ -411,7 +460,7 @@ class _HeaderCard extends StatelessWidget {
           const SizedBox(height: 12),
           Chip(
             label: Text(
-              _roleTranslation(role),
+              t.role(role),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
@@ -429,19 +478,6 @@ class _HeaderCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _roleTranslation(String role) {
-    switch (role.toLowerCase()) {
-      case 'tutor':
-        return 'TUTOR';
-      case 'learner':
-        return 'LEARNER';
-      case 'admin':
-        return 'ADMIN';
-      default:
-        return role.isEmpty ? 'USER' : role.toUpperCase();
-    }
   }
 
   Widget _buildVerificationBadge(BuildContext context, String? status) {
@@ -518,6 +554,7 @@ class _ProfileForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = context.l10n;
 
     InputDecoration inputStyle(
       String label,
@@ -559,7 +596,7 @@ class _ProfileForm extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Personal Information',
+                  t.personalInformation,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -571,7 +608,7 @@ class _ProfileForm extends StatelessWidget {
               initialValue: profile?.email ?? '',
               enabled: false,
               decoration: inputStyle(
-                'Email Address',
+                t.emailAddress,
                 Icons.email_outlined,
                 enabled: false,
               ),
@@ -579,13 +616,13 @@ class _ProfileForm extends StatelessWidget {
             const SizedBox(height: 16),
             TextFormField(
               controller: name,
-              decoration: inputStyle('Full Name', Icons.person_outline),
-              validator: _required,
+              decoration: inputStyle(t.fullName, Icons.person_outline),
+              validator: (value) => _required(context, value),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: phone,
-              decoration: inputStyle('Phone Number', Icons.phone_outlined),
+              decoration: inputStyle(t.phoneNumber, Icons.phone_outlined),
               keyboardType: TextInputType.phone,
             ),
             if (isTutor) ...[
@@ -593,7 +630,7 @@ class _ProfileForm extends StatelessWidget {
               TextFormField(
                 controller: tutorBio,
                 decoration: inputStyle(
-                  'Biography / Introduction (Tutor)',
+                  t.biographyTutor,
                   Icons.description_outlined,
                 ),
                 minLines: 3,
@@ -612,8 +649,8 @@ class _ProfileForm extends StatelessWidget {
                 ),
                 onPressed: loading ? null : onSave,
                 icon: const Icon(Icons.save_rounded),
-                label: const Text(
-                  'Save Changes',
+                label: Text(
+                  t.saveChanges,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -653,6 +690,7 @@ class _BankForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = context.l10n;
 
     InputDecoration inputStyle(
       String label,
@@ -690,7 +728,7 @@ class _BankForm extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Bank Account Details',
+                  t.bankAccountDetails,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -714,7 +752,7 @@ class _BankForm extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Bank BIN is required for automatic payout, VietQR transfer, and bank account validation.',
+                      t.bankBinInfo,
                       style: TextStyle(
                         fontSize: 12,
                         color: theme.colorScheme.onSecondaryContainer,
@@ -728,10 +766,10 @@ class _BankForm extends StatelessWidget {
             TextFormField(
               controller: bankName,
               decoration: inputStyle(
-                'Bank Name',
+                t.bankName,
                 Icons.account_balance_outlined,
               ),
-              validator: _required,
+              validator: (value) => _required(context, value),
             ),
             const SizedBox(height: 16),
             BankBinField(controller: bankBin),
@@ -739,26 +777,26 @@ class _BankForm extends StatelessWidget {
             TextFormField(
               controller: accountNumber,
               decoration: inputStyle(
-                'Account Number',
+                t.accountNumber,
                 Icons.numbers_outlined,
               ),
               keyboardType: TextInputType.number,
-              validator: _required,
+              validator: (value) => _required(context, value),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: accountHolderName,
               decoration: inputStyle(
-                'Account Holder Name',
+                t.accountHolderName,
                 Icons.person_pin_outlined,
               ),
-              validator: _required,
+              validator: (value) => _required(context, value),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: branchName,
               decoration: inputStyle(
-                'Bank Branch (Optional)',
+                t.bankBranchOptional,
                 Icons.location_city_outlined,
               ),
             ),
@@ -775,8 +813,8 @@ class _BankForm extends StatelessWidget {
                 ),
                 onPressed: loading ? null : onSave,
                 icon: const Icon(Icons.save_rounded),
-                label: const Text(
-                  'Save Bank Information',
+                label: Text(
+                  t.saveBankInformation,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -800,6 +838,7 @@ class _LegalAndReportsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = context.l10n;
 
     return Card(
       elevation: 0,
@@ -820,13 +859,11 @@ class _LegalAndReportsCard extends StatelessWidget {
                 color: theme.colorScheme.errorContainer,
                 iconColor: theme.colorScheme.onErrorContainer,
               ),
-              title: const Text(
-                'Reports About Me',
+              title: Text(
+                t.reportsAboutMe,
                 style: TextStyle(fontWeight: FontWeight.w800),
               ),
-              subtitle: const Text(
-                'View reports submitted about your tutoring sessions and admin progress.',
-              ),
+              subtitle: Text(t.reportsAboutMeSubtitle),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => context.push('/tutor-reports'),
             ),
@@ -841,13 +878,11 @@ class _LegalAndReportsCard extends StatelessWidget {
                 color: theme.colorScheme.primaryContainer,
                 iconColor: theme.colorScheme.onPrimaryContainer,
               ),
-              title: const Text(
-                'Report an Issue to Admin',
+              title: Text(
+                t.reportIssueToAdmin,
                 style: TextStyle(fontWeight: FontWeight.w800),
               ),
-              subtitle: const Text(
-                'Missing payment, slow payout, wallet issue, app bug, booking problem...',
-              ),
+              subtitle: Text(t.reportIssueToAdminSubtitle),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => context.push('/support-report/create'),
             ),
@@ -862,13 +897,11 @@ class _LegalAndReportsCard extends StatelessWidget {
                 color: theme.colorScheme.secondaryContainer,
                 iconColor: theme.colorScheme.onSecondaryContainer,
               ),
-              title: const Text(
-                'My Admin Support Reports',
+              title: Text(
+                t.myAdminSupportReports,
                 style: TextStyle(fontWeight: FontWeight.w800),
               ),
-              subtitle: const Text(
-                'View progress and admin notes for your submitted issues.',
-              ),
+              subtitle: Text(t.myAdminSupportReportsSubtitle),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => context.push('/support-reports/me'),
             ),
@@ -885,13 +918,11 @@ class _LegalAndReportsCard extends StatelessWidget {
                 color: theme.colorScheme.secondaryContainer,
                 iconColor: theme.colorScheme.onSecondaryContainer,
               ),
-              title: const Text(
-                'My Reports',
+              title: Text(
+                t.myReports,
                 style: TextStyle(fontWeight: FontWeight.w800),
               ),
-              subtitle: const Text(
-                'Track tutor reports you submitted and view admin progress.',
-              ),
+              subtitle: Text(t.myReportsSubtitle),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => context.push('/my-reports'),
             ),
@@ -907,13 +938,11 @@ class _LegalAndReportsCard extends StatelessWidget {
               color: theme.colorScheme.primaryContainer,
               iconColor: theme.colorScheme.onPrimaryContainer,
             ),
-            title: const Text(
-              'Terms of Service',
+            title: Text(
+              t.termsOfService,
               style: TextStyle(fontWeight: FontWeight.w800),
             ),
-            subtitle: const Text(
-              'Read EduNest rules for payments, reports, wallet, tutors, and account policies.',
-            ),
+            subtitle: Text(t.termsOfServiceSubtitle),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => context.push('/terms-of-service'),
           ),
@@ -956,9 +985,9 @@ class _TileIcon extends StatelessWidget {
 // Shared validator
 // ─────────────────────────────────────────────────────────────────────────────
 
-String? _required(String? value) {
+String? _required(BuildContext context, String? value) {
   if (value == null || value.trim().isEmpty) {
-    return 'This field is required';
+    return AppStrings.of(context, listen: false).thisFieldRequired;
   }
   return null;
 }

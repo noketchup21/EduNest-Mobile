@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
 
@@ -56,13 +57,14 @@ class _ReportTutorScreenState extends State<ReportTutorScreen> {
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
     final colors = Theme.of(context).colorScheme;
+    final t = context.l10n;
 
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: AppBar(
-        title: const Text(
-          'Report tutor',
-          style: TextStyle(fontWeight: FontWeight.w900),
+        title: Text(
+          t.text('Report tutor'),
+          style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         centerTitle: false,
         elevation: 0,
@@ -93,28 +95,47 @@ class _ReportTutorScreenState extends State<ReportTutorScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const _SectionHeader(
+                      _SectionHeader(
                         icon: Icons.assignment_outlined,
-                        title: 'Report details',
-                        subtitle: 'Describe the problem clearly so admin can review it faster.',
+                        title: t.text('Report details'),
+                        subtitle: t.text(
+                          'Describe the problem clearly so admin can review it faster.',
+                        ),
                       ),
                       const SizedBox(height: 18),
                       DropdownButtonFormField<String>(
                         value: _category,
+                        isExpanded: true,
                         borderRadius: BorderRadius.circular(18),
                         decoration: _inputDecoration(
                           context,
-                          label: 'Category',
+                          label: t.text('Category'),
                           icon: Icons.category_outlined,
                         ),
                         items: categories
                             .map(
                               (x) => DropdownMenuItem(
-                            value: x,
-                            child: Text(x),
-                          ),
-                        )
+                                value: x,
+                                child: Text(
+                                  t.text(x),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
                             .toList(),
+                        selectedItemBuilder: (context) {
+                          return categories.map((x) {
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                t.text(x),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList();
+                        },
                         onChanged: (value) {
                           if (value == null) return;
                           setState(() => _category = value);
@@ -125,9 +146,9 @@ class _ReportTutorScreenState extends State<ReportTutorScreen> {
                         controller: _title,
                         decoration: _inputDecoration(
                           context,
-                          label: 'Title',
+                          label: t.text('Title'),
                           icon: Icons.title,
-                          hintText: 'Brief summary of the issue',
+                          hintText: t.text('Brief summary of the issue'),
                         ),
                         validator: _required,
                       ),
@@ -136,9 +157,11 @@ class _ReportTutorScreenState extends State<ReportTutorScreen> {
                         controller: _description,
                         decoration: _inputDecoration(
                           context,
-                          label: 'Description',
+                          label: t.text('Description'),
                           icon: Icons.description_outlined,
-                          hintText: 'Explain what happened and include important details',
+                          hintText: t.text(
+                            'Explain what happened and include important details',
+                          ),
                         ).copyWith(alignLabelWithHint: true),
                         minLines: 4,
                         maxLines: 8,
@@ -164,13 +187,16 @@ class _ReportTutorScreenState extends State<ReportTutorScreen> {
                           ),
                           icon: data.loading
                               ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                                  width: 18,
+                                  height: 18,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
                               : const Icon(Icons.report_outlined),
                           label: Text(
-                            data.loading ? 'Submitting...' : 'Submit report',
+                            t.text(data.loading
+                                ? 'Submitting...'
+                                : 'Submit report'),
                             style: const TextStyle(fontWeight: FontWeight.w900),
                           ),
                         ),
@@ -188,7 +214,7 @@ class _ReportTutorScreenState extends State<ReportTutorScreen> {
 
   String? _required(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'This field is required';
+      return AppStrings.of(context, listen: false).thisFieldRequired;
     }
 
     return null;
@@ -197,7 +223,10 @@ class _ReportTutorScreenState extends State<ReportTutorScreen> {
   Future<void> _pickProofImages() async {
     if (_proofPaths.length >= 5) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Maximum 5 proof images allowed')),
+        SnackBar(
+          content: Text(AppStrings.of(context, listen: false)
+              .text('Maximum 5 proof images allowed')),
+        ),
       );
       return;
     }
@@ -223,25 +252,32 @@ class _ReportTutorScreenState extends State<ReportTutorScreen> {
 
     if (_proofPaths.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload at least one proof image')),
+        SnackBar(
+          content: Text(
+            AppStrings.of(context, listen: false)
+                .text('Please upload at least one proof image'),
+          ),
+        ),
       );
       return;
     }
 
     try {
       await context.read<AppDataProvider>().createTutorReport(
-        bookingId: widget.bookingId,
-        lessonId: widget.lessonId,
-        category: _category,
-        title: _title.text.trim(),
-        description: _description.text.trim(),
-        proofImagePaths: _proofPaths,
-      );
+            bookingId: widget.bookingId,
+            lessonId: widget.lessonId,
+            category: _category,
+            title: _title.text.trim(),
+            description: _description.text.trim(),
+            proofImagePaths: _proofPaths,
+          );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Report submitted')),
+        SnackBar(
+            content: Text(AppStrings.of(context, listen: false)
+                .text('Report submitted'))),
       );
 
       context.pop();
@@ -289,18 +325,20 @@ class _ReportHeroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Submit a tutor report',
+                  context.l10n.text('Submit a tutor report'),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Your report will be reviewed by the admin team with the proof images you provide.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                    height: 1.35,
+                  context.l10n.text(
+                    'Your report will be reviewed by the admin team with the proof images you provide.',
                   ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                        height: 1.35,
+                      ),
                 ),
                 const SizedBox(height: 12),
                 Wrap(
@@ -309,12 +347,12 @@ class _ReportHeroCard extends StatelessWidget {
                   children: [
                     _MetaBadge(
                       icon: Icons.event_note_outlined,
-                      label: 'Booking #$bookingId',
+                      label: context.l10n.bookingNumber(bookingId),
                     ),
                     if (lessonId != null)
                       _MetaBadge(
                         icon: Icons.menu_book_outlined,
-                        label: 'Lesson #$lessonId',
+                        label: '${context.l10n.lesson} #$lessonId',
                       ),
                   ],
                 ),
@@ -395,9 +433,9 @@ class _SectionHeader extends StatelessWidget {
               Text(
                 subtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  height: 1.35,
-                ),
+                      color: colors.onSurfaceVariant,
+                      height: 1.35,
+                    ),
               ),
             ],
           ),
@@ -427,11 +465,13 @@ class _ProofPicker extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: _SectionHeader(
                 icon: Icons.image_outlined,
-                title: 'Proof images',
-                subtitle: 'Upload at least one image. Maximum 5 images.',
+                title: context.l10n.text('Proof images'),
+                subtitle: context.l10n.text(
+                  'Upload at least one image. Maximum 5 images.',
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -462,13 +502,14 @@ class _ProofPicker extends StatelessWidget {
                     size: 50,
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'No proof images selected',
-                    style: TextStyle(fontWeight: FontWeight.w900),
+                  Text(
+                    context.l10n.text('No proof images selected'),
+                    style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Tap to add image proof for admin review.',
+                    context.l10n
+                        .text('Tap to add image proof for admin review.'),
                     textAlign: TextAlign.center,
                     style: TextStyle(color: colors.onSurfaceVariant),
                   ),
@@ -585,11 +626,11 @@ class _SoftIcon extends StatelessWidget {
 }
 
 InputDecoration _inputDecoration(
-    BuildContext context, {
-      required String label,
-      required IconData icon,
-      String? hintText,
-    }) {
+  BuildContext context, {
+  required String label,
+  required IconData icon,
+  String? hintText,
+}) {
   final colors = Theme.of(context).colorScheme;
 
   return InputDecoration(
