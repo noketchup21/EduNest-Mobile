@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../providers/app_data_provider.dart';
 import '../../utils/support_report_categories.dart';
 import '../../widgets/error_banner.dart';
@@ -44,13 +45,14 @@ class _CreateSupportReportScreenState extends State<CreateSupportReportScreen> {
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
+    final t = context.l10n;
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Report Issue to Admin',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          t.text('Report Issue to Admin'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: Form(
@@ -63,7 +65,9 @@ class _CreateSupportReportScreenState extends State<CreateSupportReportScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  'Use this form for tutor problems such as missing payment, slow payout, wrong wallet balance, student no-show, booking issue, or app bug.',
+                  t.text(
+                    'Use this form for tutor problems such as missing payment, slow payout, wrong wallet balance, student no-show, booking issue, or app bug.',
+                  ),
                   style: TextStyle(
                     color: theme.colorScheme.onSurfaceVariant,
                     height: 1.4,
@@ -74,15 +78,15 @@ class _CreateSupportReportScreenState extends State<CreateSupportReportScreen> {
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: category,
-              decoration: const InputDecoration(
-                labelText: 'Issue category',
-                prefixIcon: Icon(Icons.category_outlined),
+              decoration: InputDecoration(
+                labelText: t.text('Issue category'),
+                prefixIcon: const Icon(Icons.category_outlined),
               ),
               items: [
                 for (final item in tutorSupportCategories)
                   DropdownMenuItem(
                     value: item,
-                    child: Text(supportCategoryLabel(item)),
+                    child: Text(t.text(supportCategoryLabel(item))),
                   ),
               ],
               onChanged: (value) {
@@ -93,28 +97,28 @@ class _CreateSupportReportScreenState extends State<CreateSupportReportScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: title,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                hintText: 'Example: My completed lesson was not paid',
-                prefixIcon: Icon(Icons.title_outlined),
+              decoration: InputDecoration(
+                labelText: t.text('Title'),
+                hintText: t.text('Example: My completed lesson was not paid'),
+                prefixIcon: const Icon(Icons.title_outlined),
               ),
-              validator: _required,
+              validator: (value) => _required(context, value),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: description,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                hintText: 'Describe the problem clearly for admin',
-                prefixIcon: Icon(Icons.description_outlined),
+              decoration: InputDecoration(
+                labelText: t.text('Description'),
+                hintText: t.text('Describe the problem clearly for admin'),
+                prefixIcon: const Icon(Icons.description_outlined),
               ),
               minLines: 4,
               maxLines: 7,
-              validator: _required,
+              validator: (value) => _required(context, value),
             ),
             const SizedBox(height: 16),
             Text(
-              'Related IDs optional',
+              t.text('Related IDs optional'),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
@@ -123,27 +127,27 @@ class _CreateSupportReportScreenState extends State<CreateSupportReportScreen> {
             TextFormField(
               controller: payoutId,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Payout ID optional',
-                prefixIcon: Icon(Icons.payments_outlined),
+              decoration: InputDecoration(
+                labelText: t.text('Payout ID optional'),
+                prefixIcon: const Icon(Icons.payments_outlined),
               ),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: bookingId,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Booking ID optional',
-                prefixIcon: Icon(Icons.receipt_long_outlined),
+              decoration: InputDecoration(
+                labelText: t.text('Booking ID optional'),
+                prefixIcon: const Icon(Icons.receipt_long_outlined),
               ),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: lessonId,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Lesson ID optional',
-                prefixIcon: Icon(Icons.menu_book_outlined),
+              decoration: InputDecoration(
+                labelText: t.text('Lesson ID optional'),
+                prefixIcon: const Icon(Icons.menu_book_outlined),
               ),
             ),
             const SizedBox(height: 20),
@@ -161,14 +165,14 @@ class _CreateSupportReportScreenState extends State<CreateSupportReportScreen> {
                 onPressed: data.loading ? null : _submit,
                 icon: data.loading
                     ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.send_outlined),
-                label: const Text(
-                  'Submit to Admin',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                label: Text(
+                  t.text('Submit to Admin'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -179,9 +183,13 @@ class _CreateSupportReportScreenState extends State<CreateSupportReportScreen> {
   }
 
   Future<void> _pickImages() async {
+    final t = AppStrings.of(context, listen: false);
+
     try {
       if (proofPaths.length >= 5) {
-        _snack('Maximum 5 proof images allowed');
+        _snack(t.text(
+          'Maximum 5 proof images allowed',
+        ));
         return;
       }
 
@@ -200,7 +208,9 @@ class _CreateSupportReportScreenState extends State<CreateSupportReportScreen> {
         }
       });
     } catch (e) {
-      _snack('Could not pick images: $e');
+      _snack(
+        '${t.text('Could not pick images')}: $e',
+      );
     }
   }
 
@@ -209,19 +219,24 @@ class _CreateSupportReportScreenState extends State<CreateSupportReportScreen> {
 
     try {
       await context.read<AppDataProvider>().createSupportReport(
-        category: category,
-        title: title.text.trim(),
-        description: description.text.trim(),
-        payoutId: _optionalInt(payoutId.text),
-        bookingId: _optionalInt(bookingId.text),
-        lessonId: _optionalInt(lessonId.text),
-        proofImagePaths: proofPaths,
-      );
+            category: category,
+            title: title.text.trim(),
+            description: description.text.trim(),
+            payoutId: _optionalInt(payoutId.text),
+            bookingId: _optionalInt(bookingId.text),
+            lessonId: _optionalInt(lessonId.text),
+            proofImagePaths: proofPaths,
+          );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Issue report submitted')),
+        SnackBar(
+          content: Text(
+            AppStrings.of(context, listen: false)
+                .text('Issue report submitted'),
+          ),
+        ),
       );
 
       context.go('/support-reports/me');
@@ -257,6 +272,7 @@ class _ProofPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = context.l10n;
 
     return Card(
       child: Padding(
@@ -265,21 +281,23 @@ class _ProofPicker extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Proof images optional',
+              t.text('Proof images optional'),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              'Upload screenshots of wallet, payout, booking, lesson, or app errors.',
+              t.text(
+                'Upload screenshots of wallet, payout, booking, lesson, or app errors.',
+              ),
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: onPick,
               icon: const Icon(Icons.image_outlined),
-              label: const Text('Add proof images'),
+              label: Text(t.text('Add proof images')),
             ),
             if (proofPaths.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -327,9 +345,9 @@ class _ProofPicker extends StatelessWidget {
   }
 }
 
-String? _required(String? value) {
+String? _required(BuildContext context, String? value) {
   if (value == null || value.trim().isEmpty) {
-    return 'This field is required';
+    return AppStrings.of(context, listen: false).requiredField;
   }
 
   return null;

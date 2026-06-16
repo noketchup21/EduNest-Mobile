@@ -25,12 +25,12 @@ class UserAvatar extends StatelessWidget {
       child: hasImage
           ? null
           : Text(
-        name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
-        style: TextStyle(
-          color: theme.colorScheme.onPrimaryContainer,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
+              name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
+              style: TextStyle(
+                color: theme.colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
     );
   }
 }

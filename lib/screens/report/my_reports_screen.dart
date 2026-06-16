@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
@@ -37,9 +38,9 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: AppBar(
-        title: const Text(
-          'My Reports',
-          style: TextStyle(fontWeight: FontWeight.w900),
+        title: Text(
+          context.l10n.myReports,
+          style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         centerTitle: false,
         elevation: 0,
@@ -76,8 +77,9 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
             else if (visibleReports.isEmpty)
               _EmptyStateCard(
                 icon: Icons.filter_alt_off_outlined,
-                title: 'No $_statusFilter reports',
-                subtitle: 'Try another status filter to see more reports.',
+                title: context.l10n.text('No reports found.'),
+                subtitle: context.l10n
+                    .text('Try another status filter to see more reports.'),
               )
             else
               ...categories.entries.map((entry) {
@@ -123,6 +125,7 @@ class _ReportOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final t = context.l10n;
     final pending = _countStatus(reports, 'Pending');
     final reviewing = _countStatus(reports, 'Reviewing');
     final resolved = _countStatus(reports, 'Resolved');
@@ -148,14 +151,16 @@ class _ReportOverviewCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Report center',
+                      t.text('Report center'),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w900,
                           ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Track tutor reports by review stage, category, proof, and admin response.',
+                      t.text(
+                        'Track tutor reports by review stage, category, proof, and admin response.',
+                      ),
                       style: TextStyle(
                         height: 1.35,
                         color: colors.onSurfaceVariant,
@@ -176,13 +181,19 @@ class _ReportOverviewCard extends StatelessWidget {
             childAspectRatio: 1.8,
             children: [
               _OverviewMetric(
-                  label: 'Total', value: reports.length, color: colors.primary),
+                  label: t.text('Total'),
+                  value: reports.length,
+                  color: colors.primary),
               _OverviewMetric(
-                  label: 'Pending', value: pending, color: Colors.orange),
+                  label: t.text('Pending'),
+                  value: pending,
+                  color: Colors.orange),
               _OverviewMetric(
-                  label: 'Reviewing', value: reviewing, color: Colors.blue),
+                  label: t.text('Reviewing'),
+                  value: reviewing,
+                  color: Colors.blue),
               _OverviewMetric(
-                label: 'Closed',
+                label: t.text('Closed'),
                 value: resolved + rejected,
                 color: Colors.green,
               ),
@@ -260,6 +271,7 @@ class _StatusFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     const statuses = ['All', 'Pending', 'Reviewing', 'Resolved', 'Rejected'];
 
     return SingleChildScrollView(
@@ -269,7 +281,7 @@ class _StatusFilterBar extends StatelessWidget {
           for (final status in statuses) ...[
             ChoiceChip(
               selected: selected == status,
-              label: Text('${_label(status)} ${_count(status)}'),
+              label: Text('${t.text(status)} ${_count(status)}'),
               avatar: Icon(
                 _statusIcon(status),
                 size: 16,
@@ -291,8 +303,6 @@ class _StatusFilterBar extends StatelessWidget {
       return report.status.toLowerCase() == status.toLowerCase();
     }).length;
   }
-
-  String _label(String status) => status == 'All' ? 'All' : status;
 }
 
 class _ReportCategorySection extends StatelessWidget {
@@ -307,6 +317,7 @@ class _ReportCategorySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final t = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
@@ -317,7 +328,7 @@ class _ReportCategorySection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  category,
+                  t.text(category),
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -342,11 +353,12 @@ class _EmptyReports extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _EmptyStateCard(
+    return _EmptyStateCard(
       icon: Icons.report_gmailerrorred_outlined,
-      title: 'No reports yet',
-      subtitle:
-          'Reports you submit about tutors will appear here with review progress.',
+      title: context.l10n.text('No reports yet'),
+      subtitle: context.l10n.text(
+        'Reports you submit about tutors will appear here with review progress.',
+      ),
     );
   }
 }
@@ -360,6 +372,7 @@ class _ReportCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
     final status = report.status.toLowerCase();
     final statusColor = _statusColor(status);
 
@@ -405,7 +418,10 @@ class _ReportCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                _MiniBadge(label: report.status, color: statusColor),
+                _MiniBadge(
+                  label: context.l10n.status(report.status),
+                  color: statusColor,
+                ),
               ],
             ),
             const SizedBox(height: 14),
@@ -416,14 +432,16 @@ class _ReportCard extends StatelessWidget {
                 _MetaChip(icon: Icons.school_outlined, label: report.tutorName),
                 _MetaChip(
                   icon: Icons.menu_book_outlined,
-                  label: report.subjectName ?? 'Unknown subject',
+                  label: report.subjectName ?? t.text('Unknown subject'),
                 ),
                 _MetaChip(
                     icon: Icons.event_note_outlined,
-                    label: 'Booking #${report.bookingId}'),
+                    label: '${t.text('Booking')} #${report.bookingId}'),
                 _MetaChip(
                     icon: Icons.image_outlined,
-                    label: '${report.proofImages.length} proof'),
+                    label: t.isVi
+                        ? '${report.proofImages.length} bằng chứng'
+                        : '${report.proofImages.length} proof${report.proofImages.length == 1 ? '' : 's'}'),
               ],
             ),
             const SizedBox(height: 16),
@@ -433,7 +451,7 @@ class _ReportCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _DateTile(
-                    label: 'Submitted',
+                    label: t.text('Submitted'),
                     value: _formatDate(report.createdAt),
                     icon: Icons.schedule_outlined,
                   ),
@@ -441,10 +459,11 @@ class _ReportCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _DateTile(
-                    label:
-                        report.reviewedAt == null ? 'Last update' : 'Reviewed',
+                    label: report.reviewedAt == null
+                        ? t.text('Last update')
+                        : t.text('Reviewed'),
                     value: report.reviewedAt == null
-                        ? 'Waiting'
+                        ? t.text('Waiting')
                         : _formatDate(report.reviewedAt!),
                     icon: Icons.fact_check_outlined,
                   ),
@@ -550,7 +569,7 @@ class _ProgressStep extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          step.label,
+          context.l10n.text(step.label),
           textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -667,9 +686,9 @@ class _ProofImages extends StatelessWidget {
               url,
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) {
-                return const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text('Could not load image'),
+                return Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(context.l10n.text('Could not load image')),
                 );
               },
             ),

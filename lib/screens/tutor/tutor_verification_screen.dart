@@ -5,10 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
-import '../../widgets/error_banner.dart';
 import '../../widgets/bank_bin_field.dart';
+import '../../widgets/error_banner.dart';
 
 class TutorVerificationScreen extends StatefulWidget {
   const TutorVerificationScreen({super.key});
@@ -60,6 +61,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
+    final t = context.l10n;
     final verification = data.tutorVerification;
 
     _fillExistingDataOnce(verification);
@@ -80,7 +82,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: _goBack,
         ),
-        title: const Text('Tutor verification'),
+        title: Text(t.text('Tutor verification')),
         actions: [
           IconButton(
             onPressed: data.loading
@@ -112,7 +114,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
                 FilledButton.icon(
                   onPressed: () => _continueAfterApproval(verification),
                   icon: const Icon(Icons.home),
-                  label: const Text('Go to home'),
+                  label: Text(t.text('Go to home')),
                 )
               else if (isPending)
                 const _PendingMessage()
@@ -138,6 +140,8 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
     AppDataProvider data,
     TutorVerificationModel? verification,
   ) {
+    final t = context.l10n;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -147,26 +151,26 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             Card(
               child: ListTile(
                 leading: const Icon(Icons.error_outline),
-                title: const Text('Your verification was rejected'),
+                title: Text(t.text('Your verification was rejected')),
                 subtitle: Text(
                   verification?.verificationRejectReason ??
-                      'Please check your documents and submit again.',
+                      t.text('Please check your documents and submit again.'),
                 ),
               ),
             ),
           const SizedBox(height: 8),
           TextFormField(
             controller: _nationalId,
-            decoration: const InputDecoration(
-              labelText: 'CCCD number',
-              prefixIcon: Icon(Icons.badge_outlined),
+            decoration: InputDecoration(
+              labelText: t.text('CCCD number'),
+              prefixIcon: const Icon(Icons.badge_outlined),
             ),
-            validator: _requiredValidator,
+            validator: (value) => _requiredValidator(context, value),
           ),
           const SizedBox(height: 12),
           _ImagePickerTile(
-            title: 'CCCD front image',
-            subtitle: 'Upload the front side of your CCCD.',
+            title: t.text('CCCD front image'),
+            subtitle: t.text('Upload the front side of your CCCD.'),
             localPath: _cccdFrontPath,
             existingUrl: verification?.cccdFrontImageUrl,
             onPick: () async {
@@ -180,8 +184,8 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
           ),
           const SizedBox(height: 12),
           _ImagePickerTile(
-            title: 'CCCD back image',
-            subtitle: 'Upload the back side of your CCCD.',
+            title: t.text('CCCD back image'),
+            subtitle: t.text('Upload the back side of your CCCD.'),
             localPath: _cccdBackPath,
             existingUrl: verification?.cccdBackImageUrl,
             onPick: () async {
@@ -195,8 +199,9 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
           ),
           const SizedBox(height: 12),
           _ImagePickerTile(
-            title: 'Certificate / university document',
-            subtitle: 'Upload degree, certificate, or enrollment document.',
+            title: t.text('Certificate / university document'),
+            subtitle:
+                t.text('Upload degree, certificate, or enrollment document.'),
             localPath: _certificatePath,
             existingUrl: verification?.certificateImageUrl,
             onPick: () async {
@@ -212,7 +217,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Bank information',
+              t.text('Bank information'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -221,39 +226,39 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
           const SizedBox(height: 12),
           TextFormField(
             controller: _bankName,
-            decoration: const InputDecoration(
-              labelText: 'Bank name',
-              prefixIcon: Icon(Icons.account_balance_outlined),
+            decoration: InputDecoration(
+              labelText: t.text('Bank name'),
+              prefixIcon: const Icon(Icons.account_balance_outlined),
             ),
-            validator: _requiredValidator,
+            validator: (value) => _requiredValidator(context, value),
           ),
           const SizedBox(height: 12),
           BankBinField(controller: _bankBin),
           const SizedBox(height: 12),
           TextFormField(
             controller: _accountNumber,
-            decoration: const InputDecoration(
-              labelText: 'Account number',
-              prefixIcon: Icon(Icons.numbers_outlined),
+            decoration: InputDecoration(
+              labelText: t.text('Account number'),
+              prefixIcon: const Icon(Icons.numbers_outlined),
             ),
             keyboardType: TextInputType.number,
-            validator: _requiredValidator,
+            validator: (value) => _requiredValidator(context, value),
           ),
           const SizedBox(height: 12),
           TextFormField(
             controller: _accountHolderName,
-            decoration: const InputDecoration(
-              labelText: 'Account holder name',
-              prefixIcon: Icon(Icons.person_outline),
+            decoration: InputDecoration(
+              labelText: t.text('Account holder name'),
+              prefixIcon: const Icon(Icons.person_outline),
             ),
-            validator: _requiredValidator,
+            validator: (value) => _requiredValidator(context, value),
           ),
           const SizedBox(height: 12),
           TextFormField(
             controller: _branchName,
-            decoration: const InputDecoration(
-              labelText: 'Branch name optional',
-              prefixIcon: Icon(Icons.location_city_outlined),
+            decoration: InputDecoration(
+              labelText: t.text('Branch name optional'),
+              prefixIcon: const Icon(Icons.location_city_outlined),
             ),
           ),
           const SizedBox(height: 24),
@@ -269,7 +274,9 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
                     )
                   : const Icon(Icons.upload_file),
               label: Text(
-                data.loading ? 'Submitting...' : 'Submit verification',
+                data.loading
+                    ? t.text('Submitting...')
+                    : t.text('Submit verification'),
               ),
             ),
           ),
@@ -326,15 +333,18 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   }
 
   Future<void> _submit(BuildContext context) async {
+    final t = AppStrings.of(context, listen: false);
+
     if (!_formKey.currentState!.validate()) return;
 
     if (_cccdFrontPath == null ||
         _cccdBackPath == null ||
         _certificatePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('Please upload CCCD front, CCCD back, and certificate.'),
+        SnackBar(
+          content: Text(
+            t.text('Please upload CCCD front, CCCD back, and certificate.'),
+          ),
         ),
       );
 
@@ -357,9 +367,9 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Verification submitted. Please wait for admin approval.',
+            t.text('Verification submitted. Please wait for admin approval.'),
           ),
         ),
       );
@@ -379,9 +389,9 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
     _initializedFields = true;
   }
 
-  String? _requiredValidator(String? value) {
+  String? _requiredValidator(BuildContext context, String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'This field is required';
+      return AppStrings.of(context, listen: false).requiredField;
     }
 
     return null;
@@ -401,6 +411,7 @@ class _StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final status = verification?.verificationStatus ?? 'NotSubmitted';
 
     IconData icon;
@@ -409,22 +420,24 @@ class _StatusCard extends StatelessWidget {
 
     if (isApproved) {
       icon = Icons.verified;
-      title = 'Approved';
-      subtitle = 'Your tutor profile is approved. You can create availability.';
+      title = t.text('Approved');
+      subtitle = t
+          .text('Your tutor profile is approved. You can create availability.');
     } else if (isPending) {
       icon = Icons.hourglass_top;
-      title = 'Pending approval';
-      subtitle = 'Your documents are submitted. Please wait for admin review.';
+      title = t.text('Pending approval');
+      subtitle =
+          t.text('Your documents are submitted. Please wait for admin review.');
     } else if (status.toLowerCase() == 'rejected') {
       icon = Icons.cancel_outlined;
-      title = 'Rejected';
+      title = t.text('Rejected');
       subtitle = verification?.verificationRejectReason ??
-          'Please update your documents and submit again.';
+          t.text('Please update your documents and submit again.');
     } else {
       icon = Icons.assignment_outlined;
-      title = 'Verification required';
-      subtitle =
-          'Submit your CCCD, certificate, and bank information before creating availability.';
+      title = t.text('Verification required');
+      subtitle = t.text(
+          'Submit your CCCD, certificate, and bank information before creating availability.');
     }
 
     return Card(
@@ -451,7 +464,7 @@ class _StatusCard extends StatelessWidget {
                   Text(subtitle),
                   const SizedBox(height: 4),
                   Text(
-                    'Status: $status',
+                    '${t.text('Status')}: ${t.status(status)}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -469,6 +482,8 @@ class _PendingMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -477,22 +492,24 @@ class _PendingMessage extends StatelessWidget {
             const Icon(Icons.schedule, size: 56),
             const SizedBox(height: 12),
             Text(
-              'Waiting for admin approval',
+              t.text('Waiting for admin approval'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'You cannot create availability until your tutor profile is approved.',
+            Text(
+              t.text(
+                'You cannot create availability until your tutor profile is approved.',
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () => context.go('/home'),
               icon: const Icon(Icons.home_outlined),
-              label: const Text('Go to home'),
+              label: Text(t.text('Go to home')),
             ),
           ],
         ),
@@ -518,6 +535,7 @@ class _ImagePickerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final hasLocal = localPath != null && localPath!.isNotEmpty;
     final hasExisting = existingUrl != null && existingUrl!.isNotEmpty;
 
@@ -537,7 +555,8 @@ class _ImagePickerTile extends StatelessWidget {
               trailing: FilledButton.tonalIcon(
                 onPressed: onPick,
                 icon: const Icon(Icons.image_outlined),
-                label: Text(hasLocal || hasExisting ? 'Change' : 'Pick'),
+                label:
+                    Text(t.text(hasLocal || hasExisting ? 'Change' : 'Pick')),
               ),
             ),
             if (hasLocal) ...[
@@ -565,7 +584,7 @@ class _ImagePickerTile extends StatelessWidget {
                       height: 120,
                       width: double.infinity,
                       alignment: Alignment.center,
-                      child: const Text('Unable to load existing image'),
+                      child: Text(t.text('Unable to load existing image')),
                     );
                   },
                 ),

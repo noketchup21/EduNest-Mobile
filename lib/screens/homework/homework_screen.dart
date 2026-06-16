@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -68,6 +69,7 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
     final auth = context.watch<AuthProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
     final courses = _courseGroups(data.lessons);
     final selectedCourse = _selectedCourse(courses);
     final courseLessons = selectedCourse?.lessons ?? <LessonModel>[];
@@ -88,7 +90,7 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
         elevation: 0,
         titleSpacing: 20,
         title: Text(
-          'Homework',
+          t.homework,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -98,7 +100,7 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
             padding: const EdgeInsets.only(right: 12),
             child: IconButton.outlined(
               onPressed: data.loading ? null : _reload,
-              tooltip: 'Refresh',
+              tooltip: t.refresh,
               icon: const Icon(Icons.refresh_rounded, size: 20),
               style: IconButton.styleFrom(
                 side: BorderSide(color: colors.outlineVariant, width: 0.5),
@@ -160,7 +162,7 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'No courses available yet.',
+                      t.noCoursesAvailableYet,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.55),
                       ),
@@ -181,8 +183,8 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
                     const SizedBox(height: 12),
                     Text(
                       allItems.isEmpty
-                          ? 'No homework assigned in this course yet.'
-                          : 'No homework in this view.',
+                          ? t.text('No homework assigned in this course yet.')
+                          : t.text('No homework in this view.'),
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.55),
                       ),
@@ -348,7 +350,7 @@ class _CourseFilterBar extends StatelessWidget {
       isExpanded: true,
       menuMaxHeight: 360,
       decoration: InputDecoration(
-        labelText: 'Class',
+        labelText: context.l10n.text('Class'),
         prefixIcon: const Icon(Icons.school_outlined),
         filled: true,
         fillColor: colors.surface,
@@ -427,7 +429,7 @@ class _CourseMenuItem extends StatelessWidget {
                 ),
               ),
               Text(
-                '${course.lessons.length} lesson${course.lessons.length == 1 ? '' : 's'}',
+                context.l10n.lessonsN(course.lessons.length),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -474,21 +476,21 @@ class _HomeworkSummary extends StatelessWidget {
         children: [
           Expanded(
             child: _SummaryMetric(
-              label: 'Pending',
+              label: context.l10n.text('Pending'),
               value: '$pending',
               icon: Icons.assignment_outlined,
             ),
           ),
           Expanded(
             child: _SummaryMetric(
-              label: 'Due soon',
+              label: context.l10n.text('Due soon'),
               value: '$dueSoon',
               icon: Icons.warning_amber_rounded,
             ),
           ),
           Expanded(
             child: _SummaryMetric(
-              label: 'Graded',
+              label: context.l10n.text('Graded'),
               value: '$graded',
               icon: Icons.check_circle_outline_rounded,
             ),
@@ -513,10 +515,11 @@ class _HomeworkFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final filters = [
-      _FilterOption(_HomeworkFilter.all, 'All', items.length),
+      _FilterOption(
+          _HomeworkFilter.all, context.l10n.text('All'), items.length),
       _FilterOption(
         _HomeworkFilter.todo,
-        'To do',
+        context.l10n.text('To do'),
         items
             .where(
               (item) =>
@@ -527,12 +530,12 @@ class _HomeworkFilterBar extends StatelessWidget {
       ),
       _FilterOption(
         _HomeworkFilter.dueSoon,
-        'Due soon',
+        context.l10n.text('Due soon'),
         items.where((item) => _isDueSoon(item.homework)).length,
       ),
       _FilterOption(
         _HomeworkFilter.submitted,
-        'Submitted',
+        context.l10n.text('Submitted'),
         items
             .where(
               (item) =>
@@ -543,7 +546,7 @@ class _HomeworkFilterBar extends StatelessWidget {
       ),
       _FilterOption(
         _HomeworkFilter.graded,
-        'Graded',
+        context.l10n.text('Graded'),
         items
             .where((item) => item.homework.mySubmission?.isGraded == true)
             .length,
@@ -758,7 +761,9 @@ class _HomeworkCard extends StatelessWidget {
     final submission = homework.mySubmission;
     final overdue = _isOverdue(homework);
     final dueSoon = _isDueSoon(homework);
-    final typeLabel = homework.isMultipleChoice ? 'Multiple choice' : 'Essay';
+    final typeLabel = context.l10n.text(
+      homework.isMultipleChoice ? 'Multiple choice' : 'Essay',
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -808,7 +813,7 @@ class _HomeworkCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${_subjectName(lesson)} - $typeLabel - ${homework.totalPoints.g} pts',
+                      '${_subjectName(lesson)} - $typeLabel - ${context.l10n.points(homework.totalPoints.g)}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.55),
                       ),
@@ -831,14 +836,21 @@ class _HomeworkCard extends StatelessWidget {
           const SizedBox(height: 10),
           _MetaRow(
             icon: Icons.event_outlined,
-            label:
-                'Due ${DateFormat('dd/MM/yyyy HH:mm').format(homework.dueDate.toLocal())}',
+            label: context.l10n.dueAt(
+              DateFormat('dd/MM/yyyy HH:mm').format(
+                homework.dueDate.toLocal(),
+              ),
+            ),
           ),
           const SizedBox(height: 6),
           _MetaRow(
             icon: Icons.school_outlined,
-            label:
-                '${DateFormat('dd/MM/yyyy HH:mm').format(lesson.scheduleTime.toLocal())} lesson with ${lesson.tutorName}',
+            label: context.l10n.lessonWithTutor(
+              DateFormat('dd/MM/yyyy HH:mm').format(
+                lesson.scheduleTime.toLocal(),
+              ),
+              lesson.tutorName,
+            ),
           ),
           const SizedBox(height: 12),
           if (submission == null)
@@ -849,7 +861,7 @@ class _HomeworkCard extends StatelessWidget {
                     onPressed: () =>
                         context.push('/lessons/${lesson.lessonId}'),
                     icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                    label: const Text('Open lesson'),
+                    label: Text(context.l10n.text('Open lesson')),
                   ),
                 ),
                 if (canSubmit) ...[
@@ -858,7 +870,9 @@ class _HomeworkCard extends StatelessWidget {
                     child: FilledButton.icon(
                       onPressed: loading || overdue ? null : onOpenHomework,
                       icon: const Icon(Icons.upload_file_rounded, size: 17),
-                      label: Text(overdue ? 'Overdue' : 'Do homework'),
+                      label: Text(
+                        context.l10n.text(overdue ? 'Overdue' : 'Do homework'),
+                      ),
                     ),
                   ),
                 ],
@@ -872,7 +886,7 @@ class _HomeworkCard extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: onOpenHomework,
                 icon: const Icon(Icons.visibility_outlined, size: 17),
-                label: const Text('View result'),
+                label: Text(context.l10n.text('View result')),
               ),
             ),
           ],
@@ -911,7 +925,7 @@ class _PaginationControls extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              '$start-$end of $totalItems',
+              context.l10n.rangeOf(start, end, totalItems),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.55),
                 fontWeight: FontWeight.w600,
@@ -921,7 +935,7 @@ class _PaginationControls extends StatelessWidget {
           IconButton.outlined(
             onPressed: page == 0 ? null : () => onChanged(page - 1),
             icon: const Icon(Icons.chevron_left_rounded),
-            tooltip: 'Previous page',
+            tooltip: context.l10n.text('Previous page'),
           ),
           const SizedBox(width: 8),
           Text(
@@ -935,7 +949,7 @@ class _PaginationControls extends StatelessWidget {
             onPressed:
                 page >= totalPages - 1 ? null : () => onChanged(page + 1),
             icon: const Icon(Icons.chevron_right_rounded),
-            tooltip: 'Next page',
+            tooltip: context.l10n.text('Next page'),
           ),
         ],
       ),
@@ -976,8 +990,10 @@ class _DueWarning extends StatelessWidget {
           Expanded(
             child: Text(
               overdue
-                  ? 'This homework is past its due date.'
-                  : 'This homework is close to its due date.',
+                  ? context.l10n.text('This homework is past its due date.')
+                  : context.l10n.text(
+                      'This homework is close to its due date.',
+                    ),
               style: TextStyle(
                 color: fg,
                 fontSize: 13,
@@ -1025,14 +1041,17 @@ class _SubmissionResult extends StatelessWidget {
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
-                  submission.isGraded ? 'Result available' : 'Submitted',
+                  submission.isGraded
+                      ? context.l10n.text('Result available')
+                      : context.l10n.text('Submitted'),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
               Text(
-                '${submission.totalScore.g}/${submission.maxScore.g} pts',
+                context.l10n.points(
+                    '${submission.totalScore.g}/${submission.maxScore.g}'),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -1041,7 +1060,11 @@ class _SubmissionResult extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Submitted ${DateFormat('dd/MM/yyyy HH:mm').format(submission.submittedAt.toLocal())}',
+            context.l10n.submittedAt(
+              DateFormat('dd/MM/yyyy HH:mm').format(
+                submission.submittedAt.toLocal(),
+              ),
+            ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: colors.onSurface.withValues(alpha: 0.55),
             ),
@@ -1073,27 +1096,27 @@ class _HomeworkStatusChip extends StatelessWidget {
     Color border;
 
     if (submission?.isGraded == true) {
-      label = 'Graded';
+      label = context.l10n.text('Graded');
       bg = const Color(0xFFEAF3DE);
       fg = const Color(0xFF3B6D11);
       border = const Color(0xFFC0DD97);
     } else if (submission != null) {
-      label = 'Submitted';
+      label = context.l10n.text('Submitted');
       bg = const Color(0xFFE6F1FB);
       fg = const Color(0xFF185FA5);
       border = const Color(0xFFBFDDF5);
     } else if (_isOverdue(homework)) {
-      label = 'Overdue';
+      label = context.l10n.text('Overdue');
       bg = const Color(0xFFFCEBEB);
       fg = const Color(0xFFA32D2D);
       border = const Color(0xFFF7C1C1);
     } else if (_isDueSoon(homework)) {
-      label = 'Due soon';
+      label = context.l10n.text('Due soon');
       bg = const Color(0xFFFAEEDA);
       fg = const Color(0xFF854F0B);
       border = const Color(0xFFFAC775);
     } else {
-      label = 'Pending';
+      label = context.l10n.text('Pending');
       bg = Theme.of(context).colorScheme.surfaceContainerHighest;
       fg = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65);
       border = Theme.of(context).colorScheme.outlineVariant;

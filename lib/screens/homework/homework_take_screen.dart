@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -104,7 +105,8 @@ class _HomeworkTakeScreenState extends State<HomeworkTakeScreen> {
                 : [],
           );
       if (!mounted) return;
-      _showSnack('Homework submitted');
+      _showSnack(
+          AppStrings.of(context, listen: false).text('Homework submitted'));
     } catch (_) {}
   }
 
@@ -140,7 +142,7 @@ class _HomeworkTakeScreenState extends State<HomeworkTakeScreen> {
         elevation: 0,
         titleSpacing: 4,
         title: Text(
-          homework?.title ?? 'Homework',
+          homework?.title ?? context.l10n.homework,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -150,7 +152,7 @@ class _HomeworkTakeScreenState extends State<HomeworkTakeScreen> {
             padding: const EdgeInsets.only(right: 12),
             child: IconButton.outlined(
               onPressed: data.loading ? null : () => _reload(force: true),
-              tooltip: 'Refresh',
+              tooltip: context.l10n.refresh,
               icon: const Icon(Icons.refresh_rounded, size: 20),
               style: IconButton.styleFrom(
                 side: BorderSide(color: colors.outlineVariant, width: 0.5),
@@ -191,15 +193,18 @@ class _HomeworkTakeScreenState extends State<HomeworkTakeScreen> {
                     _ResultView(homework: homework)
                   else ...[
                     if (!auth.isStudent)
-                      const _InfoBox(
+                      _InfoBox(
                         icon: Icons.visibility_outlined,
-                        text:
-                            'Parent accounts can view homework and results. Student accounts submit homework.',
+                        text: context.l10n.text(
+                          'Parent accounts can view homework and results. Student accounts submit homework.',
+                        ),
                       )
                     else if (_isOverdue(homework))
-                      const _InfoBox(
+                      _InfoBox(
                         icon: Icons.error_outline_rounded,
-                        text: 'This homework is past its due date.',
+                        text: context.l10n.text(
+                          'This homework is past its due date.',
+                        ),
                         warning: true,
                       )
                     else
@@ -217,8 +222,11 @@ class _HomeworkTakeScreenState extends State<HomeworkTakeScreen> {
                           onPressed:
                               data.loading ? null : () => _submit(homework),
                           icon: const Icon(Icons.upload_file_rounded, size: 18),
-                          label:
-                              Text(data.loading ? 'Submitting...' : 'Submit'),
+                          label: Text(
+                            context.l10n.text(
+                              data.loading ? 'Submitting...' : 'Submit',
+                            ),
+                          ),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size(0, 48),
                             shape: RoundedRectangleBorder(
@@ -281,11 +289,11 @@ class _MissingHomeworkBody extends StatelessWidget {
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 12),
-            const Text('Homework not found for this lesson.'),
+            Text(context.l10n.text('Homework not found for this lesson.')),
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: onBack,
-              child: const Text('Back'),
+              child: Text(context.l10n.text('Back')),
             ),
           ],
         ),
@@ -307,7 +315,9 @@ class _HomeworkHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final typeLabel = homework.isMultipleChoice ? 'Multiple choice' : 'Essay';
+    final typeLabel = context.l10n.text(
+      homework.isMultipleChoice ? 'Multiple choice' : 'Essay',
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -350,7 +360,7 @@ class _HomeworkHeader extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '$typeLabel - ${homework.totalPoints.g} pts',
+                      '$typeLabel - ${context.l10n.points(homework.totalPoints.g)}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.55),
                       ),
@@ -367,14 +377,19 @@ class _HomeworkHeader extends StatelessWidget {
           const SizedBox(height: 10),
           _MetaRow(
             icon: Icons.event_outlined,
-            label:
-                'Due ${DateFormat('dd/MM/yyyy HH:mm').format(homework.dueDate.toLocal())}',
+            label: context.l10n.dueAt(
+              DateFormat('dd/MM/yyyy HH:mm').format(
+                homework.dueDate.toLocal(),
+              ),
+            ),
           ),
           if (lesson != null) ...[
             const SizedBox(height: 6),
             _MetaRow(
               icon: Icons.school_outlined,
-              label: '${_subjectName(lesson!)} with ${lesson!.tutorName}',
+              label: context.l10n.isVi
+                  ? '${_subjectName(lesson!)} với ${lesson!.tutorName}'
+                  : '${_subjectName(lesson!)} with ${lesson!.tutorName}',
             ),
           ],
         ],
@@ -710,7 +725,7 @@ class _MultipleChoiceQuestionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Question ${index + 1}',
+            '${context.l10n.text('Question')} ${index + 1}',
             style: theme.textTheme.labelMedium?.copyWith(
               color: colors.onSurface.withValues(alpha: 0.55),
             ),
@@ -810,7 +825,7 @@ class _EssayPromptCard extends StatelessWidget {
             minLines: 7,
             maxLines: 12,
             decoration: InputDecoration(
-              hintText: 'Write your answer',
+              hintText: context.l10n.text('Write your answer'),
               alignLabelWithHint: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -883,8 +898,8 @@ class _ResultView extends StatelessWidget {
                       children: [
                         Text(
                           submission.isGraded
-                              ? 'Essay result'
-                              : 'Essay submitted',
+                              ? context.l10n.text('Essay result')
+                              : context.l10n.text('Essay submitted'),
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
@@ -892,8 +907,8 @@ class _ResultView extends StatelessWidget {
                         const SizedBox(height: 3),
                         Text(
                           submission.isGraded
-                              ? 'Graded ${DateFormat('dd/MM/yyyy HH:mm').format((submission.gradedAt ?? submission.submittedAt).toLocal())}'
-                              : 'Waiting for tutor grading',
+                              ? '${context.l10n.text('Graded')} ${DateFormat('dd/MM/yyyy HH:mm').format((submission.gradedAt ?? submission.submittedAt).toLocal())}'
+                              : context.l10n.text('Waiting for tutor grading'),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colors.onSurface.withValues(alpha: 0.55),
                           ),
@@ -933,13 +948,16 @@ class _ResultView extends StatelessWidget {
               const SizedBox(height: 10),
               _MetaRow(
                 icon: Icons.upload_file_outlined,
-                label:
-                    'Submitted ${DateFormat('dd/MM/yyyy HH:mm').format(submission.submittedAt.toLocal())}',
+                label: context.l10n.submittedAt(
+                  DateFormat('dd/MM/yyyy HH:mm').format(
+                    submission.submittedAt.toLocal(),
+                  ),
+                ),
               ),
               if ((submission.feedback ?? '').trim().isNotEmpty) ...[
                 const SizedBox(height: 12),
                 _ResultFeedbackBox(
-                  title: 'Tutor feedback',
+                  title: context.l10n.text('Tutor feedback'),
                   text: submission.feedback!.trim(),
                 ),
               ],
@@ -956,7 +974,7 @@ class _ResultView extends StatelessWidget {
           )
         else ...[
           Text(
-            'Essay answers',
+            context.l10n.text('Essay answers'),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -1054,7 +1072,7 @@ class _ChoiceResultCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            question?.questionText ?? 'Question',
+            question?.questionText ?? context.l10n.text('Question'),
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -1071,7 +1089,7 @@ class _ChoiceResultCard extends StatelessWidget {
               ),
               const SizedBox(width: 7),
               Expanded(child: Text(answer.selectedOption)),
-              Text('${answer.score.g} pts'),
+              Text(context.l10n.points(answer.score.g)),
             ],
           ),
         ],
@@ -1144,7 +1162,7 @@ class _EssayResultCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      prompt ?? 'Essay',
+                      prompt ?? context.l10n.text('Essay'),
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -1152,8 +1170,8 @@ class _EssayResultCard extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       maxPoints == null
-                          ? 'Essay response'
-                          : '${maxPoints.g} pts possible',
+                          ? context.l10n.text('Essay response')
+                          : '${context.l10n.points(maxPoints.g)} ${context.l10n.text('possible')}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.55),
                       ),
@@ -1174,7 +1192,7 @@ class _EssayResultCard extends StatelessWidget {
                 ),
                 child: Text(
                   maxPoints == null
-                      ? '${answer.score.g} pts'
+                      ? context.l10n.points(answer.score.g)
                       : '${answer.score.g}/${maxPoints.g}',
                   style: TextStyle(
                     color: isGraded
@@ -1203,7 +1221,7 @@ class _EssayResultCard extends StatelessWidget {
           if ((answer.feedback ?? '').trim().isNotEmpty) ...[
             const SizedBox(height: 10),
             _ResultFeedbackBox(
-              title: 'Question feedback',
+              title: context.l10n.text('Question feedback'),
               text: answer.feedback!.trim(),
             ),
           ] else if (!isGraded) ...[
@@ -1218,7 +1236,7 @@ class _EssayResultCard extends StatelessWidget {
                 const SizedBox(width: 7),
                 Expanded(
                   child: Text(
-                    'Waiting for tutor feedback',
+                    context.l10n.text('Waiting for tutor feedback'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: const Color(0xFF854F0B),
                       fontWeight: FontWeight.w700,

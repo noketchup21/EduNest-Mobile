@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../utils/support_report_categories.dart';
@@ -32,9 +34,20 @@ class _MySupportReportsScreenState extends State<MySupportReportsScreen> {
       length: _statuses.length,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text(
-            'My Admin Support Reports',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          leading: IconButton(
+            tooltip: context.l10n.text('Back'),
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/profile');
+              }
+            },
+          ),
+          title: Text(
+            context.l10n.myAdminSupportReports,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           actions: [
             IconButton(
@@ -46,7 +59,10 @@ class _MySupportReportsScreenState extends State<MySupportReportsScreen> {
             isScrollable: true,
             tabs: [
               for (final status in _statuses)
-                Tab(text: '$status (${_count(reports, status)})'),
+                Tab(
+                  text:
+                      '${context.l10n.text(status)} (${_count(reports, status)})',
+                ),
             ],
           ),
         ),
@@ -79,9 +95,9 @@ class _MySupportReportsScreenState extends State<MySupportReportsScreen> {
   }
 
   List<SupportReportModel> _filter(
-      List<SupportReportModel> reports,
-      String status,
-      ) {
+    List<SupportReportModel> reports,
+    String status,
+  ) {
     if (status == 'All') return reports;
 
     return reports
@@ -108,8 +124,8 @@ class _SupportReportList extends StatelessWidget {
     }
 
     if (reports.isEmpty) {
-      return const Center(
-        child: Text('No support reports found.'),
+      return Center(
+        child: Text(context.l10n.text('No support reports found.')),
       );
     }
 
@@ -136,6 +152,7 @@ class _SupportReportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = context.l10n;
     final color = _statusColor(report.status);
 
     return Card(
@@ -150,7 +167,7 @@ class _SupportReportCard extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         subtitle: Text(
-          '${supportCategoryLabel(report.category)} • ${_formatDate(report.createdAt)}',
+          '${t.text(supportCategoryLabel(report.category))} • ${_formatDate(report.createdAt)}',
         ),
         trailing: _StatusChip(status: report.status),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -186,16 +203,17 @@ class _RelatedIds extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final items = <String>[
-      if (report.payoutId != null) 'Payout #${report.payoutId}',
-      if (report.bookingId != null) 'Booking #${report.bookingId}',
-      if (report.lessonId != null) 'Lesson #${report.lessonId}',
+      if (report.payoutId != null) '${t.text('Payout')} #${report.payoutId}',
+      if (report.bookingId != null) '${t.text('Booking')} #${report.bookingId}',
+      if (report.lessonId != null) '${t.text('Lesson')} #${report.lessonId}',
     ];
 
     if (items.isEmpty) {
-      return const Align(
+      return Align(
         alignment: Alignment.centerLeft,
-        child: Text('No related IDs provided'),
+        child: Text(t.text('No related IDs provided')),
       );
     }
 
@@ -225,12 +243,13 @@ class _ProgressBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final text = switch (status.toLowerCase()) {
-      'pending' => 'Waiting for admin to review.',
-      'reviewing' => 'Admin is checking your issue.',
-      'resolved' => 'Admin has resolved this issue.',
-      'rejected' => 'Admin rejected this report.',
-      _ => 'Current status: $status',
+      'pending' => t.text('Waiting for admin to review.'),
+      'reviewing' => t.text('Admin is checking your issue.'),
+      'resolved' => t.text('Admin has resolved this issue.'),
+      'rejected' => t.text('Admin rejected this report.'),
+      _ => '${t.text('Current status')}: ${t.status(status)}',
     };
 
     final color = _statusColor(status);
@@ -277,7 +296,7 @@ class _AdminNote extends StatelessWidget {
         color: theme.colorScheme.primaryContainer.withOpacity(0.45),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Text('Admin note: $note'),
+      child: Text('${context.l10n.text('Admin note')}: $note'),
     );
   }
 }
@@ -295,7 +314,7 @@ class _StatusChip extends StatelessWidget {
 
     return Chip(
       label: Text(
-        status,
+        context.l10n.status(status),
         style: TextStyle(color: color, fontWeight: FontWeight.w800),
       ),
       backgroundColor: color.withOpacity(0.12),

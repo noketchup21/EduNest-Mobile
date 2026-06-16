@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
@@ -23,6 +24,8 @@ class AdminPayoutDetailScreen extends StatefulWidget {
 }
 
 class _AdminPayoutDetailScreenState extends State<AdminPayoutDetailScreen> {
+  bool _actionLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -44,7 +47,7 @@ class _AdminPayoutDetailScreenState extends State<AdminPayoutDetailScreen> {
       backgroundColor: colors.surface,
       appBar: AppBar(
         title: Text(
-          'Payout #${widget.payoutId}',
+          '${context.l10n.text('Payout')} #${widget.payoutId}',
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         centerTitle: false,
@@ -72,7 +75,7 @@ class _AdminPayoutDetailScreenState extends State<AdminPayoutDetailScreen> {
             else
               _PayoutDetailContent(
                 detail: detail,
-                loading: data.loading,
+                loading: _actionLoading,
                 onStatusChanged: _updateStatus,
                 onPayOSChiApprove: _approveWithPayOSChi,
               ),
@@ -83,15 +86,21 @@ class _AdminPayoutDetailScreenState extends State<AdminPayoutDetailScreen> {
   }
 
   Future<void> _reload() async {
-    await context.read<AppDataProvider>().adminLoadPayoutDetail(widget.payoutId);
+    await context
+        .read<AppDataProvider>()
+        .adminLoadPayoutDetail(widget.payoutId);
   }
 
   Future<void> _updateStatus(String status) async {
+    if (_actionLoading) return;
+
+    setState(() => _actionLoading = true);
+
     try {
       await context.read<AppDataProvider>().adminUpdatePayout(
-        payoutId: widget.payoutId,
-        status: status,
-      );
+            payoutId: widget.payoutId,
+            status: status,
+          );
 
       if (!mounted) return;
 
@@ -101,15 +110,28 @@ class _AdminPayoutDetailScreenState extends State<AdminPayoutDetailScreen> {
 
       if (!mounted) return;
 
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Payout marked as $status')),
+        SnackBar(
+          content: Text(
+            '${t.text('Payout marked as')} ${t.status(status)}',
+          ),
+        ),
       );
     } catch (_) {
       // ErrorBanner will show provider error.
+    } finally {
+      if (mounted) {
+        setState(() => _actionLoading = false);
+      }
     }
   }
 
   Future<void> _approveWithPayOSChi() async {
+    if (_actionLoading) return;
+
+    setState(() => _actionLoading = true);
+
     try {
       await context
           .read<AppDataProvider>()
@@ -123,13 +145,20 @@ class _AdminPayoutDetailScreenState extends State<AdminPayoutDetailScreen> {
 
       if (!mounted) return;
 
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Payout approved. payOS Chi is processing.'),
+        SnackBar(
+          content: Text(
+            t.text('Payout approved. payOS Chi is processing.'),
+          ),
         ),
       );
     } catch (_) {
       // ErrorBanner will show provider error.
+    } finally {
+      if (mounted) {
+        setState(() => _actionLoading = false);
+      }
     }
   }
 }
@@ -149,7 +178,8 @@ class _PayoutDetailContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = detail.status.toLowerCase();
+    final t = context.l10n;
+    final status = _normalizedPayoutStatus(detail.status);
     final isPending = status == 'pending';
     final isProcessing = status == 'processing';
     final isManualQrRequired = status == 'manualqrrequired';
@@ -170,31 +200,31 @@ class _PayoutDetailContent extends StatelessWidget {
           const SizedBox(height: 14),
         ],
         _SectionCard(
-          title: 'Tutor',
-          subtitle: 'Tutor receiving this payout',
+          title: t.tutor,
+          subtitle: t.text('Tutor receiving this payout'),
           icon: Icons.school_outlined,
           children: [
             _InfoTile(
               icon: Icons.person_outline,
-              label: 'Tutor name',
+              label: t.text('Tutor name'),
               value: detail.tutorName,
               copyable: true,
             ),
             _InfoTile(
               icon: Icons.email_outlined,
-              label: 'Tutor email',
+              label: t.text('Tutor email'),
               value: detail.tutorEmail,
               copyable: true,
             ),
             _InfoTile(
               icon: Icons.badge_outlined,
-              label: 'Tutor ID',
+              label: t.text('Tutor ID'),
               value: detail.tutorId.toString(),
               copyable: true,
             ),
             _InfoTile(
               icon: Icons.person_pin_outlined,
-              label: 'Tutor user ID',
+              label: t.text('Tutor user ID'),
               value: detail.tutorUserId.toString(),
               copyable: true,
             ),
@@ -202,88 +232,90 @@ class _PayoutDetailContent extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         _SectionCard(
-          title: 'Bank account',
-          subtitle: 'Destination account for payOS Chi or QR/manual backup',
+          title: t.text('Bank account'),
+          subtitle: t.text(
+            'Destination account for payOS Chi or QR/manual backup',
+          ),
           icon: Icons.account_balance_outlined,
           children: [
             _InfoTile(
               icon: Icons.account_balance_outlined,
-              label: 'Bank name',
-              value: _safe(detail.bankName),
+              label: t.text('Bank name'),
+              value: t.text(_safe(detail.bankName)),
               copyable: _hasValue(detail.bankName),
             ),
             _InfoTile(
               icon: Icons.qr_code_2_outlined,
-              label: 'Bank BIN',
-              value: _safe(detail.bankBin),
+              label: t.text('Bank BIN'),
+              value: t.text(_safe(detail.bankBin)),
               copyable: _hasValue(detail.bankBin),
             ),
             _InfoTile(
               icon: Icons.numbers_outlined,
-              label: 'Account number',
-              value: _safe(detail.accountNumber),
+              label: t.text('Account number'),
+              value: t.text(_safe(detail.accountNumber)),
               copyable: _hasValue(detail.accountNumber),
             ),
             _InfoTile(
               icon: Icons.person_outline,
-              label: 'Account holder name',
-              value: _safe(detail.accountHolderName),
+              label: t.text('Account holder name'),
+              value: t.text(_safe(detail.accountHolderName)),
               copyable: _hasValue(detail.accountHolderName),
             ),
             _InfoTile(
               icon: Icons.location_city_outlined,
-              label: 'Branch',
-              value: _safe(detail.branchName),
+              label: t.text('Branch'),
+              value: t.text(_safe(detail.branchName)),
               copyable: _hasValue(detail.branchName),
             ),
           ],
         ),
         const SizedBox(height: 14),
         _SectionCard(
-          title: 'Payout information',
-          subtitle: 'Amount, status, transfer content, and timestamps',
+          title: t.text('Payout information'),
+          subtitle: t.text('Amount, status, transfer content, and timestamps'),
           icon: Icons.receipt_long_outlined,
           children: [
             _InfoTile(
               icon: Icons.payments_outlined,
-              label: 'Amount',
+              label: t.text('Amount'),
               value: detail.amount.toStringAsFixed(0),
               copyable: true,
             ),
             _InfoTile(
               icon: Icons.info_outline,
-              label: 'Status',
+              label: t.text('Status'),
               value: detail.status,
               statusColor: _statusColor(detail.status),
             ),
             _InfoTile(
               icon: Icons.account_balance_wallet_outlined,
-              label: 'Method',
+              label: t.text('Method'),
               value: detail.payoutMethod.trim().isEmpty
-                  ? 'ManualQr'
-                  : detail.payoutMethod,
+                  ? t.text('ManualQr')
+                  : t.text(detail.payoutMethod),
             ),
             _InfoTile(
               icon: Icons.receipt_long_outlined,
-              label: 'Transfer content',
+              label: t.text('Transfer content'),
               value: _transferContent(detail),
               copyable: true,
             ),
             _InfoTile(
               icon: Icons.calendar_month_outlined,
-              label: 'Requested at',
+              label: t.text('Requested at'),
               value: _dateTimeText(detail.requestedAt),
             ),
             if (detail.approvedAt != null)
               _InfoTile(
                 icon: Icons.verified_outlined,
-                label: 'Approved at',
+                label: t.text('Approved at'),
                 value: _dateTimeText(detail.approvedAt!),
               ),
             if (detail.paidAt != null)
               _InfoTile(
                 icon: Icons.check_circle_outline,
-                label: 'Paid at',
+                label: t.text('Paid at'),
                 value: _dateTimeText(detail.paidAt!),
               ),
           ],
@@ -296,13 +328,15 @@ class _PayoutDetailContent extends StatelessWidget {
               onPressed: loading ? null : () => _confirmPayOSChi(context),
               icon: loading
                   ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.payments_outlined),
               label: Text(
-                loading ? 'Processing...' : 'Approve with payOS Chi',
+                loading
+                    ? t.text('Processing...')
+                    : t.text('Approve with payOS Chi'),
                 style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
@@ -314,16 +348,17 @@ class _PayoutDetailContent extends StatelessWidget {
               onPressed: loading
                   ? null
                   : () => _confirmStatus(
-                context,
-                status: 'Paid',
-                title: 'Mark payout as Paid manually?',
-                message:
-                'Only confirm this after you have successfully transferred money to the tutor bank account.',
-              ),
+                        context,
+                        status: 'Paid',
+                        title: t.text('Mark payout as Paid manually?'),
+                        message: t.text(
+                          'Only confirm this after you have successfully transferred money to the tutor bank account.',
+                        ),
+                      ),
               icon: const Icon(Icons.check_circle_outline),
-              label: const Text(
-                'Mark Paid manually',
-                style: TextStyle(fontWeight: FontWeight.w900),
+              label: Text(
+                t.text('Mark Paid manually'),
+                style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -334,16 +369,17 @@ class _PayoutDetailContent extends StatelessWidget {
               onPressed: loading
                   ? null
                   : () => _confirmStatus(
-                context,
-                status: 'Failed',
-                title: 'Mark payout as Failed?',
-                message:
-                'The payout amount will be returned to the tutor wallet. This payout cannot be updated again after failing.',
-              ),
+                        context,
+                        status: 'Failed',
+                        title: t.text('Mark payout as Failed?'),
+                        message: t.text(
+                          'The payout amount will be returned to the tutor wallet. This payout cannot be updated again after failing.',
+                        ),
+                      ),
               icon: const Icon(Icons.cancel_outlined),
-              label: const Text(
-                'Mark Failed',
-                style: TextStyle(fontWeight: FontWeight.w900),
+              label: Text(
+                t.text('Mark Failed'),
+                style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -356,16 +392,17 @@ class _PayoutDetailContent extends StatelessWidget {
               onPressed: loading
                   ? null
                   : () => _confirmStatus(
-                context,
-                status: 'Paid',
-                title: 'Mark payout as Paid manually?',
-                message:
-                'Only confirm this after you have verified the tutor received the money.',
-              ),
+                        context,
+                        status: 'Paid',
+                        title: t.text('Mark payout as Paid manually?'),
+                        message: t.text(
+                          'Only confirm this after you have verified the tutor received the money.',
+                        ),
+                      ),
               icon: const Icon(Icons.check_circle_outline),
-              label: const Text(
-                'Mark Paid manually',
-                style: TextStyle(fontWeight: FontWeight.w900),
+              label: Text(
+                t.text('Mark Paid manually'),
+                style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -376,16 +413,17 @@ class _PayoutDetailContent extends StatelessWidget {
               onPressed: loading
                   ? null
                   : () => _confirmStatus(
-                context,
-                status: 'Failed',
-                title: 'Mark payout as Failed?',
-                message:
-                'Use this if payOS Chi failed and the amount should be returned to the tutor wallet.',
-              ),
+                        context,
+                        status: 'Failed',
+                        title: t.text('Mark payout as Failed?'),
+                        message: t.text(
+                          'Use this if payOS Chi failed and the amount should be returned to the tutor wallet.',
+                        ),
+                      ),
               icon: const Icon(Icons.cancel_outlined),
-              label: const Text(
-                'Mark Failed',
-                style: TextStyle(fontWeight: FontWeight.w900),
+              label: Text(
+                t.text('Mark Failed'),
+                style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -398,16 +436,17 @@ class _PayoutDetailContent extends StatelessWidget {
               onPressed: loading
                   ? null
                   : () => _confirmStatus(
-                context,
-                status: 'Paid',
-                title: 'Confirm manual transfer?',
-                message:
-                'Only confirm this after you have transferred the payout using QR/bank app.',
-              ),
+                        context,
+                        status: 'Paid',
+                        title: t.text('Confirm manual transfer?'),
+                        message: t.text(
+                          'Only confirm this after you have transferred the payout using QR/bank app.',
+                        ),
+                      ),
               icon: const Icon(Icons.check_circle_outline),
-              label: const Text(
-                'I transferred manually',
-                style: TextStyle(fontWeight: FontWeight.w900),
+              label: Text(
+                t.text('I transferred manually'),
+                style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -418,16 +457,17 @@ class _PayoutDetailContent extends StatelessWidget {
               onPressed: loading
                   ? null
                   : () => _confirmStatus(
-                context,
-                status: 'Failed',
-                title: 'Mark payout as Failed?',
-                message:
-                'The payout amount will be returned to the tutor wallet.',
-              ),
+                        context,
+                        status: 'Failed',
+                        title: t.text('Mark payout as Failed?'),
+                        message: t.text(
+                          'The payout amount will be returned to the tutor wallet.',
+                        ),
+                      ),
               icon: const Icon(Icons.cancel_outlined),
-              label: const Text(
-                'Mark Failed',
-                style: TextStyle(fontWeight: FontWeight.w900),
+              label: Text(
+                t.text('Mark Failed'),
+                style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -439,6 +479,7 @@ class _PayoutDetailContent extends StatelessWidget {
   }
 
   Future<void> _confirmPayOSChi(BuildContext context) async {
+    final t = AppStrings.of(context, listen: false);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -446,22 +487,23 @@ class _PayoutDetailContent extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
           ),
-          title: const Text(
-            'Approve with payOS Chi?',
-            style: TextStyle(fontWeight: FontWeight.w900),
+          title: Text(
+            t.text('Approve with payOS Chi?'),
+            style: const TextStyle(fontWeight: FontWeight.w900),
           ),
-          content: const Text(
-            'This will send the payout request to payOS Chi using the tutor bank information. '
-                'If it fails, the backend will switch this payout to QR/manual backup.',
+          content: Text(
+            t.text(
+              'This will send the payout request to payOS Chi using the tutor bank information. If it fails, the backend will switch this payout to QR/manual backup.',
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(t.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Approve'),
+              child: Text(t.text('Approve')),
             ),
           ],
         );
@@ -474,11 +516,12 @@ class _PayoutDetailContent extends StatelessWidget {
   }
 
   Future<void> _confirmStatus(
-      BuildContext context, {
-        required String status,
-        required String title,
-        required String message,
-      }) async {
+    BuildContext context, {
+    required String status,
+    required String title,
+    required String message,
+  }) async {
+    final t = AppStrings.of(context, listen: false);
     final isPaidAction = status.toLowerCase() == 'paid';
     bool confirmedTransfer = false;
 
@@ -520,9 +563,11 @@ class _PayoutDetailContent extends StatelessWidget {
                             confirmedTransfer = value ?? false;
                           });
                         },
-                        title: const Text(
-                          'I confirm this payout has been handled correctly.',
-                          style: TextStyle(fontWeight: FontWeight.w700),
+                        title: Text(
+                          t.text(
+                            'I confirm this payout has been handled correctly.',
+                          ),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         controlAffinity: ListTileControlAffinity.leading,
                       ),
@@ -533,13 +578,13 @@ class _PayoutDetailContent extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(t.cancel),
                 ),
                 FilledButton(
                   onPressed: isPaidAction && !confirmedTransfer
                       ? null
                       : () => Navigator.of(dialogContext).pop(true),
-                  child: Text(status),
+                  child: Text(t.status(status)),
                 ),
               ],
             );
@@ -560,7 +605,7 @@ class _PayoutDetailContent extends StatelessWidget {
         (detail.payOSChiApprovalState ?? '').trim().isNotEmpty ||
         (detail.payOSChiTransactionState ?? '').trim().isNotEmpty ||
         (detail.payOSChiFailureReason ?? '').trim().isNotEmpty ||
-        detail.payoutMethod.toLowerCase() == 'payoschi';
+        detail.payoutMethod.trim().toLowerCase() == 'payoschi';
   }
 
   static bool _hasValue(String? value) {
@@ -585,62 +630,64 @@ class _PayOSChiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = detail.status.toLowerCase();
+    final t = context.l10n;
+    final status = _normalizedPayoutStatus(detail.status);
     final isManualQrRequired = status == 'manualqrrequired';
 
     return _SectionCard(
       title: 'payOS Chi',
       subtitle: isManualQrRequired
-          ? 'Automatic payout failed. Use QR/manual transfer backup.'
-          : 'Automatic payout tracking information',
-      icon: isManualQrRequired ? Icons.warning_amber_rounded : Icons.sync_rounded,
+          ? t.text('Automatic payout failed. Use QR/manual transfer backup.')
+          : t.text('Automatic payout tracking information'),
+      icon:
+          isManualQrRequired ? Icons.warning_amber_rounded : Icons.sync_rounded,
       children: [
         _InfoTile(
           icon: Icons.account_balance_wallet_outlined,
-          label: 'Payout method',
+          label: t.text('Payout method'),
           value: detail.payoutMethod.trim().isEmpty
-              ? 'ManualQr'
-              : detail.payoutMethod,
+              ? t.text('ManualQr')
+              : t.text(detail.payoutMethod),
         ),
         if ((detail.payOSChiReferenceId ?? '').trim().isNotEmpty)
           _InfoTile(
             icon: Icons.tag_outlined,
-            label: 'Reference ID',
+            label: t.text('Reference ID'),
             value: detail.payOSChiReferenceId!,
             copyable: true,
           ),
         if ((detail.payOSChiBatchId ?? '').trim().isNotEmpty)
           _InfoTile(
             icon: Icons.folder_copy_outlined,
-            label: 'Batch / payout ID',
+            label: t.text('Batch / payout ID'),
             value: detail.payOSChiBatchId!,
             copyable: true,
           ),
         if ((detail.payOSChiPayoutItemId ?? '').trim().isNotEmpty)
           _InfoTile(
             icon: Icons.receipt_long_outlined,
-            label: 'Payout item ID',
+            label: t.text('Payout item ID'),
             value: detail.payOSChiPayoutItemId!,
             copyable: true,
           ),
         if ((detail.payOSChiApprovalState ?? '').trim().isNotEmpty)
           _InfoTile(
             icon: Icons.verified_outlined,
-            label: 'Approval state',
+            label: t.text('Approval state'),
             value: detail.payOSChiApprovalState!,
             statusColor: _statusColor(detail.payOSChiApprovalState!),
           ),
         if ((detail.payOSChiTransactionState ?? '').trim().isNotEmpty)
           _InfoTile(
             icon: Icons.sync_alt_outlined,
-            label: 'Transaction state',
+            label: t.text('Transaction state'),
             value: detail.payOSChiTransactionState!,
             statusColor: _statusColor(detail.payOSChiTransactionState!),
           ),
         if ((detail.payOSChiFailureReason ?? '').trim().isNotEmpty)
           _InfoTile(
             icon: Icons.error_outline,
-            label: 'Failure reason',
+            label: t.text('Failure reason'),
             value: detail.payOSChiFailureReason!,
             copyable: true,
             statusColor: Colors.deepOrange,
@@ -659,11 +706,13 @@ class _ProcessingNoticeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     return _NoticeCard(
       icon: Icons.sync_rounded,
-      title: 'payOS Chi is processing',
-      message:
-      'Do not mark this as paid until you verify the payout result. If needed, you can manually confirm or fail the payout.',
+      title: t.text('payOS Chi is processing'),
+      message: t.text(
+        'Do not mark this as paid until you verify the payout result. If needed, you can manually confirm or fail the payout.',
+      ),
       color: Colors.blue,
     );
   }
@@ -678,14 +727,17 @@ class _ManualQrRequiredNoticeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final reason = detail.payOSChiFailureReason?.trim() ?? '';
 
     return _NoticeCard(
       icon: Icons.qr_code_2_outlined,
-      title: 'QR/manual backup required',
+      title: t.text('QR/manual backup required'),
       message: reason.isEmpty
-          ? 'Automatic payout failed. Scan the transfer QR or use the tutor bank information to transfer manually.'
-          : 'Automatic payout failed: $reason',
+          ? t.text(
+              'Automatic payout failed. Scan the transfer QR or use the tutor bank information to transfer manually.',
+            )
+          : '${t.text('Automatic payout failed')}: $reason',
       color: Colors.deepOrange,
     );
   }
@@ -765,7 +817,7 @@ class _HeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final statusColor = _statusColor(detail.status);
-    final status = detail.status.toLowerCase();
+    final status = _normalizedPayoutStatus(detail.status);
 
     IconData icon;
 
@@ -806,17 +858,17 @@ class _HeaderCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Payout #${detail.payoutId}',
+            '${context.l10n.text('Payout')} #${detail.payoutId}',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.3,
-            ),
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.3,
+                ),
           ),
           const SizedBox(height: 8),
           MoneyText(detail.amount),
           const SizedBox(height: 14),
           _StatusPill(
-            label: detail.status,
+            label: context.l10n.status(detail.status),
             color: statusColor,
           ),
         ],
@@ -834,14 +886,15 @@ class _TransferQrCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final hasQr =
         detail.transferQrUrl != null && detail.transferQrUrl!.trim().isNotEmpty;
     final colors = Theme.of(context).colorScheme;
 
     if (!hasQr) {
       return _SectionCard(
-        title: 'Quick transfer QR',
-        subtitle: 'QR is unavailable for this payout',
+        title: t.text('Quick transfer QR'),
+        subtitle: t.text('QR is unavailable for this payout'),
         icon: Icons.qr_code_2_outlined,
         children: [
           Container(
@@ -863,7 +916,9 @@ class _TransferQrCard extends StatelessWidget {
                   child: Text(
                     detail.transferQrNote?.trim().isNotEmpty == true
                         ? detail.transferQrNote!
-                        : 'Enter the tutor bank BIN to enable quick money transfer QR.',
+                        : t.text(
+                            'Enter the tutor bank BIN to enable quick money transfer QR.',
+                          ),
                     style: TextStyle(
                       color: colors.onSurfaceVariant,
                       height: 1.35,
@@ -878,8 +933,8 @@ class _TransferQrCard extends StatelessWidget {
     }
 
     return _SectionCard(
-      title: 'Quick transfer QR',
-      subtitle: 'Scan this code to transfer payout money to the tutor',
+      title: t.text('Quick transfer QR'),
+      subtitle: t.text('Scan this code to transfer payout money to the tutor'),
       icon: Icons.qr_code_2_outlined,
       children: [
         Container(
@@ -908,7 +963,7 @@ class _TransferQrCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    'Unable to load transfer QR',
+                    t.text('Unable to load transfer QR'),
                     style: TextStyle(color: colors.onSurfaceVariant),
                   ),
                 );
@@ -918,19 +973,19 @@ class _TransferQrCard extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _CopyRow(
-          label: 'Transfer content',
+          label: t.text('Transfer content'),
           value: _transferContent(detail),
         ),
         const SizedBox(height: 8),
         Text(
           detail.transferQrNote?.trim().isNotEmpty == true
               ? detail.transferQrNote!
-              : 'Scan this QR to transfer payout money to the tutor.',
+              : t.text('Scan this QR to transfer payout money to the tutor.'),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: colors.onSurfaceVariant,
-            height: 1.35,
-          ),
+                color: colors.onSurfaceVariant,
+                height: 1.35,
+              ),
         ),
       ],
     );
@@ -948,6 +1003,7 @@ class _CopyRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final colors = Theme.of(context).colorScheme;
 
     return Container(
@@ -966,7 +1022,7 @@ class _CopyRow extends StatelessWidget {
             ),
           ),
           IconButton.filledTonal(
-            tooltip: 'Copy',
+            tooltip: t.text('Copy'),
             icon: const Icon(Icons.copy),
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: value));
@@ -974,7 +1030,7 @@ class _CopyRow extends StatelessWidget {
               if (!context.mounted) return;
 
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Copied $label')),
+                SnackBar(content: Text('${t.text('Copied')} $label')),
               );
             },
           ),
@@ -993,7 +1049,8 @@ class _FinalStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final normalized = status.toLowerCase();
+    final t = context.l10n;
+    final normalized = _normalizedPayoutStatus(status);
 
     IconData icon;
     String title;
@@ -1004,21 +1061,23 @@ class _FinalStatusCard extends StatelessWidget {
         normalized == 'completed' ||
         normalized == 'approved') {
       icon = Icons.check_circle_outline;
-      title = 'Payout is Paid';
-      subtitle = 'This payout has been completed and cannot be updated again.';
+      title = t.text('Payout is Paid');
+      subtitle =
+          t.text('This payout has been completed and cannot be updated again.');
       color = Colors.green;
     } else if (normalized == 'failed' ||
         normalized == 'cancelled' ||
         normalized == 'rejected') {
       icon = Icons.cancel_outlined;
-      title = 'Payout is Failed';
-      subtitle =
-      'The payout amount was returned to the tutor wallet. This payout cannot be updated again.';
+      title = t.text('Payout is Failed');
+      subtitle = t.text(
+        'The payout amount was returned to the tutor wallet. This payout cannot be updated again.',
+      );
       color = Colors.red;
     } else {
       icon = Icons.info_outline;
-      title = 'Payout is $status';
-      subtitle = 'No further action is available.';
+      title = '${t.text('Payout is')} ${t.status(status)}';
+      subtitle = t.text('No further action is available.');
       color = Colors.blueGrey;
     }
 
@@ -1112,9 +1171,9 @@ class _SectionCard extends StatelessWidget {
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                          height: 1.35,
-                        ),
+                              color: colors.onSurfaceVariant,
+                              height: 1.35,
+                            ),
                       ),
                     ],
                   ),
@@ -1147,6 +1206,7 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final colors = Theme.of(context).colorScheme;
 
     return Container(
@@ -1171,33 +1231,33 @@ class _InfoTile extends StatelessWidget {
           padding: const EdgeInsets.only(top: 3),
           child: statusColor == null
               ? Text(
-            value,
-            style: TextStyle(color: colors.onSurfaceVariant),
-          )
+                  value,
+                  style: TextStyle(color: colors.onSurfaceVariant),
+                )
               : Align(
-            alignment: Alignment.centerLeft,
-            child: _StatusPill(
-              label: value,
-              color: statusColor!,
-            ),
-          ),
+                  alignment: Alignment.centerLeft,
+                  child: _StatusPill(
+                    label: t.status(value),
+                    color: statusColor!,
+                  ),
+                ),
         ),
         trailing: copyable
             ? IconButton(
-          tooltip: 'Copy',
-          icon: const Icon(Icons.copy),
-          onPressed: () async {
-            await Clipboard.setData(
-              ClipboardData(text: value),
-            );
+                tooltip: t.text('Copy'),
+                icon: const Icon(Icons.copy),
+                onPressed: () async {
+                  await Clipboard.setData(
+                    ClipboardData(text: value),
+                  );
 
-            if (!context.mounted) return;
+                  if (!context.mounted) return;
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Copied $label')),
-            );
-          },
-        )
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${t.text('Copied')} $label')),
+                  );
+                },
+              )
             : null,
       ),
     );
@@ -1289,7 +1349,7 @@ class _LoadingCard extends StatelessWidget {
 }
 
 Color _statusColor(String status) {
-  final normalized = status.toLowerCase();
+  final normalized = _normalizedPayoutStatus(status);
 
   if (normalized == 'paid' ||
       normalized == 'completed' ||
@@ -1319,6 +1379,10 @@ Color _statusColor(String status) {
   }
 
   return Colors.blueGrey;
+}
+
+String _normalizedPayoutStatus(String status) {
+  return status.trim().toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
 }
 
 String _transferContent(AdminPayoutDetailModel detail) {

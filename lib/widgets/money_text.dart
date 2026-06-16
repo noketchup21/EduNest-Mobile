@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class MoneyText extends StatelessWidget {
@@ -8,7 +8,8 @@ class MoneyText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(value);
+    final text =
+        NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(value);
     return Text(text, style: style);
   }
 }

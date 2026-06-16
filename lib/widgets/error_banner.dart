@@ -15,7 +15,9 @@ class ErrorBanner extends StatelessWidget {
         color: Theme.of(context).colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Text(message!, style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer)),
+      child: Text(message!,
+          style:
+              TextStyle(color: Theme.of(context).colorScheme.onErrorContainer)),
     );
   }
 }

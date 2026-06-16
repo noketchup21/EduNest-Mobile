@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n/app_language_provider.dart';
 import 'providers/app_data_provider.dart';
 import 'providers/auth_provider.dart';
 import 'router/app_router.dart';
@@ -21,6 +23,7 @@ Future<void> main() async {
   final authProvider = AuthProvider(api: api);
   await authProvider.bootstrap();
 
+  final languageProvider = AppLanguageProvider(prefs: prefs);
   final appDataProvider = AppDataProvider(api: api);
 
   // Track app install once.
@@ -31,6 +34,7 @@ Future<void> main() async {
     EduNestApp(
       api: api,
       authProvider: authProvider,
+      languageProvider: languageProvider,
       appDataProvider: appDataProvider,
     ),
   );
@@ -39,12 +43,14 @@ Future<void> main() async {
 class EduNestApp extends StatefulWidget {
   final ApiService api;
   final AuthProvider authProvider;
+  final AppLanguageProvider languageProvider;
   final AppDataProvider appDataProvider;
 
   const EduNestApp({
     super.key,
     required this.api,
     required this.authProvider,
+    required this.languageProvider,
     required this.appDataProvider,
   });
 
@@ -74,16 +80,30 @@ class _EduNestAppState extends State<EduNestApp> {
         ChangeNotifierProvider<AuthProvider>.value(
           value: widget.authProvider,
         ),
+        ChangeNotifierProvider<AppLanguageProvider>.value(
+          value: widget.languageProvider,
+        ),
         ChangeNotifierProvider<AppDataProvider>.value(
           value: widget.appDataProvider,
         ),
       ],
-      child: MaterialApp.router(
-        title: 'EduNest',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        routerConfig: _router,
+      child: Consumer<AppLanguageProvider>(
+        builder: (context, language, _) {
+          return MaterialApp.router(
+            title: 'EduNest',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            locale: language.locale,
+            supportedLocales: AppLanguageProvider.supportedLocales,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+            ],
+            routerConfig: _router,
+          );
+        },
       ),
     );
   }

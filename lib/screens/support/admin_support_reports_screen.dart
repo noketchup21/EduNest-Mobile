@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../utils/support_report_categories.dart';
@@ -13,7 +14,7 @@ class AdminSupportReportsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Support Reports'),
+        title: Text(context.l10n.text('Support Reports')),
       ),
       body: const AdminSupportReportsPanel(),
     );
@@ -65,9 +66,9 @@ class _AdminSupportReportsPanelState extends State<AdminSupportReportsPanel> {
                 Expanded(
                   child: TextField(
                     controller: search,
-                    decoration: const InputDecoration(
-                      labelText: 'Search support reports',
-                      prefixIcon: Icon(Icons.search),
+                    decoration: InputDecoration(
+                      labelText: context.l10n.text('Search support reports'),
+                      prefixIcon: const Icon(Icons.search),
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
@@ -75,20 +76,34 @@ class _AdminSupportReportsPanelState extends State<AdminSupportReportsPanel> {
                 const SizedBox(width: 10),
                 DropdownButton<String>(
                   value: roleFilter,
-                  items: const [
-                    DropdownMenuItem(value: 'All', child: Text('All')),
-                    DropdownMenuItem(value: 'Tutor', child: Text('Tutor')),
-                    DropdownMenuItem(value: 'Learner', child: Text('Learner')),
-                    DropdownMenuItem(value: 'Parent', child: Text('Parent')),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'All',
+                      child: Text(context.l10n.text('All')),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Tutor',
+                      child: Text(context.l10n.tutor),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Learner',
+                      child: Text(context.l10n.text('Learner')),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Parent',
+                      child: Text(context.l10n.parent),
+                    ),
                   ],
                   onChanged: (value) async {
                     if (value == null) return;
 
                     setState(() => roleFilter = value);
 
-                    await context.read<AppDataProvider>().adminLoadSupportReports(
-                      role: value == 'All' ? null : value,
-                    );
+                    await context
+                        .read<AppDataProvider>()
+                        .adminLoadSupportReports(
+                          role: value == 'All' ? null : value,
+                        );
                   },
                 ),
               ],
@@ -98,7 +113,10 @@ class _AdminSupportReportsPanelState extends State<AdminSupportReportsPanel> {
             isScrollable: true,
             tabs: [
               for (final status in _statuses)
-                Tab(text: '$status (${_count(reports, status)})'),
+                Tab(
+                  text:
+                      '${context.l10n.text(status)} (${_count(reports, status)})',
+                ),
             ],
           ),
           Expanded(
@@ -127,15 +145,15 @@ class _AdminSupportReportsPanelState extends State<AdminSupportReportsPanel> {
   }
 
   List<SupportReportModel> _filter(
-      List<SupportReportModel> reports,
-      String status,
-      String query,
-      ) {
+    List<SupportReportModel> reports,
+    String status,
+    String query,
+  ) {
     var result = status == 'All'
         ? reports
         : reports
-        .where((r) => r.status.toLowerCase() == status.toLowerCase())
-        .toList();
+            .where((r) => r.status.toLowerCase() == status.toLowerCase())
+            .toList();
 
     final q = query.trim().toLowerCase();
 
@@ -172,14 +190,15 @@ class _AdminSupportReportList extends StatelessWidget {
     }
 
     if (reports.isEmpty) {
-      return const Center(child: Text('No support reports found.'));
+      return Center(
+          child: Text(context.l10n.text('No support reports found.')));
     }
 
     return RefreshIndicator(
       onRefresh: () {
         return context.read<AppDataProvider>().adminLoadSupportReports(
-          role: roleFilter == 'All' ? null : roleFilter,
-        );
+              role: roleFilter == 'All' ? null : roleFilter,
+            );
       },
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -251,7 +270,7 @@ class _AdminSupportReportCard extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: () => _showStatusDialog(context, report),
               icon: const Icon(Icons.edit_outlined),
-              label: const Text('Update Status'),
+              label: Text(context.l10n.text('Update Status')),
             ),
           ),
         ],
@@ -260,9 +279,9 @@ class _AdminSupportReportCard extends StatelessWidget {
   }
 
   Future<void> _showStatusDialog(
-      BuildContext context,
-      SupportReportModel report,
-      ) async {
+    BuildContext context,
+    SupportReportModel report,
+  ) async {
     final result = await showDialog<_SupportStatusUpdate>(
       context: context,
       builder: (_) => _StatusDialog(report: report),
@@ -272,15 +291,17 @@ class _AdminSupportReportCard extends StatelessWidget {
 
     try {
       await context.read<AppDataProvider>().adminUpdateSupportReportStatus(
-        supportReportId: report.supportReportId,
-        status: result.status,
-        adminNote: result.adminNote,
-      );
+            supportReportId: report.supportReportId,
+            status: result.status,
+            adminNote: result.adminNote,
+          );
 
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Support report updated')),
+        SnackBar(
+            content: Text(AppStrings.of(context, listen: false)
+                .text('Support report updated'))),
       );
     } catch (_) {}
   }
@@ -317,18 +338,30 @@ class _StatusDialogState extends State<_StatusDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Update support report'),
+      title: Text(context.l10n.text('Update support report')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DropdownButtonFormField<String>(
             value: status,
-            decoration: const InputDecoration(labelText: 'Status'),
-            items: const [
-              DropdownMenuItem(value: 'Pending', child: Text('Pending')),
-              DropdownMenuItem(value: 'Reviewing', child: Text('Reviewing')),
-              DropdownMenuItem(value: 'Resolved', child: Text('Resolved')),
-              DropdownMenuItem(value: 'Rejected', child: Text('Rejected')),
+            decoration: InputDecoration(labelText: context.l10n.text('Status')),
+            items: [
+              DropdownMenuItem(
+                value: 'Pending',
+                child: Text(context.l10n.text('Pending')),
+              ),
+              DropdownMenuItem(
+                value: 'Reviewing',
+                child: Text(context.l10n.text('Reviewing')),
+              ),
+              DropdownMenuItem(
+                value: 'Resolved',
+                child: Text(context.l10n.text('Resolved')),
+              ),
+              DropdownMenuItem(
+                value: 'Rejected',
+                child: Text(context.l10n.text('Rejected')),
+              ),
             ],
             onChanged: (value) {
               if (value == null) return;
@@ -338,9 +371,9 @@ class _StatusDialogState extends State<_StatusDialog> {
           const SizedBox(height: 12),
           TextField(
             controller: adminNote,
-            decoration: const InputDecoration(
-              labelText: 'Admin note',
-              hintText: 'Explain the result to the tutor',
+            decoration: InputDecoration(
+              labelText: context.l10n.text('Admin note'),
+              hintText: context.l10n.text('Explain the result to the tutor'),
             ),
             minLines: 3,
             maxLines: 5,
@@ -350,7 +383,7 @@ class _StatusDialogState extends State<_StatusDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: () {
@@ -361,7 +394,7 @@ class _StatusDialogState extends State<_StatusDialog> {
               ),
             );
           },
-          child: const Text('Save'),
+          child: Text(context.l10n.text('Save')),
         ),
       ],
     );
@@ -420,7 +453,7 @@ class _StatusChip extends StatelessWidget {
 
     return Chip(
       label: Text(
-        status,
+        context.l10n.status(status),
         style: TextStyle(color: color, fontWeight: FontWeight.w800),
       ),
       backgroundColor: color.withOpacity(0.12),

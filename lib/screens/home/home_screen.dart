@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -41,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final auth = context.watch<AuthProvider>();
     final isTutor = auth.isTutor && !auth.isAdmin;
     final theme = Theme.of(context);
+    final t = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLow,
@@ -49,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
         scrolledUnderElevation: 2,
         backgroundColor: Colors.transparent,
         title: Text(
-          isTutor ? 'My Courses' : 'Explore Tutors',
+          isTutor ? t.myCourses : t.exploreTutors,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.onSurface,
@@ -72,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: IconButton(
                 onPressed: () => context.push('/favorites'),
                 icon: const Icon(Icons.favorite_border_rounded),
-                tooltip: 'Favorite tutors',
+                tooltip: t.favoriteTutors,
               ),
             ),
           Padding(
@@ -102,6 +104,7 @@ class _TutorCourseList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final courses = data.myAvailabilities;
+    final t = context.l10n;
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       children: [
@@ -123,13 +126,13 @@ class _TutorCourseList extends StatelessWidget {
                 Icon(Icons.menu_book_rounded,
                     size: 48, color: Colors.grey[400]),
                 const SizedBox(height: 12),
-                const Text(
-                  'No Courses Available',
+                Text(
+                  t.noCoursesAvailable,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Start sharing your knowledge with students today.',
+                  t.startSharingKnowledge,
                   style: TextStyle(color: Colors.grey[600], fontSize: 13),
                   textAlign: TextAlign.center,
                 ),
@@ -153,6 +156,7 @@ class _TutorCourseCard extends StatelessWidget {
     final theme = Theme.of(context);
     final status = availability.status.toLowerCase();
     final isActive = status == 'active';
+    final t = context.l10n;
     final total = availability.totalCoursePrice > 0
         ? availability.totalCoursePrice
         : availability.pricePerSlot * availability.slot;
@@ -211,7 +215,7 @@ class _TutorCourseCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        isActive ? 'Active' : 'Hidden',
+                        isActive ? t.active : t.hidden,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -235,12 +239,12 @@ class _TutorCourseCard extends StatelessWidget {
                 _buildInfoTag(theme, Icons.access_time_rounded,
                     '${availability.startTime} - ${availability.endTime}'),
                 _buildInfoTag(theme, Icons.layers_rounded,
-                    '${availability.mode} • ${availability.level}'),
+                    '${t.mode(availability.mode)} - ${t.level(availability.level)}'),
                 if (_offlineAreas(availability).isNotEmpty)
                   _buildInfoTag(theme, Icons.location_on_outlined,
                       _offlineAreas(availability)),
                 _buildInfoTag(theme, Icons.list_alt_rounded,
-                    '${availability.slot} lessons'),
+                    '${availability.slot} ${t.lessonsLower}'),
               ],
             ),
             const SizedBox(height: 16),
@@ -256,7 +260,7 @@ class _TutorCourseCard extends StatelessWidget {
                         CrossAxisAlignment.start, // Đã sửa lỗi tại đây
                     children: [
                       Text(
-                        'Total Tuition',
+                        t.totalTuition,
                         style: TextStyle(
                             fontSize: 11,
                             color: theme.colorScheme.onSurfaceVariant),
@@ -287,7 +291,7 @@ class _TutorCourseCard extends StatelessWidget {
                         ? theme.colorScheme.error
                         : theme.colorScheme.onSecondaryContainer,
                   ),
-                  child: Text(isActive ? 'Hide' : 'Publish',
+                  child: Text(isActive ? t.hide : t.publish,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
@@ -326,25 +330,26 @@ class _TutorCourseCard extends StatelessWidget {
       BuildContext context, AvailabilityModel availability) async {
     final isActive = availability.status.toLowerCase() == 'active';
     final newStatus = isActive ? 'Inactive' : 'Active';
+    final t = AppStrings.of(context, listen: false);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(isActive ? 'Hide Course?' : 'Publish Course?'),
-        content: Text(isActive
-            ? 'Students will no longer be able to find or book this course.'
-            : 'Students will be able to find and book this course open for registration.'),
+        title: Text(isActive ? t.hideCourseTitle : t.publishCourseTitle),
+        content: Text(
+          isActive ? t.hideCourseMessage : t.publishCourseMessage,
+        ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel')),
+              child: Text(t.cancel)),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: FilledButton.styleFrom(
               backgroundColor:
                   isActive ? Theme.of(context).colorScheme.error : null,
             ),
-            child: Text(isActive ? 'Hide' : 'Publish'),
+            child: Text(isActive ? t.hide : t.publish),
           ),
         ],
       ),
@@ -356,8 +361,9 @@ class _TutorCourseCard extends StatelessWidget {
             status: newStatus,
           );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Course status updated successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.courseStatusUpdated)),
+        );
       }
     } catch (_) {}
   }
@@ -371,6 +377,7 @@ class _LearnerTutorList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final groups = _groupByTutor(data.availabilities);
+    final t = context.l10n;
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       children: [
@@ -384,8 +391,10 @@ class _LearnerTutorList extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(40),
             alignment: Alignment.center,
-            child: const Text('No tutors are currently available.',
-                style: TextStyle(color: Colors.grey)),
+            child: Text(
+              t.noTutorsAvailable,
+              style: const TextStyle(color: Colors.grey),
+            ),
           ),
         ...groups.values.map((courses) => _TutorGroupCard(courses: courses)),
       ],
@@ -415,6 +424,7 @@ class _TutorGroupCard extends StatelessWidget {
     final tutorName =
         first.tutorName.isEmpty ? 'Tutor #${first.tutorId}' : first.tutorName;
     final isFavorite = data.isFavoriteTutor(first.tutorId);
+    final t = context.l10n;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -456,7 +466,7 @@ class _TutorGroupCard extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           subtitle: Text(
-            '${courses.length} active courses open',
+            t.activeCoursesOpen(courses.length),
             style: TextStyle(
                 fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
           ),
@@ -464,7 +474,7 @@ class _TutorGroupCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                tooltip: isFavorite ? 'Unsave tutor' : 'Save tutor',
+                tooltip: isFavorite ? t.unsaveTutor : t.saveTutor,
                 onPressed: data.loading
                     ? null
                     : () => _toggleFavorite(context, first, tutorName),
@@ -512,7 +522,7 @@ class _TutorGroupCard extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () => context.push('/tutors/${first.tutorId}'),
                       icon: const Icon(Icons.badge_rounded),
-                      label: const Text('View tutor profile'),
+                      label: Text(t.viewTutorProfile),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -556,9 +566,10 @@ class _TutorGroupCard extends StatelessWidget {
 
       final saved =
           context.read<AppDataProvider>().isFavoriteTutor(availability.tutorId);
+      final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(saved ? 'Tutor saved' : 'Tutor removed from favorites'),
+          content: Text(saved ? t.tutorSaved : t.tutorRemoved),
         ),
       );
     } catch (_) {}
@@ -573,6 +584,7 @@ class _LearnerCourseTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = context.watch<AppDataProvider>();
     final theme = Theme.of(context);
+    final t = context.l10n;
     final total = availability.totalCoursePrice > 0
         ? availability.totalCoursePrice
         : availability.pricePerSlot * availability.slot;
@@ -606,7 +618,7 @@ class _LearnerCourseTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    availability.mode,
+                    t.mode(availability.mode),
                     style: TextStyle(
                         fontSize: 11,
                         color: theme.colorScheme.secondary,
@@ -656,7 +668,7 @@ class _LearnerCourseTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Full Tuition Package',
+                      Text(t.fullTuitionPackage,
                           style: TextStyle(
                               fontSize: 11,
                               color: theme.colorScheme.onSurfaceVariant)),
@@ -679,8 +691,8 @@ class _LearnerCourseTile extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Enroll Now',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(t.enrollNow,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -709,8 +721,10 @@ class _LearnerCourseTile extends StatelessWidget {
     try {
       await context.read<AppDataProvider>().book(availability.availabilityId);
       if (context.mounted) {
+        final t = AppStrings.of(context, listen: false);
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Enrolled in class successfully!')));
+          SnackBar(content: Text(t.enrolledSuccessfully)),
+        );
         context.go('/bookings');
       }
     } catch (_) {}

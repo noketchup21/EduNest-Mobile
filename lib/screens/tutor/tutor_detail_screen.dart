@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -52,11 +53,12 @@ class _TutorDetailScreenState extends State<TutorDetailScreen> {
     final reviews = data.tutorReviews[widget.tutorId] ?? <TutorReviewModel>[];
     final isFavorite = data.isFavoriteTutor(widget.tutorId);
     final canFavorite = auth.isLearner && !auth.isAdmin;
+    final t = context.l10n;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       appBar: AppBar(
-        title: const Text('Tutor Profile'),
+        title: Text(t.text('Tutor Profile')),
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 2,
@@ -102,7 +104,7 @@ class _TutorDetailScreenState extends State<TutorDetailScreen> {
               ),
               const SizedBox(height: 18),
               Text(
-                'Available courses',
+                t.text('Available courses'),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -144,7 +146,9 @@ class _TutorDetailScreenState extends State<TutorDetailScreen> {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Enrolled in class successfully!')),
+          SnackBar(
+              content: Text(
+                  AppStrings.of(context, listen: false).enrolledSuccessfully)),
         );
         context.go('/bookings');
       }
@@ -171,7 +175,9 @@ class _TutorDetailScreenState extends State<TutorDetailScreen> {
       final saved = context.read<AppDataProvider>().isFavoriteTutor(tutorId);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(saved ? 'Tutor saved' : 'Tutor removed from favorites'),
+          content: Text(saved
+              ? AppStrings.of(context, listen: false).tutorSaved
+              : AppStrings.of(context, listen: false).tutorRemoved),
         ),
       );
     } catch (_) {}
@@ -202,6 +208,7 @@ class _TutorHeroCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final rating = tutor?.rating ?? 0;
+    final t = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -240,18 +247,18 @@ class _TutorHeroCard extends StatelessWidget {
                         _InfoChip(
                           icon: Icons.verified_rounded,
                           label: tutor?.isVerified == true
-                              ? 'Verified tutor'
-                              : 'Tutor',
+                              ? t.text('Verified tutor')
+                              : t.tutor,
                         ),
                         _InfoChip(
                           icon: Icons.menu_book_rounded,
-                          label: '$courseCount courses',
+                          label: t.coursesN(courseCount),
                         ),
                         _InfoChip(
                           icon: Icons.star_rounded,
                           label: rating > 0
                               ? rating.toStringAsFixed(1)
-                              : 'New tutor',
+                              : t.text('New tutor'),
                         ),
                       ],
                     ),
@@ -267,14 +274,14 @@ class _TutorHeroCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: onChat,
                   icon: const Icon(Icons.chat_bubble_rounded),
-                  label: const Text('Chat'),
+                  label: Text(t.chat),
                 ),
               ),
               const SizedBox(width: 10),
               if (onFavorite != null)
                 IconButton.filledTonal(
                   onPressed: onFavorite,
-                  tooltip: isFavorite ? 'Unsave tutor' : 'Save tutor',
+                  tooltip: isFavorite ? t.unsaveTutor : t.saveTutor,
                   icon: Icon(
                     isFavorite
                         ? Icons.favorite_rounded
@@ -303,6 +310,7 @@ class _ReviewSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -323,8 +331,8 @@ class _ReviewSummaryCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   averageRating > 0
-                      ? '${averageRating.toStringAsFixed(1)} tutor rating'
-                      : 'Tutor reviews',
+                      ? '${averageRating.toStringAsFixed(1)} ${t.text('Tutor reviews')}'
+                      : t.text('Tutor reviews'),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -339,7 +347,7 @@ class _ReviewSummaryCard extends StatelessWidget {
           const SizedBox(height: 10),
           if (reviews.isEmpty)
             Text(
-              'No written reviews yet.',
+              t.text('No written reviews yet.'),
               style: TextStyle(color: colors.onSurfaceVariant),
             )
           else
@@ -414,8 +422,9 @@ class _BioCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = context.l10n;
     final text = bio.trim().isEmpty
-        ? 'This tutor has not added an introduction yet.'
+        ? t.text('This tutor has not added an introduction yet.')
         : bio.trim();
 
     return Container(
@@ -431,7 +440,7 @@ class _BioCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'About',
+            t.text('About'),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -460,6 +469,7 @@ class _CourseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final t = context.l10n;
     final total = availability.totalCoursePrice > 0
         ? availability.totalCoursePrice
         : availability.pricePerSlot * availability.slot;
@@ -486,7 +496,7 @@ class _CourseCard extends StatelessWidget {
                   ),
                 ),
               ),
-              _ModePill(label: availability.mode),
+              _ModePill(label: t.mode(availability.mode)),
             ],
           ),
           const SizedBox(height: 12),
@@ -504,11 +514,11 @@ class _CourseCard extends StatelessWidget {
               ),
               _InfoChip(
                 icon: Icons.layers_rounded,
-                label: availability.level,
+                label: t.level(availability.level),
               ),
               _InfoChip(
                 icon: Icons.list_alt_rounded,
-                label: '${availability.slot} lessons',
+                label: t.lessonsN(availability.slot),
               ),
             ],
           ),
@@ -520,7 +530,7 @@ class _CourseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Full tuition package',
+                      t.text('Full tuition package'),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: colors.onSurfaceVariant,
                       ),
@@ -537,7 +547,7 @@ class _CourseCard extends StatelessWidget {
               ),
               FilledButton(
                 onPressed: onBook,
-                child: const Text('Enroll'),
+                child: Text(t.text('Enroll')),
               ),
             ],
           ),
@@ -638,7 +648,7 @@ class _EmptyCoursesCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
       ),
       child: Text(
-        'This tutor has no active courses right now.',
+        context.l10n.text('This tutor has no active courses right now.'),
         style: TextStyle(color: colors.onSurfaceVariant),
         textAlign: TextAlign.center,
       ),

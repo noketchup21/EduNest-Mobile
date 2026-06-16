@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
@@ -39,9 +40,9 @@ class _TutorReportsScreenState extends State<TutorReportsScreen> {
       length: _tabs.length,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text(
-            'Reports About Me',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          title: Text(
+            context.l10n.reportsAboutMe,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           actions: [
             IconButton(
@@ -54,7 +55,8 @@ class _TutorReportsScreenState extends State<TutorReportsScreen> {
             tabs: [
               for (final tab in _tabs)
                 Tab(
-                  text: '${tab.label} (${_count(reports, tab.status)})',
+                  text:
+                      '${context.l10n.text(tab.label)} (${_count(reports, tab.status)})',
                 ),
             ],
           ),
@@ -66,10 +68,12 @@ class _TutorReportsScreenState extends State<TutorReportsScreen> {
               padding: const EdgeInsets.all(12),
               child: TextField(
                 controller: search,
-                decoration: const InputDecoration(
-                  labelText: 'Search reports',
-                  hintText: 'Search by title, category, reporter, booking...',
-                  prefixIcon: Icon(Icons.search),
+                decoration: InputDecoration(
+                  labelText: context.l10n.text('Search reports'),
+                  hintText: context.l10n.text(
+                    'Search by title, category, reporter, booking...',
+                  ),
+                  prefixIcon: const Icon(Icons.search),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -96,15 +100,15 @@ class _TutorReportsScreenState extends State<TutorReportsScreen> {
   }
 
   List<TutorReportModel> _filter(
-      List<TutorReportModel> reports, {
-        required String status,
-        required String query,
-      }) {
+    List<TutorReportModel> reports, {
+    required String status,
+    required String query,
+  }) {
     var result = status == 'all'
         ? reports
         : reports
-        .where((r) => r.status.toLowerCase() == status.toLowerCase())
-        .toList();
+            .where((r) => r.status.toLowerCase() == status.toLowerCase())
+            .toList();
 
     final q = query.trim().toLowerCase();
 
@@ -198,14 +202,16 @@ class _EmptyReports extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'No reports found',
+                  context.l10n.text('No reports found'),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Reports submitted by learners about your tutoring sessions will appear here.',
+                  context.l10n.text(
+                    'Reports submitted by learners about your tutoring sessions will appear here.',
+                  ),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -230,6 +236,7 @@ class _TutorReportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = context.l10n;
     final status = report.status.toLowerCase();
 
     return Card(
@@ -249,7 +256,7 @@ class _TutorReportCard extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         subtitle: Text(
-          '${report.category} • Booking #${report.bookingId}',
+          '${t.text(report.category)} • ${t.text('Booking')} #${report.bookingId}',
         ),
         trailing: _StatusChip(status: report.status),
         children: [
@@ -265,23 +272,23 @@ class _TutorReportCard extends StatelessWidget {
           const SizedBox(height: 12),
           _InfoRow(
             icon: Icons.person_outline,
-            label: 'Reporter',
+            label: t.text('Reporter'),
             value: report.reporterName,
           ),
           _InfoRow(
             icon: Icons.menu_book_outlined,
-            label: 'Subject',
-            value: report.subjectName ?? 'Unknown subject',
+            label: t.text('Subject'),
+            value: report.subjectName ?? t.text('Unknown subject'),
           ),
           _InfoRow(
             icon: Icons.schedule_outlined,
-            label: 'Submitted',
+            label: t.text('Submitted'),
             value: _formatDate(report.createdAt),
           ),
           if (report.reviewedAt != null)
             _InfoRow(
               icon: Icons.fact_check_outlined,
-              label: 'Reviewed',
+              label: t.text('Reviewed'),
               value: _formatDate(report.reviewedAt!),
             ),
           const SizedBox(height: 12),
@@ -315,12 +322,13 @@ class _ProgressBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.l10n;
     final text = switch (status) {
-      'pending' => 'Waiting for admin review.',
-      'reviewing' => 'Admin is reviewing the evidence.',
-      'resolved' => 'The report has been processed.',
-      'rejected' => 'The report was rejected.',
-      _ => 'Current status: $status',
+      'pending' => t.text('Waiting for admin review.'),
+      'reviewing' => t.text('Admin is reviewing the evidence.'),
+      'resolved' => t.text('The report has been processed.'),
+      'rejected' => t.text('The report was rejected.'),
+      _ => '${t.text('Current status')}: ${t.status(status)}',
     };
 
     final color = _statusColor(status);
@@ -380,7 +388,7 @@ class _AdminNote extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Admin note: $note',
+              '${context.l10n.text('Admin note')}: $note',
               style: TextStyle(
                 color: theme.colorScheme.onPrimaryContainer,
               ),
@@ -444,7 +452,7 @@ class _StatusChip extends StatelessWidget {
 
     return Chip(
       label: Text(
-        status,
+        context.l10n.status(status),
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w800,
