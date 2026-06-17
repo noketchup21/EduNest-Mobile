@@ -155,6 +155,7 @@ class _BookingCard extends StatelessWidget {
       booking.subjectId,
       fallback: '${t.text('Subject')} #${booking.subjectId ?? '-'}',
     );
+    final tutorName = _displayTutorName(context, booking);
 
     final statusColor = _getIndicatorColor(status);
 
@@ -197,11 +198,28 @@ class _BookingCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(
-                          subjectName,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              subjectName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              tutorName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colors.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -394,6 +412,16 @@ class _BookingCard extends StatelessWidget {
     }
   }
 
+  String _displayTutorName(BuildContext context, BookingModel booking) {
+    final name = booking.tutorName?.trim() ?? '';
+
+    if (name.isNotEmpty) {
+      return name;
+    }
+
+    return '${AppStrings.of(context, listen: false).tutor} #${booking.tutorId}';
+  }
+
   Future<void> _pay(BuildContext context, int bookingId) async {
     final data = context.read<AppDataProvider>();
     try {
@@ -408,8 +436,7 @@ class _BookingCard extends StatelessWidget {
       context: context,
       bookingId: booking.bookingId,
       tutorId: booking.tutorId,
-      tutorName:
-          '${AppStrings.of(context, listen: false).tutor} #${booking.tutorId}',
+      tutorName: _displayTutorName(context, booking),
     );
 
     if (created == true && context.mounted) {

@@ -282,6 +282,7 @@ class BookingModel {
   final int availabilityId;
   final int userId;
   final int tutorId;
+  final String? tutorName;
   final int? subjectId;
   final double priceAtBooking;
   final String status;
@@ -292,6 +293,7 @@ class BookingModel {
     required this.availabilityId,
     required this.userId,
     required this.tutorId,
+    this.tutorName,
     required this.subjectId,
     required this.priceAtBooking,
     required this.status,
@@ -299,15 +301,21 @@ class BookingModel {
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
+    final tutorId = _asInt(json['tutorId'] ?? json['TutorId']);
+    final tutorName = _bookingTutorName(json, tutorId);
+
     return BookingModel(
-      bookingId: _asInt(json['bookingId']),
-      availabilityId: _asInt(json['availabilityId']),
-      userId: _asInt(json['userId']),
-      tutorId: _asInt(json['tutorId']),
-      subjectId: json['subjectId'] == null ? null : _asInt(json['subjectId']),
-      priceAtBooking: _asDouble(json['priceAtBooking']),
-      status: json['status']?.toString() ?? '',
-      createdAt: _asDate(json['createdAt']),
+      bookingId: _asInt(json['bookingId'] ?? json['BookingId']),
+      availabilityId: _asInt(json['availabilityId'] ?? json['AvailabilityId']),
+      userId: _asInt(json['userId'] ?? json['UserId']),
+      tutorId: tutorId,
+      tutorName: tutorName,
+      subjectId: _bookingSubjectId(json),
+      priceAtBooking: _asDouble(
+        json['priceAtBooking'] ?? json['PriceAtBooking'],
+      ),
+      status: (json['status'] ?? json['Status'])?.toString() ?? '',
+      createdAt: _asDate(json['createdAt'] ?? json['CreatedAt']),
     );
   }
 }
@@ -1714,6 +1722,51 @@ String? _subjectName(Map<String, dynamic> json) {
   }
 
   return null;
+}
+
+int? _bookingSubjectId(Map<String, dynamic> json) {
+  final direct = json['subjectId'] ?? json['SubjectId'];
+
+  if (direct != null) {
+    return _asInt(direct);
+  }
+
+  final availability = _asMap(json['availability'] ?? json['Availability']);
+  final nested = availability['subjectId'] ?? availability['SubjectId'];
+
+  return nested == null ? null : _asInt(nested);
+}
+
+String _bookingTutorName(Map<String, dynamic> json, int tutorId) {
+  final candidates = [
+    json['tutorName'],
+    json['TutorName'],
+    _asMap(json['tutor'] ?? json['Tutor'])['tutorName'],
+    _asMap(json['tutor'] ?? json['Tutor'])['TutorName'],
+    _asMap(json['tutor'] ?? json['Tutor'])['name'],
+    _asMap(json['tutor'] ?? json['Tutor'])['Name'],
+    _asMap(_asMap(json['tutor'] ?? json['Tutor'])['user'])['name'],
+    _asMap(_asMap(json['tutor'] ?? json['Tutor'])['User'])['Name'],
+    _asMap(_asMap(json['availability'] ?? json['Availability'])['tutor'])[
+            'user'] is Map
+        ? _asMap(_asMap(
+                _asMap(json['availability'] ?? json['Availability'])['tutor'])[
+            'user'])['name']
+        : null,
+    _asMap(_asMap(json['Availability'])['Tutor'])['User'] is Map
+        ? _asMap(_asMap(_asMap(json['Availability'])['Tutor'])['User'])['Name']
+        : null,
+  ];
+
+  for (final candidate in candidates) {
+    final value = candidate?.toString().trim() ?? '';
+
+    if (value.isNotEmpty) {
+      return value;
+    }
+  }
+
+  return 'Tutor #$tutorId';
 }
 
 Map<String, dynamic> _asMap(dynamic value) {
