@@ -284,6 +284,11 @@ class BookingModel {
   final int tutorId;
   final String? tutorName;
   final int? subjectId;
+  final String? availabilityDayOfWeek;
+  final DateTime? availabilityStartCourseTime;
+  final DateTime? availabilityEndCourseTime;
+  final String? availabilityStartTime;
+  final String? availabilityEndTime;
   final double priceAtBooking;
   final String status;
   final DateTime createdAt;
@@ -295,6 +300,11 @@ class BookingModel {
     required this.tutorId,
     this.tutorName,
     required this.subjectId,
+    this.availabilityDayOfWeek,
+    this.availabilityStartCourseTime,
+    this.availabilityEndCourseTime,
+    this.availabilityStartTime,
+    this.availabilityEndTime,
     required this.priceAtBooking,
     required this.status,
     required this.createdAt,
@@ -311,6 +321,19 @@ class BookingModel {
       tutorId: tutorId,
       tutorName: tutorName,
       subjectId: _bookingSubjectId(json),
+      availabilityDayOfWeek: _blankToNull(
+        json['dayOfWeek'] ?? json['DayOfWeek'],
+      ),
+      availabilityStartCourseTime: _asNullableDate(
+        json['startCourseTime'] ?? json['StartCourseTime'],
+      ),
+      availabilityEndCourseTime: _asNullableDate(
+        json['endCourseTime'] ?? json['EndCourseTime'],
+      ),
+      availabilityStartTime: _blankToNull(
+        json['startTime'] ?? json['StartTime'],
+      ),
+      availabilityEndTime: _blankToNull(json['endTime'] ?? json['EndTime']),
       priceAtBooking: _asDouble(
         json['priceAtBooking'] ?? json['PriceAtBooking'],
       ),
@@ -1679,6 +1702,11 @@ double _asDouble(dynamic value) {
 DateTime _asDate(dynamic value) {
   return DateTime.tryParse(value?.toString() ?? '') ??
       DateTime.fromMillisecondsSinceEpoch(0);
+}
+
+DateTime? _asNullableDate(dynamic value) {
+  final text = value?.toString().trim() ?? '';
+  return text.isEmpty ? null : DateTime.tryParse(text);
 }
 
 String _timeString(dynamic value) {

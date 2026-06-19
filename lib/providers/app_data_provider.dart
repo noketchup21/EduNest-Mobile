@@ -213,6 +213,7 @@ class AppDataProvider extends ChangeNotifier {
     await _guard(() async {
       subjects = await api.getSubjects();
       bookings = await api.getMyBookings();
+      availabilities = await api.getAvailabilities();
       await _tryLoadMyTutorReviews();
     });
   }
