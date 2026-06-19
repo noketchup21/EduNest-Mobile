@@ -523,6 +523,7 @@ const Map<String, String> _viPhrases = {
   'End course date': 'Ngày kết thúc khóa học',
   'Start time': 'Giờ bắt đầu',
   'End time': 'Giờ kết thúc',
+  'Class time': 'Giờ học',
   'Price per lesson': 'Giá mỗi buổi học',
   'Example: 200000': 'Ví dụ: 200000',
   'Course price preview': 'Xem trước học phí khóa học',
@@ -563,6 +564,13 @@ const Map<String, String> _viPhrases = {
       'Vui lòng tải lên mặt trước CCCD, mặt sau CCCD và chứng chỉ.',
   'Please upload CCCD front, CCCD back, and at least one certificate.':
       'Vui lòng tải lên mặt trước CCCD, mặt sau CCCD và ít nhất một chứng chỉ.',
+  'Upcoming': 'Sắp tới',
+  'Cancelled / Issues': 'Đã hủy / Sự cố',
+  'No upcoming bookings yet': 'Chưa có lịch đặt sắp tới',
+  'No confirmed bookings yet': 'Chưa có lịch đặt đã xác nhận',
+  'No completed bookings yet': 'Chưa có lịch đặt đã hoàn tất',
+  'No cancelled or issue bookings yet':
+      'Chưa có lịch đặt bị hủy hoặc gặp sự cố',
   'Verification submitted. Please wait for admin approval.':
       'Đã gửi xác minh. Vui lòng chờ quản trị viên duyệt.',
   'Your tutor profile is approved. You can create availability.':
