@@ -8,6 +8,7 @@ import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/money_text.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/user_avatar.dart';
 
 class TutorDetailScreen extends StatefulWidget {
@@ -95,21 +96,25 @@ class _TutorDetailScreenState extends State<TutorDetailScreen> {
                           avatarUrl: avatarUrl,
                         ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 20),
               _BioCard(bio: tutor?.bio ?? ''),
-              const SizedBox(height: 14),
+              const SizedBox(height: 20),
               _ReviewSummaryCard(
                 averageRating: tutor?.rating ?? 0,
                 reviews: reviews,
               ),
-              const SizedBox(height: 18),
-              Text(
-                t.text('Available courses'),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+              const SizedBox(height: 24),
+              AppSectionHeader(
+                icon: Icons.event_available_rounded,
+                title: t.text('Available courses'),
+                subtitle: t.text('Choose the schedule that fits your routine.'),
+                action: AppStatusBadge(
+                  label: t.coursesN(courses.length),
+                  tone: AppStatusTone.info,
+                  icon: Icons.menu_book_rounded,
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               if (courses.isEmpty)
                 const _EmptyCoursesCard()
               else
@@ -123,6 +128,24 @@ class _TutorDetailScreenState extends State<TutorDetailScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: auth.isLearner && !auth.isAdmin && courses.isNotEmpty
+          ? SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: FilledButton.icon(
+                  onPressed: data.loading
+                      ? null
+                      : () => context.push(
+                            '/availabilities/${courses.first.availabilityId}',
+                            extra: courses.first,
+                          ),
+                  icon: const Icon(Icons.event_available_rounded),
+                  label: Text(t.text('Choose a course to book')),
+                ),
+              ),
+            )
+          : null,
     );
   }
 
@@ -210,13 +233,8 @@ class _TutorHeroCard extends StatelessWidget {
     final rating = tutor?.rating ?? 0;
     final t = context.l10n;
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.5)),
-      ),
+    return AppHeroCard(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -237,6 +255,7 @@ class _TutorHeroCard extends StatelessWidget {
                       name,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
+                        color: colors.onPrimary,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -244,18 +263,20 @@ class _TutorHeroCard extends StatelessWidget {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _InfoChip(
+                        _HeroFactChip(
                           icon: Icons.verified_rounded,
                           label: tutor?.isVerified == true
                               ? t.text('Verified tutor')
                               : t.tutor,
                         ),
-                        _InfoChip(
+                        _HeroFactChip(
                           icon: Icons.menu_book_rounded,
                           label: t.coursesN(courseCount),
                         ),
-                        _InfoChip(
-                          icon: Icons.star_rounded,
+                        _HeroFactChip(
+                          icon: rating > 0
+                              ? Icons.star_rounded
+                              : Icons.auto_awesome_rounded,
                           label: rating > 0
                               ? rating.toStringAsFixed(1)
                               : t.text('New tutor'),
@@ -273,6 +294,11 @@ class _TutorHeroCard extends StatelessWidget {
               Expanded(
                 child: FilledButton.icon(
                   onPressed: onChat,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colors.surface,
+                    foregroundColor: colors.primary,
+                    elevation: 0,
+                  ),
                   icon: const Icon(Icons.chat_bubble_rounded),
                   label: Text(t.chat),
                 ),
@@ -290,6 +316,40 @@ class _TutorHeroCard extends StatelessWidget {
                   color: isFavorite ? colors.error : null,
                 ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroFactChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _HeroFactChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: colors.onPrimary.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: colors.onPrimary, size: 15),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: colors.onPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
           ),
         ],
       ),
@@ -427,25 +487,13 @@ class _BioCard extends StatelessWidget {
         ? t.text('This tutor has not added an introduction yet.')
         : bio.trim();
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
-        ),
-      ),
+    return AppSurfaceCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            t.text('About'),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
+          AppSectionHeader(
+              icon: Icons.person_outline_rounded, title: t.text('About')),
+          const SizedBox(height: 12),
           Text(
             text,
             style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
@@ -474,84 +522,82 @@ class _CourseCard extends StatelessWidget {
         ? availability.totalCoursePrice
         : availability.pricePerSlot * availability.slot;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.4)),
+    return AppSurfaceCard(
+      kind: AppSurfaceCardKind.marketplace,
+      onTap: () => context.push(
+        '/availabilities/${availability.availabilityId}',
+        extra: availability,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  _subjectName(context, availability),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+      padding: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    _subjectName(context, availability),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-              ),
-              _ModePill(label: t.mode(availability.mode)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 10,
-            runSpacing: 8,
-            children: [
-              _InfoChip(
-                icon: Icons.event_rounded,
-                label: availability.dayOfWeek,
-              ),
-              _InfoChip(
-                icon: Icons.schedule_rounded,
-                label: '${availability.startTime} - ${availability.endTime}',
-              ),
-              _InfoChip(
-                icon: Icons.layers_rounded,
-                label: t.level(availability.level),
-              ),
-              _InfoChip(
-                icon: Icons.list_alt_rounded,
-                label: t.lessonsN(availability.slot),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.text('Full tuition package'),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                    MoneyText(
-                      total,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colors.primary,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
+                _ModePill(label: t.mode(availability.mode)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              children: [
+                _InfoChip(
+                  icon: Icons.event_rounded,
+                  label: availability.dayOfWeek,
                 ),
-              ),
-              FilledButton(
-                onPressed: onBook,
-                child: Text(t.text('Enroll')),
-              ),
-            ],
-          ),
-        ],
+                _InfoChip(
+                  icon: Icons.schedule_rounded,
+                  label: '${availability.startTime} - ${availability.endTime}',
+                ),
+                _InfoChip(
+                  icon: Icons.list_alt_rounded,
+                  label: t.lessonsN(availability.slot),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.text('Full tuition package'),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                      MoneyText(
+                        total,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colors.primary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                FilledButton(
+                  onPressed: onBook,
+                  child: Text(t.text('Enroll')),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -580,30 +626,7 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: colors.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: colors.onSurfaceVariant,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
+    return AppMetaChip(icon: icon, label: label);
   }
 }
 

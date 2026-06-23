@@ -302,7 +302,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'Start the conversation 👋',
+                              t.text(
+                                  'Say hello to get the conversation started.'),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colors.onSurface.withValues(alpha: 0.45),
                               ),

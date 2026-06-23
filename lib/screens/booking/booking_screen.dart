@@ -9,6 +9,7 @@ import '../../providers/app_data_provider.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/money_text.dart';
 import '../../widgets/tutor_review_sheet.dart';
+import '../../widgets/app_ui.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -20,7 +21,6 @@ class BookingScreen extends StatefulWidget {
 enum _BookingCategory {
   upcoming,
   confirmed,
-  completed,
   cancelledIssues,
 }
 
@@ -148,9 +148,9 @@ class _BookingScreenState extends State<BookingScreen>
     switch (status.trim().toLowerCase()) {
       case 'confirmed':
       case 'paid':
-        return _BookingCategory.confirmed;
       case 'completed':
-        return _BookingCategory.completed;
+      case 'success':
+        return _BookingCategory.confirmed;
       case 'cancelled':
       case 'expired':
       case 'failed':
@@ -316,51 +316,14 @@ class _BookingCategoryEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
     final t = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 24),
-      child: Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colors.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.calendar_today_rounded,
-                size: 40,
-                color: colors.primary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _emptyCategoryTitle(context, category),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              t.bookingsEmptyMessage,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
+      child: AppEmptyState(
+        icon: Icons.calendar_today_rounded,
+        title: _emptyCategoryTitle(context, category),
+        message: t.bookingsEmptyMessage,
       ),
     );
   }
@@ -374,8 +337,6 @@ String _categoryLabel(BuildContext context, _BookingCategory category) {
       return t.text('Upcoming');
     case _BookingCategory.confirmed:
       return t.confirmed;
-    case _BookingCategory.completed:
-      return t.completed;
     case _BookingCategory.cancelledIssues:
       return t.text('Cancelled / Issues');
   }
@@ -389,8 +350,6 @@ String _emptyCategoryTitle(BuildContext context, _BookingCategory category) {
       return t.text('No upcoming bookings yet');
     case _BookingCategory.confirmed:
       return t.text('No confirmed bookings yet');
-    case _BookingCategory.completed:
-      return t.text('No completed bookings yet');
     case _BookingCategory.cancelledIssues:
       return t.text('No cancelled or issue bookings yet');
   }
@@ -789,12 +748,17 @@ class _BookingCard extends StatelessWidget {
 
   bool _canReportBooking(BookingModel booking) {
     final status = booking.status.toLowerCase();
-    return status == 'confirmed' || status == 'completed';
+    return status == 'confirmed' ||
+        status == 'completed' ||
+        status == 'success';
   }
 
   bool _canReviewBooking(BookingModel booking) {
     final status = booking.status.toLowerCase();
-    return status == 'paid' || status == 'confirmed' || status == 'completed';
+    return status == 'paid' ||
+        status == 'confirmed' ||
+        status == 'completed' ||
+        status == 'success';
   }
 
   String _payButtonText(BuildContext context, String status) {
@@ -804,6 +768,7 @@ class _BookingCard extends StatelessWidget {
         return t.payNow;
       case 'paid':
       case 'confirmed':
+      case 'success':
         return t.paid;
       case 'completed':
         return t.completed;
@@ -972,6 +937,7 @@ class _BookingStatusVisual {
     switch (status.trim().toLowerCase()) {
       case 'confirmed':
       case 'paid':
+      case 'success':
         return const _BookingStatusVisual(
           color: Color(0xFF15803D),
           icon: Icons.verified_outlined,

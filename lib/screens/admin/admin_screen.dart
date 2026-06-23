@@ -300,11 +300,21 @@ class _SubjectsTab extends StatefulWidget {
 class _SubjectsTabState extends State<_SubjectsTab> {
   final name = TextEditingController();
   final description = TextEditingController();
+  final objective = TextEditingController();
+  final learningGoals = TextEditingController();
+  final expectedResults = TextEditingController();
+  final requiredTopics = TextEditingController();
+  final commonDifficulties = TextEditingController();
 
   @override
   void dispose() {
     name.dispose();
     description.dispose();
+    objective.dispose();
+    learningGoals.dispose();
+    expectedResults.dispose();
+    requiredTopics.dispose();
+    commonDifficulties.dispose();
     super.dispose();
   }
 
@@ -358,6 +368,37 @@ class _SubjectsTabState extends State<_SubjectsTab> {
                   ),
                   minLines: 1,
                   maxLines: 3,
+                ),
+                const SizedBox(height: 12),
+                _GuidanceField(
+                  controller: objective,
+                  label: t.text('Subject objective'),
+                  hint:
+                      t.text('What should this subject help students achieve?'),
+                ),
+                const SizedBox(height: 12),
+                _GuidanceField(
+                  controller: learningGoals,
+                  label: t.text('Learning goals'),
+                  hint: t.text('One goal per line'),
+                ),
+                const SizedBox(height: 12),
+                _GuidanceField(
+                  controller: expectedResults,
+                  label: t.text('Expected results'),
+                  hint: t.text('What should students be able to do?'),
+                ),
+                const SizedBox(height: 12),
+                _GuidanceField(
+                  controller: requiredTopics,
+                  label: t.text('Required topics'),
+                  hint: t.text('One topic per line'),
+                ),
+                const SizedBox(height: 12),
+                _GuidanceField(
+                  controller: commonDifficulties,
+                  label: t.text('Common learning difficulties'),
+                  hint: t.text('One difficulty per line'),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -425,6 +466,13 @@ class _SubjectsTabState extends State<_SubjectsTab> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                trailing: IconButton(
+                  onPressed: data.loading
+                      ? null
+                      : () => _editSubject(context, subject),
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: t.text('Edit subject guidance'),
+                ),
               ),
             );
           }),
@@ -450,12 +498,22 @@ class _SubjectsTabState extends State<_SubjectsTab> {
       await context.read<AppDataProvider>().adminCreateSubject(
             name: subjectName,
             description: subjectDescription,
+            objective: objective.text.trim(),
+            learningGoals: learningGoals.text.trim(),
+            expectedResults: expectedResults.text.trim(),
+            requiredTopics: requiredTopics.text.trim(),
+            commonDifficulties: commonDifficulties.text.trim(),
           );
 
       if (!mounted) return;
 
       name.clear();
       description.clear();
+      objective.clear();
+      learningGoals.clear();
+      expectedResults.clear();
+      requiredTopics.clear();
+      commonDifficulties.clear();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -463,6 +521,147 @@ class _SubjectsTabState extends State<_SubjectsTab> {
                 AppStrings.of(context, listen: false).text('Subject added'))),
       );
     } catch (_) {}
+  }
+
+  Future<void> _editSubject(BuildContext context, SubjectModel subject) async {
+    final editName = TextEditingController(text: subject.name);
+    final editDescription = TextEditingController(text: subject.description);
+    final editObjective = TextEditingController(text: subject.objective);
+    final editGoals = TextEditingController(text: subject.learningGoals);
+    final editResults = TextEditingController(text: subject.expectedResults);
+    final editTopics = TextEditingController(text: subject.requiredTopics);
+    final editDifficulties =
+        TextEditingController(text: subject.commonDifficulties);
+    final t = AppStrings.of(context, listen: false);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(t.text('Edit subject guidance')),
+        content: SizedBox(
+          width: 520,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: editName,
+                  decoration: _adminInputDecoration(
+                    context,
+                    label: t.text('Subject name'),
+                    icon: Icons.menu_book_outlined,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: editDescription,
+                  decoration: _adminInputDecoration(
+                    context,
+                    label: t.text('Description'),
+                    icon: Icons.description_outlined,
+                  ),
+                  minLines: 2,
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 12),
+                _GuidanceField(
+                  controller: editObjective,
+                  label: t.text('Subject objective'),
+                  hint:
+                      t.text('What should this subject help students achieve?'),
+                ),
+                const SizedBox(height: 12),
+                _GuidanceField(
+                  controller: editGoals,
+                  label: t.text('Learning goals'),
+                  hint: t.text('One goal per line'),
+                ),
+                const SizedBox(height: 12),
+                _GuidanceField(
+                  controller: editResults,
+                  label: t.text('Expected results'),
+                  hint: t.text('What should students be able to do?'),
+                ),
+                const SizedBox(height: 12),
+                _GuidanceField(
+                  controller: editTopics,
+                  label: t.text('Required topics'),
+                  hint: t.text('One topic per line'),
+                ),
+                const SizedBox(height: 12),
+                _GuidanceField(
+                  controller: editDifficulties,
+                  label: t.text('Common learning difficulties'),
+                  hint: t.text('One difficulty per line'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(t.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(t.text('Save guidance')),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true &&
+        context.mounted &&
+        editName.text.trim().isNotEmpty) {
+      try {
+        await context.read<AppDataProvider>().adminUpdateSubject(
+              subjectId: subject.subjectId,
+              name: editName.text.trim(),
+              description: editDescription.text.trim(),
+              objective: editObjective.text.trim(),
+              learningGoals: editGoals.text.trim(),
+              expectedResults: editResults.text.trim(),
+              requiredTopics: editTopics.text.trim(),
+              commonDifficulties: editDifficulties.text.trim(),
+            );
+      } catch (_) {}
+    }
+
+    editName.dispose();
+    editDescription.dispose();
+    editObjective.dispose();
+    editGoals.dispose();
+    editResults.dispose();
+    editTopics.dispose();
+    editDifficulties.dispose();
+  }
+}
+
+class _GuidanceField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+
+  const _GuidanceField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      decoration: _adminInputDecoration(
+        context,
+        label: label,
+        icon: Icons.lightbulb_outline,
+      ).copyWith(hintText: hint),
+      minLines: 2,
+      maxLines: 4,
+      textCapitalization: TextCapitalization.sentences,
+    );
   }
 }
 

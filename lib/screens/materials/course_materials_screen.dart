@@ -9,6 +9,7 @@ import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/error_banner.dart';
 
 class CourseMaterialsScreen extends StatefulWidget {
@@ -91,7 +92,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
     final t = AppStrings.of(context, listen: false);
     final successMessage = t.text('Section added');
 
-    final payload = await _showSectionEditor(context);
+    final payload = await showMaterialSectionEditor(context);
     if (payload == null || !mounted) return;
 
     try {
@@ -118,7 +119,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
 
     final data = context.read<AppDataProvider>();
     final successMessage = t.text('Section updated');
-    final payload = await _showSectionEditor(context, section: section);
+    final payload = await showMaterialSectionEditor(context, section: section);
     if (payload == null || !mounted) return;
 
     try {
@@ -164,7 +165,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
     final t = AppStrings.of(context, listen: false);
     final successMessage = t.text('Material added');
 
-    final payload = await _showMaterialEditor(context);
+    final payload = await showMaterialEditor(context);
     if (payload == null || !mounted) return;
 
     try {
@@ -186,7 +187,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
     final successMessage = t.text('Material updated');
     final sections = data.courseMaterials[item.availabilityId] ??
         <CourseMaterialSectionModel>[];
-    final payload = await _showMaterialEditor(
+    final payload = await showMaterialEditor(
       context,
       item: item,
       sections: sections,
@@ -228,7 +229,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
 
   Future<void> _openMaterial(CourseMaterialItemModel item) async {
     final t = AppStrings.of(context, listen: false);
-    final uri = _materialUri(item);
+    final uri = materialUri(item);
     if (uri == null) {
       _showSnack(
         t.text('No file or link is available for this material.'),
@@ -395,55 +396,19 @@ class _MaterialsIntro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: colors.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
+    return AppSurfaceCard(
+      child: AppSectionHeader(
+        icon: Icons.folder_copy_outlined,
+        title: context.l10n.text(
+          isTutor ? 'Manage course materials' : 'Course materials',
         ),
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: colors.primaryContainer,
-            child: Icon(Icons.folder_copy_outlined, color: colors.primary),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.text(
-                    isTutor ? 'Manage course materials' : 'Course materials',
-                  ),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  isTutor
-                      ? context.l10n.text(
-                          'Organize files and links by section for each class.',
-                        )
-                      : context.l10n.text(
-                          'Open shared files and links from your enrolled classes.',
-                        ),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        subtitle: isTutor
+            ? context.l10n.text(
+                'Organize files and links by section for each class.',
+              )
+            : context.l10n.text(
+                'Open shared files and links from your enrolled classes.',
+              ),
       ),
     );
   }
@@ -873,26 +838,18 @@ class _EmptyMaterialsState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      child: Column(
-        children: [
-          Icon(icon, size: 42, color: colors.onSurface.withValues(alpha: 0.3)),
-          const SizedBox(height: 12),
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.55)),
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: AppEmptyState(
+        icon: icon,
+        title: text,
+        message: context.l10n.text('Select another class or check back later.'),
       ),
     );
   }
 }
 
-Future<_SectionEditorResult?> _showSectionEditor(
+Future<MaterialSectionEditorResult?> showMaterialSectionEditor(
   BuildContext context, {
   CourseMaterialSectionModel? section,
 }) {
@@ -900,7 +857,7 @@ Future<_SectionEditorResult?> _showSectionEditor(
   final title = TextEditingController(text: section?.title ?? '');
   final description = TextEditingController(text: section?.description ?? '');
 
-  return showDialog<_SectionEditorResult>(
+  return showDialog<MaterialSectionEditorResult>(
     context: context,
     builder: (context) => AlertDialog(
       title: Text(
@@ -934,7 +891,7 @@ Future<_SectionEditorResult?> _showSectionEditor(
             if (title.text.trim().isEmpty) return;
             Navigator.pop(
               context,
-              _SectionEditorResult(
+              MaterialSectionEditorResult(
                 title: title.text.trim(),
                 description: _optionalText(description.text),
               ),
@@ -947,7 +904,7 @@ Future<_SectionEditorResult?> _showSectionEditor(
   );
 }
 
-Future<_MaterialEditorResult?> _showMaterialEditor(
+Future<MaterialEditorResult?> showMaterialEditor(
   BuildContext context, {
   CourseMaterialItemModel? item,
   List<CourseMaterialSectionModel> sections = const [],
@@ -969,7 +926,7 @@ Future<_MaterialEditorResult?> _showMaterialEditor(
   selectedSectionId ??=
       editableSections.isEmpty ? null : editableSections.first.sectionId;
 
-  return showDialog<_MaterialEditorResult>(
+  return showDialog<MaterialEditorResult>(
     context: context,
     builder: (context) {
       return StatefulBuilder(
@@ -1081,7 +1038,7 @@ Future<_MaterialEditorResult?> _showMaterialEditor(
 
                   Navigator.pop(
                     context,
-                    _MaterialEditorResult(
+                    MaterialEditorResult(
                       title: title.text.trim(),
                       description: _optionalText(description.text),
                       linkUrl: _optionalText(link.text),
@@ -1112,24 +1069,24 @@ class _MaterialCourse {
   });
 }
 
-class _SectionEditorResult {
+class MaterialSectionEditorResult {
   final String title;
   final String? description;
 
-  const _SectionEditorResult({
+  const MaterialSectionEditorResult({
     required this.title,
     required this.description,
   });
 }
 
-class _MaterialEditorResult {
+class MaterialEditorResult {
   final String title;
   final String? description;
   final String? linkUrl;
   final String? filePath;
   final int? sectionId;
 
-  const _MaterialEditorResult({
+  const MaterialEditorResult({
     required this.title,
     required this.description,
     required this.linkUrl,
@@ -1200,7 +1157,7 @@ String? _optionalText(String value) {
   return text.isEmpty ? null : text;
 }
 
-Uri? _materialUri(CourseMaterialItemModel item) {
+Uri? materialUri(CourseMaterialItemModel item) {
   final value = item.fileUrl?.trim() ?? '';
   if (value.isEmpty) return null;
 

@@ -42,6 +42,7 @@ class AppDataProvider extends ChangeNotifier {
   List<PayoutModel> adminPayouts = [];
 
   TutorVerificationModel? tutorVerification;
+  TeachingPreparationGuideModel? teachingPreparationGuide;
   TutorPublicModel? selectedTutor;
   List<AvailabilityModel> selectedTutorAvailabilities = [];
   List<FavoriteTutorModel> favoriteTutors = [];
@@ -106,6 +107,7 @@ class AppDataProvider extends ChangeNotifier {
     adminPayouts = [];
 
     tutorVerification = null;
+    teachingPreparationGuide = null;
     selectedTutor = null;
     selectedTutorAvailabilities = [];
     favoriteTutors = [];
@@ -160,6 +162,18 @@ class AppDataProvider extends ChangeNotifier {
   Future<void> loadSubjects() async {
     await _guard(() async {
       subjects = await api.getSubjects();
+    });
+  }
+
+  Future<void> generateTeachingPreparationGuide({
+    required int subjectId,
+    String? lessonFocus,
+  }) async {
+    await _guard(() async {
+      teachingPreparationGuide = await api.generateTeachingPreparationGuide(
+        subjectId: subjectId,
+        lessonFocus: lessonFocus,
+      );
     });
   }
 
@@ -660,7 +674,6 @@ class AppDataProvider extends ChangeNotifier {
     required List<String> daysOfWeek,
     required String mode,
     String? offlineAreas,
-    required String level,
     required DateTime startCourseTime,
     required DateTime endCourseTime,
     required String startTime,
@@ -673,7 +686,6 @@ class AppDataProvider extends ChangeNotifier {
         daysOfWeek: daysOfWeek,
         mode: mode,
         offlineAreas: offlineAreas,
-        level: level,
         startCourseTime: startCourseTime,
         endCourseTime: endCourseTime,
         startTime: startTime,
@@ -1061,11 +1073,48 @@ class AppDataProvider extends ChangeNotifier {
   Future<void> adminCreateSubject({
     required String name,
     required String description,
+    String? objective,
+    String? learningGoals,
+    String? expectedResults,
+    String? requiredTopics,
+    String? commonDifficulties,
   }) async {
     await _guard(() async {
       await api.adminCreateSubject(
         name: name,
         description: description,
+        objective: objective,
+        learningGoals: learningGoals,
+        expectedResults: expectedResults,
+        requiredTopics: requiredTopics,
+        commonDifficulties: commonDifficulties,
+      );
+
+      subjects = await api.getSubjects();
+      adminDashboard = await api.adminGetDashboard();
+    });
+  }
+
+  Future<void> adminUpdateSubject({
+    required int subjectId,
+    required String name,
+    required String description,
+    String? objective,
+    String? learningGoals,
+    String? expectedResults,
+    String? requiredTopics,
+    String? commonDifficulties,
+  }) async {
+    await _guard(() async {
+      await api.adminUpdateSubject(
+        subjectId: subjectId,
+        name: name,
+        description: description,
+        objective: objective,
+        learningGoals: learningGoals,
+        expectedResults: expectedResults,
+        requiredTopics: requiredTopics,
+        commonDifficulties: commonDifficulties,
       );
 
       subjects = await api.getSubjects();
@@ -1129,6 +1178,7 @@ class AppDataProvider extends ChangeNotifier {
     required String cccdFrontPath,
     required String cccdBackPath,
     required List<String> certificatePaths,
+    String? transcriptDocumentPath,
     required String bankName,
     required String accountNumber,
     required String accountHolderName,
@@ -1141,6 +1191,7 @@ class AppDataProvider extends ChangeNotifier {
         cccdFrontPath: cccdFrontPath,
         cccdBackPath: cccdBackPath,
         certificatePaths: certificatePaths,
+        transcriptDocumentPath: transcriptDocumentPath,
         bankName: bankName,
         accountNumber: accountNumber,
         accountHolderName: accountHolderName,

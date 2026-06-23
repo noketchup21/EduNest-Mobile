@@ -305,7 +305,6 @@ class ApiService {
     required List<String> daysOfWeek,
     required String mode,
     String? offlineAreas,
-    required String level,
     required DateTime startCourseTime,
     required DateTime endCourseTime,
     required String startTime,
@@ -325,7 +324,6 @@ class ApiService {
         'daysOfWeek': normalizedDays,
         'mode': mode,
         'offlineAreas': offlineAreas?.trim(),
-        'level': level,
         'startCourseTime': _dateOnlyIso(startCourseTime),
         'endCourseTime': _dateOnlyIso(endCourseTime),
         'startTime': _normalizeTime(startTime),
@@ -883,16 +881,68 @@ class ApiService {
   Future<SubjectModel> adminCreateSubject({
     required String name,
     required String description,
+    String? objective,
+    String? learningGoals,
+    String? expectedResults,
+    String? requiredTopics,
+    String? commonDifficulties,
   }) async {
     final res = await dio.post(
       '/api/admin/subject',
       data: {
         'name': name,
         'description': description,
+        'objective': objective,
+        'learningGoals': learningGoals,
+        'expectedResults': expectedResults,
+        'requiredTopics': requiredTopics,
+        'commonDifficulties': commonDifficulties,
       },
     );
 
     return SubjectModel.fromJson(_asMap(res.data));
+  }
+
+  Future<SubjectModel> adminUpdateSubject({
+    required int subjectId,
+    required String name,
+    required String description,
+    String? objective,
+    String? learningGoals,
+    String? expectedResults,
+    String? requiredTopics,
+    String? commonDifficulties,
+  }) async {
+    final res = await dio.put(
+      '/api/subject/$subjectId',
+      data: {
+        'name': name,
+        'description': description,
+        'objective': objective,
+        'learningGoals': learningGoals,
+        'expectedResults': expectedResults,
+        'requiredTopics': requiredTopics,
+        'commonDifficulties': commonDifficulties,
+      },
+    );
+
+    return SubjectModel.fromJson(_asMap(res.data));
+  }
+
+  Future<TeachingPreparationGuideModel> generateTeachingPreparationGuide({
+    required int subjectId,
+    String? lessonFocus,
+  }) async {
+    final res = await dio.post(
+      '/api/tutor/teaching-guide',
+      data: {
+        'subjectId': subjectId,
+        if (lessonFocus != null && lessonFocus.trim().isNotEmpty)
+          'lessonFocus': lessonFocus.trim(),
+      },
+    );
+
+    return TeachingPreparationGuideModel.fromJson(_asMap(res.data));
   }
 
   Future<List<PayoutModel>> adminGetPayouts() async {
@@ -1064,6 +1114,7 @@ class ApiService {
     required String cccdFrontPath,
     required String cccdBackPath,
     required List<String> certificatePaths,
+    String? transcriptDocumentPath,
     required String bankName,
     required String accountNumber,
     required String accountHolderName,
@@ -1084,6 +1135,11 @@ class ApiService {
       'nationalIdNumber': nationalIdNumber,
       'cccdFrontImage': await MultipartFile.fromFile(cccdFrontPath),
       'cccdBackImage': await MultipartFile.fromFile(cccdBackPath),
+      if (transcriptDocumentPath != null &&
+          transcriptDocumentPath.trim().isNotEmpty)
+        'transcriptDocument': await MultipartFile.fromFile(
+          transcriptDocumentPath,
+        ),
       if (legacyCertificateFile != null)
         'certificateImage': legacyCertificateFile,
       'bankName': bankName,

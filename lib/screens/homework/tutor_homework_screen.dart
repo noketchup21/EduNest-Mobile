@@ -74,7 +74,8 @@ class _TutorHomeworkScreenState extends State<TutorHomeworkScreen> {
       return;
     }
 
-    final targetLesson = await _showLessonPicker(context, course.lessons);
+    final targetLesson =
+        await showTutorHomeworkLessonPicker(context, course.lessons);
     if (targetLesson == null || !mounted) return;
     if (_hasLessonEnded(targetLesson)) {
       _showSnack(AppStrings.of(context, listen: false)
@@ -82,7 +83,7 @@ class _TutorHomeworkScreenState extends State<TutorHomeworkScreen> {
       return;
     }
 
-    final body = await _showTutorHomeworkEditor(context);
+    final body = await showTutorHomeworkEditor(context);
     if (body == null || !mounted) return;
 
     try {
@@ -107,7 +108,7 @@ class _TutorHomeworkScreenState extends State<TutorHomeworkScreen> {
       return;
     }
 
-    final body = await _showTutorHomeworkEditor(
+    final body = await showTutorHomeworkEditor(
       context,
       homework: item.homework,
     );
@@ -165,7 +166,7 @@ class _TutorHomeworkScreenState extends State<TutorHomeworkScreen> {
     required _TutorHomeworkItem item,
     required HomeworkSubmissionModel submission,
   }) async {
-    final payload = await _showEssayGradeSheet(
+    final payload = await showEssayGradeSheet(
       context,
       homework: item.homework,
       submission: submission,
@@ -857,6 +858,12 @@ class _TutorHomeworkCard extends StatelessWidget {
                 label:
                     '${homework.submissions.length} ${context.l10n.text('submissions')}',
               ),
+              if (homework.dueDate.toLocal().isBefore(DateTime.now()))
+                _InfoChip(
+                  icon: Icons.error_outline_rounded,
+                  label: context.l10n.text('Overdue'),
+                  warning: true,
+                ),
               if (toGrade > 0)
                 _InfoChip(
                   icon: Icons.warning_amber_rounded,
@@ -1340,17 +1347,17 @@ class _EssayDraft {
         points = TextEditingController(text: pointValue);
 }
 
-class _EssayGradePayload {
+class EssayGradePayload {
   final List<Map<String, dynamic>> essayGrades;
   final String? feedback;
 
-  const _EssayGradePayload({
+  const EssayGradePayload({
     required this.essayGrades,
     required this.feedback,
   });
 }
 
-Future<LessonModel?> _showLessonPicker(
+Future<LessonModel?> showTutorHomeworkLessonPicker(
   BuildContext context,
   List<LessonModel> lessons,
 ) {
@@ -1399,7 +1406,7 @@ Future<LessonModel?> _showLessonPicker(
   );
 }
 
-Future<Map<String, dynamic>?> _showTutorHomeworkEditor(
+Future<Map<String, dynamic>?> showTutorHomeworkEditor(
   BuildContext context, {
   HomeworkModel? homework,
 }) {
@@ -1822,7 +1829,7 @@ class _EssayDraftList extends StatelessWidget {
   }
 }
 
-Future<_EssayGradePayload?> _showEssayGradeSheet(
+Future<EssayGradePayload?> showEssayGradeSheet(
   BuildContext context, {
   required HomeworkModel homework,
   required HomeworkSubmissionModel submission,
@@ -1839,7 +1846,7 @@ Future<_EssayGradePayload?> _showEssayGradeSheet(
   final overallFeedback =
       TextEditingController(text: submission.feedback ?? '');
 
-  return showModalBottomSheet<_EssayGradePayload>(
+  return showModalBottomSheet<EssayGradePayload>(
     context: context,
     isScrollControlled: true,
     builder: (context) {
@@ -1937,7 +1944,7 @@ Future<_EssayGradePayload?> _showEssayGradeSheet(
                     onPressed: () {
                       Navigator.pop(
                         context,
-                        _EssayGradePayload(
+                        EssayGradePayload(
                           essayGrades: submission.essayAnswers.map((answer) {
                             return {
                               'essayAnswerId': answer.essayAnswerId,

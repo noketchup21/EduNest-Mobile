@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
@@ -611,8 +612,50 @@ class _DocumentsCard extends StatelessWidget {
                 '${context.l10n.text('Upload Certificates')} ${entry.$1 + 1}',
             imageUrl: entry.$2,
           ),
+        _TranscriptDocumentTile(documentUrl: detail.transcriptDocumentUrl),
       ],
     );
+  }
+}
+
+class _TranscriptDocumentTile extends StatelessWidget {
+  final String? documentUrl;
+
+  const _TranscriptDocumentTile({required this.documentUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasDocument = documentUrl != null && documentUrl!.isNotEmpty;
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.description_outlined),
+      title: Text(context.l10n.text('Upload your academic transcript')),
+      subtitle: Text(
+        context.l10n.text(hasDocument ? 'Submitted' : 'Not provided'),
+      ),
+      trailing: hasDocument
+          ? OutlinedButton.icon(
+              onPressed: () => _openDocument(context, documentUrl!),
+              icon: const Icon(Icons.open_in_new, size: 18),
+              label: Text(context.l10n.text('Open')),
+            )
+          : null,
+    );
+  }
+
+  Future<void> _openDocument(BuildContext context, String url) async {
+    final opened = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(context.l10n.text('Could not open this document.'))),
+      );
+    }
   }
 }
 

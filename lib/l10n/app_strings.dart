@@ -410,6 +410,24 @@ class AppStrings {
 
   String authFlowTitle(bool isTutor) => isTutor ? tutor : parentStudent;
 
+  String courseProgress(int completedCount, int totalCount) => isVi
+      ? 'Đã hoàn thành $completedCount/$totalCount buổi học'
+      : '$completedCount of $totalCount lessons completed';
+
+  String showPastLessons(int count) =>
+      isVi ? 'Xem $count buổi học trước' : 'Show $count past lessons';
+
+  String showCompletedHomework(int count) => isVi
+      ? 'Xem $count bài tập đã hoàn thành'
+      : 'Show $count completed homework';
+
+  String homeworkToGrade(int count) => isVi
+      ? '$count bài nộp cần chấm'
+      : '$count submission${count == 1 ? '' : 's'} to grade';
+
+  String submissionsN(int count) =>
+      isVi ? '$count bài nộp' : '$count submission${count == 1 ? '' : 's'}';
+
   String text(String source) {
     if (!isVi) return source;
 
@@ -423,6 +441,7 @@ class AppStrings {
       case 'paid':
         return paid;
       case 'confirmed':
+      case 'success':
         return confirmed;
       case 'completed':
       case 'complete':
@@ -497,6 +516,35 @@ class AppStrings {
 }
 
 const Map<String, String> _viPhrases = {
+  'Review your published teaching availability.':
+      'Xem lại lịch dạy bạn đã công khai.',
+  'Tutors you can book': 'Gia sư bạn có thể đặt lịch',
+  'Compare availability, teaching mode, and price.':
+      'So sánh lịch trống, hình thức dạy và học phí.',
+  'Make today a great teaching day': 'Hãy tạo một ngày giảng dạy thật hiệu quả',
+  'Find a tutor who fits your goals': 'Tìm gia sư phù hợp với mục tiêu của bạn',
+  'Create availability, prepare your lessons, and stay on top of your courses.':
+      'Tạo lịch dạy, chuẩn bị bài học và theo dõi các khóa học của bạn.',
+  'Explore trusted tutors, compare schedules, and book with confidence.':
+      'Khám phá gia sư đáng tin cậy, so sánh lịch học và đặt lịch tự tin.',
+  'Choose a course to book': 'Chọn khóa học để đặt lịch',
+  'Say hello to get the conversation started.':
+      'Hãy chào hỏi để bắt đầu cuộc trò chuyện.',
+  'Your scheduled lessons will appear here.':
+      'Các buổi học đã lên lịch sẽ xuất hiện tại đây.',
+  'Start a conversation': 'Bắt đầu cuộc trò chuyện',
+  'Connect safely with a tutor, learner, or parent.':
+      'Kết nối an toàn với gia sư, học viên hoặc phụ huynh.',
+  'No conversations yet': 'Chưa có cuộc trò chuyện nào',
+  'Start a conversation using an email above.':
+      'Bắt đầu cuộc trò chuyện bằng email ở trên.',
+  'Choose a course to see its homework.': 'Chọn một khóa học để xem bài tập.',
+  'Try another filter or check back later.':
+      'Thử bộ lọc khác hoặc quay lại sau.',
+  'Select another class or check back later.':
+      'Chọn lớp khác hoặc quay lại sau.',
+  'Check back soon for new tutors and courses.':
+      'Vui lòng quay lại sau để xem các gia sư và khóa học mới.',
   'Create availability': 'Tạo lịch dạy',
   'You can now create teaching availability.':
       'Bây giờ bạn có thể tạo lịch dạy.',
@@ -553,8 +601,50 @@ const Map<String, String> _viPhrases = {
   'Upload Certificates': 'Tải lên chứng chỉ',
   'Certificate of Enrollment or Academic Transcript':
       'Giấy xác nhận đang học hoặc bảng điểm học tập',
+  'Upload your academic transcript': 'Tải lên bảng điểm của bạn',
+  'Accepted formats: PDF, Word, Excel, PowerPoint, text, or CSV (max 2 MB).':
+      'Định dạng chấp nhận: PDF, Word, Excel, PowerPoint, văn bản hoặc CSV (tối đa 2 MB).',
   'Maximum 5 images': 'Tối đa 5 ảnh',
   'Maximum 5 certificate images.': 'Tối đa 5 ảnh chứng chỉ.',
+  'Maximum {count} images': 'Tối đa {count} ảnh',
+  'Maximum 3 certificate images.': 'Tối đa 3 ảnh chứng chỉ.',
+  'Transcript document must be 2 MB or smaller.':
+      'Bảng điểm phải có dung lượng tối đa 2 MB.',
+  'Availability details': 'Chi tiết lịch dạy',
+  'No description has been added for this subject.':
+      'Chưa có mô tả cho môn học này.',
+  'Schedule': 'Lịch học',
+  'Availability setup': 'Thiết lập lịch dạy',
+  'Tuition': 'Học phí',
+  'Tutor availability': 'Lịch dạy của gia sư',
+  'Teaching preparation guide': 'Hướng dẫn chuẩn bị giảng dạy',
+  'Open teaching preparation guide': 'Mở hướng dẫn chuẩn bị giảng dạy',
+  'Prepare before you create slides': 'Chuẩn bị trước khi tạo slide',
+  'Use the subject objectives set by admin to see the concepts, examples, misconceptions, and preparation you should cover.':
+      'Dùng mục tiêu môn học do quản trị viên thiết lập để xem các khái niệm, ví dụ, hiểu lầm thường gặp và nội dung bạn cần chuẩn bị.',
+  'Base subject': 'Môn học nền tảng',
+  'Technology or teaching focus': 'Công nghệ hoặc trọng tâm giảng dạy',
+  'Example: C, C#, Python, SQL': 'Ví dụ: C, C#, Python, SQL',
+  'Student level': 'Trình độ học viên',
+  'Lesson focus optional': 'Trọng tâm buổi học (tùy chọn)',
+  'Example: Variables and input/output': 'Ví dụ: Biến và nhập/xuất dữ liệu',
+  'Create preparation guide': 'Tạo hướng dẫn chuẩn bị',
+  'Focus': 'Trọng tâm',
+  'Admin objective': 'Mục tiêu của quản trị viên',
+  'This field is required': 'Trường này là bắt buộc',
+  'Subject objective': 'Mục tiêu môn học',
+  'What should this subject help students achieve?':
+      'Môn học này cần giúp học viên đạt được điều gì?',
+  'Learning goals': 'Mục tiêu học tập',
+  'Expected results': 'Kết quả mong đợi',
+  'What should students be able to do?': 'Học viên cần có thể làm được gì?',
+  'Required topics': 'Chủ đề bắt buộc',
+  'Common learning difficulties': 'Khó khăn học tập thường gặp',
+  'One goal per line': 'Mỗi mục tiêu một dòng',
+  'One topic per line': 'Mỗi chủ đề một dòng',
+  'One difficulty per line': 'Mỗi khó khăn một dòng',
+  'Edit subject guidance': 'Chỉnh sửa hướng dẫn môn học',
+  'Save guidance': 'Lưu hướng dẫn',
   '{count} image(s) selected': 'Đã chọn {count} ảnh',
   'Add images': 'Thêm ảnh',
   'Remove': 'Xóa',
@@ -1173,6 +1263,61 @@ const Map<String, String> _viPhrases = {
       'Đặt lịch của bạn đã được xác nhận. Các buổi học đã được tạo.',
   'After transferring money, tap "I have paid / Check payment" to sync PayOS status and create lessons.':
       'Sau khi chuyển tiền, nhấn "Tôi đã thanh toán / Kiểm tra thanh toán" để đồng bộ trạng thái PayOS và tạo buổi học.',
+  'Learning space': 'Không gian học tập',
+  'Course': 'Khóa học',
+  'Your lessons, homework, and materials will appear here.':
+      'Buổi học, bài tập và tài liệu của bạn sẽ xuất hiện tại đây.',
+  'Your teaching course': 'Khóa học bạn đang giảng dạy',
+  'No lessons scheduled yet': 'Chưa có buổi học nào được lên lịch',
+  'New lessons will be shown here when they are ready.':
+      'Buổi học mới sẽ xuất hiện ở đây khi sẵn sàng.',
+  'Hide past lessons': 'Ẩn các buổi học trước',
+  'Ready to learn': 'Sẵn sàng học',
+  'No homework yet': 'Chưa có bài tập',
+  'Assignments for this course will appear here.':
+      'Bài tập của khóa học này sẽ xuất hiện tại đây.',
+  'Hide completed homework': 'Ẩn bài tập đã hoàn thành',
+  'Due': 'Hạn nộp',
+  'No materials yet': 'Chưa có tài liệu',
+  'Course files and links will be shared here.':
+      'Tệp và liên kết của khóa học sẽ được chia sẻ tại đây.',
+  'Open materials': 'Mở tài liệu',
+  'No files in this topic yet.': 'Chưa có tệp nào trong chủ đề này.',
+  'No submissions need review right now.':
+      'Hiện không có bài nộp nào cần xem xét.',
+  'Create an assignment for one of your lessons.':
+      'Hãy tạo bài tập cho một trong các buổi học của bạn.',
+  'Grade submission': 'Chấm bài nộp',
+  'Create sections, files, and useful links for learners.':
+      'Tạo chủ đề, tệp và liên kết hữu ích cho học viên.',
+  'Open files and links shared for this course.':
+      'Mở tệp và liên kết được chia sẻ cho khóa học này.',
+  'Create a topic, then add the first file or link.':
+      'Tạo một chủ đề, sau đó thêm tệp hoặc liên kết đầu tiên.',
+  'Manage section': 'Quản lý chủ đề',
+  'Choose the schedule that fits your routine.':
+      'Chọn lịch học phù hợp với thời gian của bạn.',
+  'Course basics': 'Thông tin khóa học',
+  'Choose the subject you want to teach.': 'Chọn môn học bạn muốn giảng dạy.',
+  'Teaching format': 'Hình thức giảng dạy',
+  'Set the days and delivery mode.': 'Thiết lập ngày dạy và hình thức dạy.',
+  'Schedule and teaching time': 'Lịch và thời gian giảng dạy',
+  'Choose a repeatable schedule for this course.':
+      'Chọn lịch học lặp lại cho khóa học này.',
+  'Pricing': 'Học phí',
+  'Set the price per lesson before publishing.':
+      'Thiết lập học phí mỗi buổi trước khi công khai.',
+  'Assignment details': 'Chi tiết bài tập',
+  'Review the questions and learner submissions.':
+      'Xem câu hỏi và bài nộp của người học.',
+  'Your result': 'Kết quả của bạn',
+  'Your score and tutor feedback appear here.':
+      'Điểm số và nhận xét của gia sư sẽ hiển thị ở đây.',
+  'Write your response': 'Viết câu trả lời',
+  'Choose your answers': 'Chọn đáp án',
+  'Complete every prompt before submitting.':
+      'Hoàn thành tất cả câu hỏi trước khi nộp.',
+  'Select one answer for each question.': 'Chọn một đáp án cho mỗi câu hỏi.',
 };
 
 extension AppStringsX on BuildContext {

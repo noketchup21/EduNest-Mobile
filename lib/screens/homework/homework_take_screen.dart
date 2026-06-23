@@ -7,6 +7,8 @@ import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/error_banner.dart';
 
 class HomeworkTakeScreen extends StatefulWidget {
@@ -129,6 +131,8 @@ class _HomeworkTakeScreenState extends State<HomeworkTakeScreen> {
     final colors = theme.colorScheme;
     final homework = _homework(data);
     final lesson = _lesson(data);
+    final canSubmit =
+        homework != null && auth.isLearner && homework.mySubmission == null;
 
     if (homework != null) {
       _prepare(homework);
@@ -137,15 +141,11 @@ class _HomeworkTakeScreenState extends State<HomeworkTakeScreen> {
     return Scaffold(
       backgroundColor: colors.surfaceContainerLowest,
       appBar: AppBar(
-        backgroundColor: colors.surface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        titleSpacing: 4,
+        titleSpacing: 8,
         title: Text(
-          homework?.title ?? context.l10n.homework,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          context.l10n.homework,
+          style:
+              theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         actions: [
           Padding(
@@ -165,14 +165,6 @@ class _HomeworkTakeScreenState extends State<HomeworkTakeScreen> {
             ),
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(0.5),
-          child: Divider(
-            height: 0.5,
-            thickness: 0.5,
-            color: colors.outlineVariant.withValues(alpha: 0.5),
-          ),
-        ),
       ),
       body: homework == null
           ? _MissingHomeworkBody(
@@ -182,64 +174,97 @@ class _HomeworkTakeScreenState extends State<HomeworkTakeScreen> {
           : RefreshIndicator(
               onRefresh: () => _reload(force: true),
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                padding: EdgeInsets.fromLTRB(16, 12, 16, canSubmit ? 112 : 32),
                 children: [
                   ErrorBanner(data.error),
                   _HomeworkHeader(homework: homework, lesson: lesson),
-                  const SizedBox(height: 12),
-                  if (auth.isTutor)
+                  const SizedBox(height: 24),
+                  if (auth.isTutor) ...[
+                    AppSectionHeader(
+                      icon: Icons.fact_check_rounded,
+                      title: context.l10n.text('Assignment details'),
+                      subtitle: context.l10n.text(
+                        'Review the questions and learner submissions.',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     _TutorDetailView(homework: homework)
-                  else if (homework.mySubmission != null)
+                  ] else if (homework.mySubmission != null) ...[
+                    AppSectionHeader(
+                      icon: Icons.workspace_premium_rounded,
+                      title: context.l10n.text('Your result'),
+                      subtitle: context.l10n.text(
+                        'Your score and tutor feedback appear here.',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     _ResultView(homework: homework)
-                  else ...[
-                    if (!auth.isStudent)
-                      _InfoBox(
-                        icon: Icons.visibility_outlined,
-                        text: context.l10n.text(
-                          'Parent accounts can view homework and results. Student accounts submit homework.',
-                        ),
-                      )
-                    else if (_isOverdue(homework))
+                  ] else ...[
+                    if (_isOverdue(homework))
                       _InfoBox(
                         icon: Icons.error_outline_rounded,
                         text: context.l10n.text(
                           'This homework is past its due date.',
                         ),
                         warning: true,
-                      )
-                    else
-                      _QuestionForm(
-                        homework: homework,
-                        selectedOptions: selectedOptions,
-                        essayControllers: essayControllers,
-                        onChanged: () => setState(() {}),
                       ),
-                    if (auth.isStudent && !_isOverdue(homework)) ...[
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed:
-                              data.loading ? null : () => _submit(homework),
-                          icon: const Icon(Icons.upload_file_rounded, size: 18),
-                          label: Text(
-                            context.l10n.text(
-                              data.loading ? 'Submitting...' : 'Submit',
-                            ),
-                          ),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size(0, 48),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    if (_isOverdue(homework)) const SizedBox(height: 20),
+                    AppSectionHeader(
+                      icon: homework.isEssay
+                          ? Icons.edit_note_rounded
+                          : Icons.quiz_rounded,
+                      title: homework.isEssay
+                          ? context.l10n.text('Write your response')
+                          : context.l10n.text('Choose your answers'),
+                      subtitle: homework.isEssay
+                          ? context.l10n
+                              .text('Complete every prompt before submitting.')
+                          : context.l10n
+                              .text('Select one answer for each question.'),
+                    ),
+                    const SizedBox(height: 12),
+                    _QuestionForm(
+                      homework: homework,
+                      selectedOptions: selectedOptions,
+                      essayControllers: essayControllers,
+                      onChanged: () => setState(() {}),
+                    ),
                   ],
                 ],
               ),
             ),
+      bottomNavigationBar: canSubmit
+          ? SafeArea(
+              top: false,
+              child: Material(
+                color: colors.surface,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+                  child: FilledButton.icon(
+                    onPressed: data.loading ? null : () => _submit(homework),
+                    icon: data.loading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: colors.onPrimary,
+                            ),
+                          )
+                        : const Icon(Icons.upload_file_rounded),
+                    label: Text(
+                      context.l10n
+                          .text(data.loading ? 'Submitting...' : 'Submit'),
+                    ),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(54),
+                      shape: const StadiumBorder(),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
   }
 
@@ -315,54 +340,60 @@ class _HomeworkHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final typeLabel = context.l10n.text(
+    final t = context.l10n;
+    final typeLabel = t.text(
       homework.isMultipleChoice ? 'Multiple choice' : 'Essay',
     );
+    final overdue = _isOverdue(homework);
+    final submission = homework.mySubmission;
+    final statusLabel = submission != null
+        ? (submission.isGraded ? t.text('Reviewed') : t.text('Submitted'))
+        : overdue
+            ? t.text('Overdue')
+            : t.text('Assigned');
+    final statusIcon = submission != null
+        ? (submission.isGraded
+            ? Icons.workspace_premium_rounded
+            : Icons.hourglass_top_rounded)
+        : overdue
+            ? Icons.warning_amber_rounded
+            : Icons.assignment_rounded;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colors.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(14),
+    return AppHeroCard(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 46,
+                height: 46,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE6F1FB),
-                  borderRadius: BorderRadius.circular(10),
+                  color: colors.onPrimary.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   homework.isMultipleChoice
-                      ? Icons.checklist_rounded
+                      ? Icons.quiz_rounded
                       : Icons.edit_note_rounded,
-                  color: const Color(0xFF185FA5),
+                  color: colors.onPrimary,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       homework.title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      '$typeLabel - ${context.l10n.points(homework.totalPoints.g)}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurface.withValues(alpha: 0.55),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        color: colors.onPrimary,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
@@ -370,30 +401,116 @@ class _HomeworkHeader extends StatelessWidget {
               ),
             ],
           ),
-          if ((homework.description ?? '').trim().isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(homework.description!.trim()),
-          ],
-          const SizedBox(height: 10),
-          _MetaRow(
-            icon: Icons.event_outlined,
-            label: context.l10n.dueAt(
-              DateFormat('dd/MM/yyyy HH:mm').format(
-                homework.dueDate.toLocal(),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _HeroHomeworkChip(
+                icon: homework.isMultipleChoice
+                    ? Icons.quiz_rounded
+                    : Icons.edit_note_rounded,
+                label: typeLabel,
               ),
+              _HeroHomeworkChip(
+                icon: Icons.stars_rounded,
+                label: t.points(homework.totalPoints.g),
+              ),
+              _HeroHomeworkChip(icon: statusIcon, label: statusLabel),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _HeroHomeworkDetail(
+            icon: Icons.schedule_rounded,
+            label: t.dueAt(
+              DateFormat('dd MMM, HH:mm').format(homework.dueDate.toLocal()),
             ),
           ),
           if (lesson != null) ...[
-            const SizedBox(height: 6),
-            _MetaRow(
-              icon: Icons.school_outlined,
+            const SizedBox(height: 8),
+            _HeroHomeworkDetail(
+              icon: Icons.school_rounded,
               label: context.l10n.isVi
                   ? '${_subjectName(lesson!)} với ${lesson!.tutorName}'
                   : '${_subjectName(lesson!)} with ${lesson!.tutorName}',
             ),
           ],
+          if ((homework.description ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(
+              homework.description!.trim(),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.onPrimary.withValues(alpha: 0.9),
+                height: 1.4,
+              ),
+            ),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _HeroHomeworkChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _HeroHomeworkChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: colors.onPrimary.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: colors.onPrimary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: colors.onPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroHomeworkDetail extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _HeroHomeworkDetail({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 17, color: colors.onPrimary.withValues(alpha: 0.9)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colors.onPrimary.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -480,7 +597,7 @@ class _TutorDetailView extends StatelessWidget {
             );
           }),
         const SizedBox(height: 2),
-        _SubmissionSummary(submissions: submissions),
+        _SubmissionSummary(homework: homework, submissions: submissions),
       ],
     );
   }
@@ -499,17 +616,11 @@ class _TutorQuestionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final tokens =
+        theme.extension<EduNestThemeTokens>() ?? EduNestThemeTokens.light();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colors.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(14),
+    return AppSurfaceCard(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -540,13 +651,12 @@ class _TutorQuestionCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: correct
-                      ? const Color(0xFFEAF3DE)
+                      ? tokens.successColor.withValues(alpha: 0.12)
                       : colors.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: correct
-                        ? const Color(0xFFC0DD97)
-                        : colors.outlineVariant,
+                    color:
+                        correct ? tokens.successColor : colors.outlineVariant,
                     width: 0.7,
                   ),
                 ),
@@ -558,17 +668,17 @@ class _TutorQuestionCard extends StatelessWidget {
                           : Icons.circle_outlined,
                       size: 18,
                       color: correct
-                          ? const Color(0xFF3B6D11)
+                          ? tokens.successColor
                           : colors.onSurface.withValues(alpha: 0.45),
                     ),
                     const SizedBox(width: 10),
                     Expanded(child: Text(option.content)),
                     if (correct)
-                      const Text(
-                        'Correct',
-                        style: TextStyle(
-                          color: Color(0xFF3B6D11),
-                          fontWeight: FontWeight.w700,
+                      Text(
+                        context.l10n.text('Correct'),
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: tokens.successColor,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                   ],
@@ -629,34 +739,26 @@ class _TutorEssayCard extends StatelessWidget {
 }
 
 class _SubmissionSummary extends StatelessWidget {
+  final HomeworkModel homework;
   final List<HomeworkSubmissionModel> submissions;
 
-  const _SubmissionSummary({required this.submissions});
+  const _SubmissionSummary({required this.homework, required this.submissions});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colors.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(14),
+    return AppSurfaceCard(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Submissions',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+          AppSectionHeader(
+            icon: Icons.inbox_rounded,
+            title: context.l10n.text('Submissions'),
+            subtitle:
+                '${submissions.length} ${context.l10n.text('submissions')}',
           ),
           const SizedBox(height: 8),
           if (submissions.isEmpty)
@@ -667,26 +769,158 @@ class _SubmissionSummary extends StatelessWidget {
               ),
             )
           else
-            ...submissions.map((submission) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        submission.studentName,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+            ...submissions.map(
+              (submission) => _TutorSubmissionTile(
+                homework: homework,
+                submission: submission,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TutorSubmissionTile extends StatelessWidget {
+  final HomeworkModel homework;
+  final HomeworkSubmissionModel submission;
+
+  const _TutorSubmissionTile(
+      {required this.homework, required this.submission});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final t = context.l10n;
+    final isEssay = homework.isEssay;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerHighest.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          leading: CircleAvatar(
+            radius: 18,
+            backgroundColor: colors.primaryContainer,
+            foregroundColor: colors.onPrimaryContainer,
+            child: Text(
+              submission.studentName.trim().isEmpty
+                  ? '?'
+                  : submission.studentName.trim().substring(0, 1).toUpperCase(),
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          title: Text(
+            submission.studentName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          subtitle: Text(
+            '${t.submittedAt(DateFormat('dd MMM, HH:mm').format(submission.submittedAt.toLocal()))} · ${submission.totalScore.g}/${submission.maxScore.g}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          children: [
+            if (isEssay) ...[
+              AppSectionHeader(
+                icon: Icons.edit_note_rounded,
+                title: t.text('Essay answers'),
+              ),
+              const SizedBox(height: 10),
+              if (submission.essayAnswers.isEmpty)
+                Text(
+                  t.text('No submissions yet'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                )
+              else
+                ...submission.essayAnswers.asMap().entries.map(
+                      (entry) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _TutorEssayAnswerCard(
+                          homework: homework,
+                          index: entry.key,
+                          answer: entry.value,
                         ),
                       ),
                     ),
-                    Text(
-                      '${submission.totalScore.g}/${submission.maxScore.g} pts',
-                    ),
-                  ],
-                ),
-              );
-            }),
+            ] else
+              const SizedBox.shrink(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TutorEssayAnswerCard extends StatelessWidget {
+  final HomeworkModel homework;
+  final int index;
+  final EssayAnswerModel answer;
+
+  const _TutorEssayAnswerCard({
+    required this.homework,
+    required this.index,
+    required this.answer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final prompt = _firstWhereOrNull<HomeworkEssayModel>(
+      homework.essays,
+      (essay) => essay.essayId == answer.essayId,
+    )?.questionText;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${context.l10n.text('Essay')} ${index + 1}',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colors.primary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (prompt != null && prompt.trim().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              prompt,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            context.l10n.text('Answer'),
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: colors.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(answer.answerText, style: theme.textTheme.bodyMedium),
         ],
       ),
     );
@@ -711,26 +945,16 @@ class _MultipleChoiceQuestionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colors.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(14),
+    return AppSurfaceCard(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${context.l10n.text('Question')} ${index + 1}',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: colors.onSurface.withValues(alpha: 0.55),
-            ),
+          AppMetaChip(
+            icon: Icons.help_outline_rounded,
+            label: '${context.l10n.text('Question')} ${index + 1}',
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 10),
           Text(
             question.questionText,
             style: theme.textTheme.bodyLarge?.copyWith(
@@ -745,7 +969,7 @@ class _MultipleChoiceQuestionCard extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: InkWell(
                 onTap: () => onSelected(option.questionOptionId),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
@@ -756,10 +980,10 @@ class _MultipleChoiceQuestionCard extends StatelessWidget {
                     color: selected
                         ? colors.primaryContainer.withValues(alpha: 0.55)
                         : colors.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: selected ? colors.primary : colors.outlineVariant,
-                      width: 0.7,
+                      width: selected ? 1.2 : 0.7,
                     ),
                   ),
                   child: Row(
@@ -798,21 +1022,17 @@ class _EssayPromptCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colors.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(14),
+    return AppSurfaceCard(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          AppMetaChip(
+            icon: Icons.edit_note_rounded,
+            label: context.l10n.text('Essay'),
+          ),
+          const SizedBox(height: 10),
           Text(
             essay.questionText,
             style: theme.textTheme.bodyLarge?.copyWith(
@@ -848,11 +1068,13 @@ class _ResultView extends StatelessWidget {
     final submission = homework.mySubmission!;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final tokens =
+        theme.extension<EduNestThemeTokens>() ?? EduNestThemeTokens.light();
     final scorePercent = submission.maxScore <= 0
         ? 0.0
         : submission.totalScore / submission.maxScore;
     final scoreColor =
-        submission.isGraded ? const Color(0xFF3B6D11) : const Color(0xFF854F0B);
+        submission.isGraded ? tokens.successColor : tokens.warningColor;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -878,9 +1100,7 @@ class _ResultView extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: submission.isGraded
-                          ? const Color(0xFFEAF3DE)
-                          : const Color(0xFFFAEEDA),
+                      color: scoreColor.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(

@@ -2,11 +2,21 @@ class SubjectModel {
   final int subjectId;
   final String name;
   final String description;
+  final String objective;
+  final String learningGoals;
+  final String expectedResults;
+  final String requiredTopics;
+  final String commonDifficulties;
 
   SubjectModel({
     required this.subjectId,
     required this.name,
     required this.description,
+    this.objective = '',
+    this.learningGoals = '',
+    this.expectedResults = '',
+    this.requiredTopics = '',
+    this.commonDifficulties = '',
   });
 
   factory SubjectModel.fromJson(Map<String, dynamic> json) {
@@ -14,6 +24,58 @@ class SubjectModel {
       subjectId: _asInt(json['subjectId'] ?? json['id']),
       name: json['name']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
+      objective: json['objective']?.toString() ?? '',
+      learningGoals: json['learningGoals']?.toString() ?? '',
+      expectedResults: json['expectedResults']?.toString() ?? '',
+      requiredTopics: json['requiredTopics']?.toString() ?? '',
+      commonDifficulties: json['commonDifficulties']?.toString() ?? '',
+    );
+  }
+}
+
+class TeachingGuideSectionModel {
+  final String title;
+  final List<String> items;
+
+  TeachingGuideSectionModel({required this.title, required this.items});
+
+  factory TeachingGuideSectionModel.fromJson(Map<String, dynamic> json) {
+    return TeachingGuideSectionModel(
+      title: json['title']?.toString() ?? '',
+      items: _asStringList(json['items']),
+    );
+  }
+}
+
+class TeachingPreparationGuideModel {
+  final int subjectId;
+  final String subjectName;
+  final String lessonFocus;
+  final String objective;
+  final List<TeachingGuideSectionModel> sections;
+
+  TeachingPreparationGuideModel({
+    required this.subjectId,
+    required this.subjectName,
+    required this.lessonFocus,
+    required this.objective,
+    required this.sections,
+  });
+
+  factory TeachingPreparationGuideModel.fromJson(Map<String, dynamic> json) {
+    final rawSections = json['sections'] as Iterable? ?? const [];
+
+    return TeachingPreparationGuideModel(
+      subjectId: _asInt(json['subjectId']),
+      subjectName: json['subjectName']?.toString() ?? '',
+      lessonFocus: json['lessonFocus']?.toString() ?? '',
+      objective: json['objective']?.toString() ?? '',
+      sections: rawSections
+          .whereType<Map>()
+          .map((item) => TeachingGuideSectionModel.fromJson(
+                Map<String, dynamic>.from(item),
+              ))
+          .toList(),
     );
   }
 }
@@ -1226,6 +1288,7 @@ class TutorVerificationModel {
   final String? cccdBackImageUrl;
   final String? certificateImageUrl;
   final List<String> certificateImageUrls;
+  final String? transcriptDocumentUrl;
 
   final String? bankName;
   final String? accountNumber;
@@ -1248,6 +1311,7 @@ class TutorVerificationModel {
     this.cccdBackImageUrl,
     this.certificateImageUrl,
     this.certificateImageUrls = const [],
+    this.transcriptDocumentUrl,
     this.bankName,
     this.accountNumber,
     this.accountHolderName,
@@ -1271,6 +1335,7 @@ class TutorVerificationModel {
       cccdBackImageUrl: json['cccdBackImageUrl']?.toString(),
       certificateImageUrl: json['certificateImageUrl']?.toString(),
       certificateImageUrls: _asStringList(json['certificateImageUrls']),
+      transcriptDocumentUrl: json['transcriptDocumentUrl']?.toString(),
       bankName: json['bankName']?.toString(),
       accountNumber: json['accountNumber']?.toString(),
       accountHolderName: json['accountHolderName']?.toString(),

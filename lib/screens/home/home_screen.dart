@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +8,7 @@ import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/money_text.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/user_avatar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -52,6 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.transparent,
         title: Text(
           isTutor ? t.myCourses : t.exploreTutors,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.onSurface,
@@ -59,6 +62,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
+          if (isTutor)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: IconButton(
+                onPressed: () => context.push('/teaching-guide'),
+                icon: Icon(
+                  Icons.auto_awesome_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                tooltip: t.text('Teaching preparation guide'),
+              ),
+            ),
           if (isTutor)
             Padding(
               padding: const EdgeInsets.only(right: 4),
@@ -105,40 +120,64 @@ class _TutorCourseList extends StatelessWidget {
   Widget build(BuildContext context) {
     final courses = data.myAvailabilities;
     final t = context.l10n;
+    final activeCourses = courses
+        .where((course) => course.status.toLowerCase() == 'active')
+        .length;
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       children: [
         ErrorBanner(data.error),
+        _HomeHero(
+          isTutor: true,
+          name: data.profile?.name,
+          action: () => context.push('/availability/create'),
+        ),
+        const SizedBox(height: 16),
+        if (courses.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.45,
+              children: [
+                AppMetricCard(
+                  icon: Icons.menu_book_rounded,
+                  label: t.myCourses,
+                  value: '${courses.length}',
+                ),
+                AppMetricCard(
+                  icon: Icons.check_circle_outline_rounded,
+                  label: t.active,
+                  value: '$activeCourses',
+                  tone: AppStatusTone.success,
+                ),
+              ],
+            ),
+          ),
         if (data.loading && courses.isEmpty)
           const Padding(
             padding: EdgeInsets.all(48),
             child: Center(child: CircularProgressIndicator()),
           ),
         if (!data.loading && courses.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.menu_book_rounded,
-                    size: 48, color: Colors.grey[400]),
-                const SizedBox(height: 12),
-                Text(
-                  t.noCoursesAvailable,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  t.startSharingKnowledge,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+          AppEmptyState(
+            icon: Icons.menu_book_rounded,
+            title: t.noCoursesAvailable,
+            message: t.startSharingKnowledge,
           ),
+        if (courses.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          AppSectionHeader(
+            icon: Icons.menu_book_rounded,
+            title: t.myCourses,
+            subtitle: t.text('Review your published teaching availability.'),
+          ),
+          const SizedBox(height: 12),
+        ],
         ...courses.map(
             (availability) => _TutorCourseCard(availability: availability)),
       ],
@@ -161,23 +200,15 @@ class _TutorCourseCard extends StatelessWidget {
         ? availability.totalCoursePrice
         : availability.pricePerSlot * availability.slot;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-            color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
-      ),
-      child: Padding(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: AppSurfaceCard(
+        kind: AppSurfaceCardKind.marketplace,
         padding: const EdgeInsets.all(20),
+        onTap: () => context.push(
+          '/availabilities/${availability.availabilityId}',
+          extra: availability,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -194,36 +225,13 @@ class _TutorCourseCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isActive
-                            ? Icons.check_circle_rounded
-                            : Icons.pause_circle_rounded,
-                        size: 14,
-                        color: isActive ? Colors.green : Colors.orange,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        isActive ? t.active : t.hidden,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: isActive ? Colors.green : Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
+                AppStatusBadge(
+                  label: isActive ? t.active : t.hidden,
+                  tone:
+                      isActive ? AppStatusTone.success : AppStatusTone.warning,
+                  icon: isActive
+                      ? Icons.check_circle_rounded
+                      : Icons.pause_circle_rounded,
                 ),
               ],
             ),
@@ -234,17 +242,27 @@ class _TutorCourseCard extends StatelessWidget {
               spacing: 12,
               runSpacing: 8,
               children: [
-                _buildInfoTag(theme, Icons.calendar_today_rounded,
-                    availability.dayOfWeek),
-                _buildInfoTag(theme, Icons.access_time_rounded,
-                    '${availability.startTime} - ${availability.endTime}'),
-                _buildInfoTag(theme, Icons.layers_rounded,
-                    '${t.mode(availability.mode)} - ${t.level(availability.level)}'),
+                AppMetaChip(
+                  icon: Icons.calendar_today_rounded,
+                  label: availability.dayOfWeek,
+                ),
+                AppMetaChip(
+                  icon: Icons.access_time_rounded,
+                  label: '${availability.startTime} - ${availability.endTime}',
+                ),
+                AppMetaChip(
+                  icon: Icons.layers_rounded,
+                  label: t.mode(availability.mode),
+                ),
                 if (_offlineAreas(availability).isNotEmpty)
-                  _buildInfoTag(theme, Icons.location_on_outlined,
-                      _offlineAreas(availability)),
-                _buildInfoTag(theme, Icons.list_alt_rounded,
-                    '${availability.slot} ${t.lessonsLower}'),
+                  AppMetaChip(
+                    icon: Icons.location_on_outlined,
+                    label: _offlineAreas(availability),
+                  ),
+                AppMetaChip(
+                  icon: Icons.list_alt_rounded,
+                  label: '${availability.slot} ${t.lessonsLower}',
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -285,7 +303,8 @@ class _TutorCourseCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     backgroundColor: isActive
-                        ? theme.colorScheme.errorContainer.withOpacity(0.6)
+                        ? theme.colorScheme.errorContainer
+                            .withValues(alpha: 0.6)
                         : theme.colorScheme.secondaryContainer,
                     foregroundColor: isActive
                         ? theme.colorScheme.error
@@ -298,30 +317,6 @@ class _TutorCourseCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfoTag(ThemeData theme, IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500),
-          ),
-        ],
       ),
     );
   }
@@ -382,19 +377,27 @@ class _LearnerTutorList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       children: [
         ErrorBanner(data.error),
+        _HomeHero(
+          isTutor: false,
+          name: data.profile?.name,
+        ),
+        const SizedBox(height: 20),
+        AppSectionHeader(
+          icon: Icons.school_rounded,
+          title: t.text('Tutors you can book'),
+          subtitle: t.text('Compare availability, teaching mode, and price.'),
+        ),
+        const SizedBox(height: 12),
         if (data.loading && data.availabilities.isEmpty)
           const Padding(
             padding: EdgeInsets.all(48),
             child: Center(child: CircularProgressIndicator()),
           ),
         if (!data.loading && data.availabilities.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(40),
-            alignment: Alignment.center,
-            child: Text(
-              t.noTutorsAvailable,
-              style: const TextStyle(color: Colors.grey),
-            ),
+          AppEmptyState(
+            icon: Icons.school_outlined,
+            title: t.noTutorsAvailable,
+            message: t.text('Check back soon for new tutors and courses.'),
           ),
         ...groups.values.map((courses) => _TutorGroupCard(courses: courses)),
       ],
@@ -412,6 +415,102 @@ class _LearnerTutorList extends StatelessWidget {
   }
 }
 
+class _HomeHero extends StatelessWidget {
+  final bool isTutor;
+  final String? name;
+  final VoidCallback? action;
+
+  const _HomeHero({
+    required this.isTutor,
+    this.name,
+    this.action,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final t = context.l10n;
+    final displayName = name?.trim() ?? '';
+
+    return AppHeroCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.onPrimary.withValues(alpha: 0.16),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isTutor
+                      ? Icons.auto_awesome_rounded
+                      : Icons.menu_book_rounded,
+                  color: colors.onPrimary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  displayName.isEmpty
+                      ? t.welcomeBack
+                      : '${t.welcomeBack}, $displayName',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: colors.onPrimary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            isTutor
+                ? t.text('Make today a great teaching day')
+                : t.text('Find a tutor who fits your goals'),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: colors.onPrimary,
+                  fontWeight: FontWeight.w900,
+                  height: 1.05,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            isTutor
+                ? t.text(
+                    'Create availability, prepare your lessons, and stay on top of your courses.')
+                : t.text(
+                    'Explore trusted tutors, compare schedules, and book with confidence.'),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colors.onPrimary.withValues(alpha: 0.86),
+                  height: 1.35,
+                ),
+          ),
+          if (action != null) ...[
+            const SizedBox(height: 18),
+            FilledButton.icon(
+              onPressed: action,
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.surface,
+                foregroundColor: colors.primary,
+                elevation: 0,
+              ),
+              icon: const Icon(Icons.add_circle_rounded),
+              label: Text(t.text('Create availability')),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _TutorGroupCard extends StatelessWidget {
   final List<AvailabilityModel> courses;
   const _TutorGroupCard({required this.courses});
@@ -426,116 +525,124 @@ class _TutorGroupCard extends StatelessWidget {
     final isFavorite = data.isFavoriteTutor(first.tutorId);
     final t = context.l10n;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-            color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          initiallyExpanded: true,
-          backgroundColor: Colors.transparent,
-          collapsedBackgroundColor: Colors.transparent,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          leading: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                  color: theme.colorScheme.primary.withOpacity(0.2), width: 3),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: AppSurfaceCard(
+        kind: AppSurfaceCardKind.marketplace,
+        padding: EdgeInsets.zero,
+        child: Theme(
+          data: theme.copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: false,
+            backgroundColor: Colors.transparent,
+            collapsedBackgroundColor: Colors.transparent,
+            tilePadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    width: 3),
+              ),
+              child: UserAvatar(
+                imageUrl: first.tutorAvatarUrl,
+                name: tutorName,
+                radius: 24,
+              ),
             ),
-            child: UserAvatar(
-              imageUrl: first.tutorAvatarUrl,
-              name: tutorName,
-              radius: 24,
+            title: Text(
+              tutorName,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-          ),
-          title: Text(
-            tutorName,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          subtitle: Text(
-            t.activeCoursesOpen(courses.length),
-            style: TextStyle(
-                fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+            subtitle: Wrap(
+              spacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  t.activeCoursesOpen(courses.length),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                AppStatusBadge(
+                  label: t.active,
+                  tone: AppStatusTone.success,
+                  icon: Icons.verified_rounded,
+                ),
+              ],
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: isFavorite ? t.unsaveTutor : t.saveTutor,
+                  onPressed: data.loading
+                      ? null
+                      : () => _toggleFavorite(context, first, tutorName),
+                  icon: Icon(
+                    isFavorite
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    color: isFavorite
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurfaceVariant,
+                    size: 22,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: isFavorite
+                        ? theme.colorScheme.errorContainer
+                            .withValues(alpha: 0.55)
+                        : theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.6),
+                    padding: const EdgeInsets.all(8),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  tooltip: 'Chat',
+                  onPressed: first.tutorUserId <= 0
+                      ? null
+                      : () => _startChat(context, first.tutorUserId),
+                  icon: Icon(Icons.chat_bubble_rounded,
+                      color: theme.colorScheme.primary, size: 22),
+                  style: IconButton.styleFrom(
+                    backgroundColor:
+                        theme.colorScheme.primary.withValues(alpha: 0.1),
+                    padding: const EdgeInsets.all(8),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.expand_more_rounded),
+              ],
+            ),
             children: [
-              IconButton(
-                tooltip: isFavorite ? t.unsaveTutor : t.saveTutor,
-                onPressed: data.loading
-                    ? null
-                    : () => _toggleFavorite(context, first, tutorName),
-                icon: Icon(
-                  isFavorite
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  color: isFavorite
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.onSurfaceVariant,
-                  size: 22,
-                ),
-                style: IconButton.styleFrom(
-                  backgroundColor: isFavorite
-                      ? theme.colorScheme.errorContainer.withOpacity(0.55)
-                      : theme.colorScheme.surfaceContainerHighest
-                          .withOpacity(0.6),
-                  padding: const EdgeInsets.all(8),
-                ),
-              ),
-              const SizedBox(width: 4),
-              IconButton(
-                tooltip: 'Chat',
-                onPressed: first.tutorUserId <= 0
-                    ? null
-                    : () => _startChat(context, first.tutorUserId),
-                icon: Icon(Icons.chat_bubble_rounded,
-                    color: theme.colorScheme.primary, size: 22),
-                style: IconButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                  padding: const EdgeInsets.all(8),
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.expand_more_rounded),
-            ],
-          ),
-          children: [
-            const Divider(height: 1, indent: 16, endIndent: 16),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => context.push('/tutors/${first.tutorId}'),
-                      icon: const Icon(Icons.badge_rounded),
-                      label: Text(t.viewTutorProfile),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () =>
+                            context.push('/tutors/${first.tutorId}'),
+                        icon: const Icon(Icons.badge_rounded),
+                        label: Text(t.viewTutorProfile),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            ...courses.map((availability) =>
-                _LearnerCourseTile(availability: availability)),
-          ],
+              ...courses.map((availability) =>
+                  _LearnerCourseTile(availability: availability)),
+            ],
+          ),
         ),
       ),
     );
@@ -591,112 +698,120 @@ class _LearnerCourseTile extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => context.push(
+          '/availabilities/${availability.availabilityId}',
+          extra: availability,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    _subjectText(context, availability),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.secondary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    t.mode(availability.mode),
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: theme.colorScheme.secondary,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                _buildSmallInfo(
-                    theme, Icons.event_rounded, availability.dayOfWeek),
-                const SizedBox(width: 16),
-                _buildSmallInfo(theme, Icons.schedule_rounded,
-                    '${availability.startTime} - ${availability.endTime}'),
-              ],
-            ),
-            if (_offlineAreas(availability).isNotEmpty) ...[
-              const SizedBox(height: 10),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.location_on_outlined,
-                    size: 14,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      _offlineAreas(availability),
+                      _subjectText(context, availability),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.secondary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      t.mode(availability.mode),
                       style: TextStyle(
-                        fontSize: 12,
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
+                          fontSize: 11,
+                          color: theme.colorScheme.secondary,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
-            ],
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(t.fullTuitionPackage,
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: theme.colorScheme.onSurfaceVariant)),
-                      MoneyText(
-                        total,
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  _buildSmallInfo(
+                      theme, Icons.event_rounded, availability.dayOfWeek),
+                  const SizedBox(width: 16),
+                  _buildSmallInfo(theme, Icons.schedule_rounded,
+                      '${availability.startTime} - ${availability.endTime}'),
+                ],
+              ),
+              if (_offlineAreas(availability).isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _offlineAreas(availability),
                         style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 18,
-                          color: theme.colorScheme.primary,
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                FilledButton(
-                  onPressed:
-                      data.loading ? null : () => _book(context, availability),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Text(t.enrollNow,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(t.fullTuitionPackage,
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: theme.colorScheme.onSurfaceVariant)),
+                        MoneyText(
+                          total,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 18,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  FilledButton(
+                    onPressed: data.loading
+                        ? null
+                        : () => _book(context, availability),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(t.enrollNow,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

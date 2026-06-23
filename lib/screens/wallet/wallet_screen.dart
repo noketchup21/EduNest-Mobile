@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_strings.dart';
 import '../../providers/app_data_provider.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/money_text.dart';
 
@@ -73,15 +74,26 @@ class _WalletScreenState extends State<WalletScreen> {
 
             // --- SECTION 1: WALLET DASHBOARD ---
             if (wallet == null)
-              Card(
-                elevation: 0,
+              AppSurfaceCard(
                 color: theme.colorScheme.errorContainer,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    t.walletTutorOnly,
-                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
-                  ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        t.walletTutorOnly,
+                        style: TextStyle(
+                          color: theme.colorScheme.onErrorContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               )
             else ...[
@@ -100,7 +112,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     )
@@ -113,7 +125,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     Text(
                       t.availableBalance,
                       style: TextStyle(
-                        color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                        color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -132,13 +144,13 @@ class _WalletScreenState extends State<WalletScreen> {
                         Icon(Icons.hourglass_empty_rounded,
                             size: 16,
                             color:
-                                theme.colorScheme.onPrimary.withOpacity(0.8)),
+                                theme.colorScheme.onPrimary.withValues(alpha: 0.8)),
                         const SizedBox(width: 6),
                         Text(
                           t.pendingClearance,
                           style: TextStyle(
                               color:
-                                  theme.colorScheme.onPrimary.withOpacity(0.8)),
+                                  theme.colorScheme.onPrimary.withValues(alpha: 0.8)),
                         ),
                         Text(
                           currencyFormatter.format(wallet.pendingBalance),
@@ -155,12 +167,7 @@ class _WalletScreenState extends State<WalletScreen> {
               const SizedBox(height: 20),
 
               // --- SECTION 2: PAYOUT BOX ---
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding: const EdgeInsets.all(16),
+              AppSurfaceCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -186,7 +193,7 @@ class _WalletScreenState extends State<WalletScreen> {
                             borderRadius: BorderRadius.circular(12)),
                         filled: true,
                         fillColor: theme.colorScheme.surfaceContainerHighest
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -222,7 +229,11 @@ class _WalletScreenState extends State<WalletScreen> {
             // --- SECTION 3: TRANSACTIONS LIST ---
             _buildSectionHeader(context, t.transactionHistory),
             if (data.walletTransactions.isEmpty)
-              _buildEmptyCard(Icons.receipt_long_outlined, t.noTransactionsYet)
+              _buildEmptyCard(
+                context,
+                Icons.receipt_long_outlined,
+                t.noTransactionsYet,
+              )
             else
               _PaginatedTransactions(
                 transactions: data.walletTransactions,
@@ -233,7 +244,11 @@ class _WalletScreenState extends State<WalletScreen> {
             // --- SECTION 4: PAYOUTS LIST ---
             _buildSectionHeader(context, t.payoutHistory),
             if (data.payouts.isEmpty)
-              _buildEmptyCard(Icons.payments_outlined, t.noPayoutRequestsYet)
+              _buildEmptyCard(
+                context,
+                Icons.payments_outlined,
+                t.noPayoutRequestsYet,
+              )
             else
               _PaginatedPayouts(
                 payouts: data.payouts,
@@ -250,51 +265,27 @@ class _WalletScreenState extends State<WalletScreen> {
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 24, 4, 12),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-      ),
+      child: AppSectionHeader(title: title),
     );
   }
 
-  Widget _buildEmptyCard(IconData icon, String message) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
-      ),
+  Widget _buildEmptyCard(BuildContext context, IconData icon, String message) {
+    return AppSurfaceCard(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: Colors.grey),
+          Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
           const SizedBox(width: 12),
-          Text(message, style: const TextStyle(color: Colors.grey)),
+          Flexible(
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    final norm = status.toLowerCase();
-    final t = AppStrings.of(context, listen: false);
-    Color color = Colors.orange;
-    if (norm == 'paid') color = Colors.green;
-    if (norm == 'failed') color = Colors.red;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        t.status(status).toUpperCase(),
-        style:
-            TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -347,19 +338,19 @@ class _PayoutStatusIcon extends StatelessWidget {
 
     if (normalized == 'paid') {
       return CircleAvatar(
-        backgroundColor: Colors.green.withOpacity(0.1),
+        backgroundColor: Colors.green.withValues(alpha: 0.1),
         child: const Icon(Icons.check_circle_rounded, color: Colors.green),
       );
     }
     if (normalized == 'failed') {
       return CircleAvatar(
-        backgroundColor: Colors.red.withOpacity(0.1),
+        backgroundColor: Colors.red.withValues(alpha: 0.1),
         child: const Icon(Icons.cancel_rounded, color: Colors.red),
       );
     }
 
     return CircleAvatar(
-      backgroundColor: Colors.orange.withOpacity(0.1),
+      backgroundColor: Colors.orange.withValues(alpha: 0.1),
       child: const Icon(Icons.timelapse_rounded, color: Colors.orange),
     );
   }
@@ -403,7 +394,7 @@ class _PaginatedTransactionsState extends State<_PaginatedTransactions> {
           decoration: BoxDecoration(
             color: colors.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: colors.outlineVariant.withOpacity(0.5)),
+            border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.5)),
           ),
           child: ListView.separated(
             shrinkWrap: true,
@@ -413,7 +404,7 @@ class _PaginatedTransactionsState extends State<_PaginatedTransactions> {
               height: 1,
               indent: 60,
               endIndent: 16,
-              color: colors.outlineVariant.withOpacity(0.4),
+              color: colors.outlineVariant.withValues(alpha: 0.4),
             ),
             itemBuilder: (context, index) {
               final t = _currentItems[index];
@@ -424,7 +415,7 @@ class _PaginatedTransactionsState extends State<_PaginatedTransactions> {
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 leading: CircleAvatar(
-                  backgroundColor: color.withOpacity(0.1),
+                  backgroundColor: color.withValues(alpha: 0.1),
                   child: Icon(
                     isPositive ? Icons.add_rounded : Icons.remove_rounded,
                     color: color,
@@ -513,7 +504,7 @@ class _PaginatedPayoutsState extends State<_PaginatedPayouts> {
           decoration: BoxDecoration(
             color: colors.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: colors.outlineVariant.withOpacity(0.5)),
+            border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.5)),
           ),
           child: ListView.separated(
             shrinkWrap: true,
@@ -523,7 +514,7 @@ class _PaginatedPayoutsState extends State<_PaginatedPayouts> {
               height: 1,
               indent: 60,
               endIndent: 16,
-              color: colors.outlineVariant.withOpacity(0.4),
+              color: colors.outlineVariant.withValues(alpha: 0.4),
             ),
             itemBuilder: (context, index) {
               final p = _currentItems[index];
@@ -572,9 +563,9 @@ class _PaginatedPayoutsState extends State<_PaginatedPayouts> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: color.withOpacity(0.25)),
+                        border: Border.all(color: color.withValues(alpha: 0.25)),
                       ),
                       child: Text(
                         t.status(p.status as String),
@@ -657,7 +648,7 @@ class _PageControls extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isActive
                     ? colors.primary
-                    : colors.onSurfaceVariant.withOpacity(0.25),
+                    : colors.onSurfaceVariant.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -678,7 +669,7 @@ class _PageControls extends StatelessWidget {
               side: BorderSide(
                 color: onPrev != null
                     ? colors.outlineVariant
-                    : colors.outlineVariant.withOpacity(0.3),
+                    : colors.outlineVariant.withValues(alpha: 0.3),
               ),
             ),
           ),
@@ -697,7 +688,7 @@ class _PageControls extends StatelessWidget {
               side: BorderSide(
                 color: onNext != null
                     ? colors.outlineVariant
-                    : colors.outlineVariant.withOpacity(0.3),
+                    : colors.outlineVariant.withValues(alpha: 0.3),
               ),
             ),
           ),

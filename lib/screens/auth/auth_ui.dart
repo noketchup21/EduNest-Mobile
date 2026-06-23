@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_theme.dart';
 import '../../widgets/language_switcher.dart';
-
-const _ink = Color(0xFF0F172A);
-const _muted = Color(0xFF64748B);
-const _border = Color(0xFFE2E8F0);
-const _surface = Colors.white;
-const _blue = Color(0xFF2563EB);
-const _teal = Color(0xFF0F766E);
-const _rose = Color(0xFFFFF1F2);
 
 class AuthScaffold extends StatelessWidget {
   final Widget child;
@@ -22,17 +15,18 @@ class AuthScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: appBar,
       body: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              _rose,
-              Color(0xFFF8FAFC),
-              Color(0xFFECFDF5),
+              colors.primaryContainer.withValues(alpha: 0.52),
+              Theme.of(context).scaffoldBackgroundColor,
+              colors.tertiaryContainer.withValues(alpha: 0.34),
             ],
           ),
         ),
@@ -66,6 +60,7 @@ class AuthLogoLockup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -74,21 +69,21 @@ class AuthLogoLockup extends StatelessWidget {
           height: 76,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: _surface,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: _border),
-            boxShadow: const [
+            border: Border.all(color: colors.outlineVariant),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x1A2563EB),
+                color: colors.primary.withValues(alpha: 0.14),
                 blurRadius: 30,
-                offset: Offset(0, 16),
+                offset: const Offset(0, 16),
               ),
             ],
           ),
           child: Image.asset(
             'assets/images/Logo.png',
             errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.school_rounded, color: _blue, size: 44),
+                Icon(Icons.school_rounded, color: colors.primary, size: 44),
           ),
         ),
         const SizedBox(width: 14),
@@ -98,7 +93,7 @@ class AuthLogoLockup extends StatelessWidget {
             Text(
               'EduNest',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: _ink,
+                    color: colors.onSurface,
                     fontWeight: FontWeight.w900,
                     height: 1,
                   ),
@@ -120,17 +115,18 @@ class AuthPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
-        color: _surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: _border),
-        boxShadow: const [
+        border: Border.all(color: colors.outlineVariant),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x140F172A),
+            color: colors.shadow.withValues(alpha: 0.12),
             blurRadius: 34,
-            offset: Offset(0, 20),
+            offset: const Offset(0, 20),
           ),
         ],
       ),
@@ -152,11 +148,12 @@ class AuthHeader extends StatelessWidget {
     required this.eyebrow,
     required this.title,
     this.subtitle,
-    this.color = _blue,
+    this.color = AppTheme.primaryBlue,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -185,7 +182,7 @@ class AuthHeader extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: _ink,
+                color: colors.onSurface,
                 fontWeight: FontWeight.w900,
                 height: 1.05,
               ),
@@ -195,7 +192,7 @@ class AuthHeader extends StatelessWidget {
           Text(
             subtitle!,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: _muted,
+                  color: colors.onSurfaceVariant,
                   height: 1.35,
                 ),
           ),
@@ -218,7 +215,7 @@ class AuthChoiceCard extends StatefulWidget {
     required this.title,
     required this.onTap,
     this.subtitle,
-    this.color = _blue,
+    this.color = AppTheme.primaryBlue,
   });
 
   @override
@@ -230,6 +227,7 @@ class _AuthChoiceCardState extends State<AuthChoiceCard> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return AnimatedScale(
       scale: _pressed ? 0.98 : 1,
       duration: const Duration(milliseconds: 120),
@@ -269,7 +267,7 @@ class _AuthChoiceCardState extends State<AuthChoiceCard> {
                         widget.title,
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: _ink,
+                                  color: colors.onSurface,
                                   fontWeight: FontWeight.w900,
                                 ),
                       ),
@@ -282,7 +280,7 @@ class _AuthChoiceCardState extends State<AuthChoiceCard> {
                           overflow: TextOverflow.ellipsis,
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: _muted,
+                                    color: colors.onSurfaceVariant,
                                     height: 1.2,
                                   ),
                         ),
@@ -295,7 +293,7 @@ class _AuthChoiceCardState extends State<AuthChoiceCard> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: _surface,
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(10),
                     border:
                         Border.all(color: widget.color.withValues(alpha: 0.18)),
@@ -381,7 +379,7 @@ class AuthLinkButton extends StatelessWidget {
       icon: Icon(icon, size: 18),
       label: Text(label),
       style: TextButton.styleFrom(
-        foregroundColor: _blue,
+        foregroundColor: Theme.of(context).colorScheme.primary,
         textStyle: const TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w800,
@@ -391,4 +389,5 @@ class AuthLinkButton extends StatelessWidget {
   }
 }
 
-Color authAccentForTutor(bool isTutor) => isTutor ? _teal : _blue;
+Color authAccentForTutor(bool isTutor) =>
+    isTutor ? AppTheme.successTeal : AppTheme.primaryBlue;
