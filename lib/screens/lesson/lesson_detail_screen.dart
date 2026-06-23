@@ -8,6 +8,7 @@ import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/error_banner.dart';
 
 class LessonDetailScreen extends StatefulWidget {
@@ -300,20 +301,17 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     onSave: _saveMeetingLink,
                   ),
                   const SizedBox(height: 18),
-                  if (isTutor)
-                    _TutorHomeworkShortcutCard(lessonId: widget.lessonId)
-                  else
-                    _HomeworkSection(
-                      homeworks: homeworks,
-                      isTutor: isTutor,
-                      loading: data.loading,
-                      onCreate: _createHomework,
-                      onView: _viewHomework,
-                      onEdit: _editHomework,
-                      onDelete: _deleteHomework,
-                      onSubmit: _submitHomework,
-                      onGrade: _gradeSubmission,
-                    ),
+                  _HomeworkSection(
+                    homeworks: homeworks,
+                    isTutor: isTutor,
+                    loading: data.loading,
+                    onCreate: _createHomework,
+                    onView: _viewHomework,
+                    onEdit: _editHomework,
+                    onDelete: _deleteHomework,
+                    onSubmit: _submitHomework,
+                    onGrade: _gradeSubmission,
+                  ),
                   const SizedBox(height: 18),
                   if (isTutor) ...[
                     // Students section label
@@ -370,83 +368,6 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 ],
               ),
             ),
-    );
-  }
-}
-
-// -----------------------------------------------------------------------------
-// Lesson Header Card
-// -----------------------------------------------------------------------------
-
-class _TutorHomeworkShortcutCard extends StatelessWidget {
-  final int lessonId;
-
-  const _TutorHomeworkShortcutCard({required this.lessonId});
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.l10n;
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: colors.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE6F1FB),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.assignment_outlined,
-              color: Color(0xFF185FA5),
-              size: 21,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.text('Homework is managed separately'),
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  t.text(
-                    'Create assignments and grade submissions in the Homework tab.',
-                  ),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.onSurface.withValues(alpha: 0.55),
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          OutlinedButton.icon(
-            onPressed: () => context.go('/homework?lessonId=$lessonId'),
-            icon: const Icon(Icons.open_in_new_rounded, size: 16),
-            label: Text(t.open),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -1505,74 +1426,56 @@ class _LessonHeaderCard extends StatelessWidget {
     final timeStr =
         '${DateFormat('HH:mm').format(start)} — ${DateFormat('HH:mm').format(end)}';
 
-    final (statusBg, statusFg, statusBorder) = _statusColors(detail.status);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: colors.outlineVariant.withValues(alpha: 0.5), width: 0.5),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
+    return AppHeroCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status icon circle
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: statusBg,
-              shape: BoxShape.circle,
-              border: Border.all(color: statusBorder, width: 0.5),
-            ),
-            child: Icon(_statusIcon(detail.status), size: 22, color: statusFg),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  dateStr,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: colors.onSurface.withValues(alpha: 0.5),
-                  ),
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.onPrimary.withValues(alpha: 0.16),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  timeStr,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.2,
-                  ),
+                child: Icon(
+                  _statusIcon(detail.status),
+                  color: colors.onPrimary,
+                  size: 22,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${detail.duration} ${t.text('minutes')}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Status chip
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: statusBg,
-              borderRadius: BorderRadius.circular(100),
-              border: Border.all(color: statusBorder, width: 0.5),
-            ),
-            child: Text(
-              t.status(detail.status),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: statusFg,
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  t.status(detail.status),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: colors.onPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              _LessonHeroChip(
+                icon: Icons.schedule_rounded,
+                label: '${detail.duration} ${t.text('minutes')}',
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            timeStr,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: colors.onPrimary,
+              fontWeight: FontWeight.w900,
             ),
+          ),
+          const SizedBox(height: 6),
+          _LessonHeroChip(
+            icon: Icons.calendar_today_rounded,
+            label: dateStr,
           ),
         ],
       ),
@@ -1591,30 +1494,38 @@ class _LessonHeaderCard extends StatelessWidget {
         return Icons.schedule_outlined;
     }
   }
+}
 
-  (Color, Color, Color) _statusColors(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return (
-          const Color(0xFFEAF3DE),
-          const Color(0xFF3B6D11),
-          const Color(0xFFC0DD97),
-        );
-      case 'cancelled':
-      case 'expired':
-      case 'failed':
-        return (
-          const Color(0xFFFCEBEB),
-          const Color(0xFFA32D2D),
-          const Color(0xFFF7C1C1),
-        );
-      default:
-        return (
-          const Color(0xFFFAEEDA),
-          const Color(0xFF854F0B),
-          const Color(0xFFFAC775),
-        );
-    }
+class _LessonHeroChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _LessonHeroChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: colors.onPrimary.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: colors.onPrimary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: colors.onPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

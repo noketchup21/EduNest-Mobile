@@ -7,6 +7,7 @@ import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/error_banner.dart';
 
 class HomeworkScreen extends StatefulWidget {
@@ -152,51 +153,29 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
               ),
             if (!data.loading && courses.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 48),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.school_outlined,
-                      size: 42,
-                      color: colors.onSurface.withValues(alpha: 0.3),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      t.noCoursesAvailableYet,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: colors.onSurface.withValues(alpha: 0.55),
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: AppEmptyState(
+                  icon: Icons.school_outlined,
+                  title: t.noCoursesAvailableYet,
+                  message: t.text('Choose a course to see its homework.'),
                 ),
               )
             else if (!data.loading && items.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 48),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.assignment_outlined,
-                      size: 42,
-                      color: colors.onSurface.withValues(alpha: 0.3),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      allItems.isEmpty
-                          ? t.text('No homework assigned in this course yet.')
-                          : t.text('No homework in this view.'),
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: colors.onSurface.withValues(alpha: 0.55),
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: AppEmptyState(
+                  icon: Icons.assignment_outlined,
+                  title: allItems.isEmpty
+                      ? t.text('No homework assigned in this course yet.')
+                      : t.text('No homework in this view.'),
+                  message: t.text('Try another filter or check back later.'),
                 ),
               ),
             ...itemsByLesson.entries.toList().asMap().entries.map(
                   (entry) => _LessonHomeworkSection(
                     lesson: entry.value.key,
                     items: entry.value.value,
-                    canSubmit: auth.isStudent,
+                    canSubmit: auth.isLearner,
                     loading: data.loading,
                     initiallyExpanded: entry.key == 0,
                     onOpenHomework: _openHomework,

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +8,7 @@ import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/tutor_review_sheet.dart';
 import '../../widgets/user_avatar.dart';
@@ -101,14 +102,12 @@ class _LessonScreenState extends State<LessonScreen> {
               const SizedBox(height: 10),
             ],
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                auth.isTutor ? t.myTeachingLessons : t.myLearningLessons,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: colors.onSurface,
-                  letterSpacing: -0.1,
-                ),
+              padding: const EdgeInsets.only(bottom: 12),
+              child: AppSectionHeader(
+                icon: auth.isTutor
+                    ? Icons.school_outlined
+                    : Icons.menu_book_outlined,
+                title: auth.isTutor ? t.myTeachingLessons : t.myLearningLessons,
               ),
             ),
             if (data.loading && lessons.isEmpty)
@@ -118,19 +117,11 @@ class _LessonScreenState extends State<LessonScreen> {
               ),
             if (!data.loading && lessons.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 48),
-                child: Column(
-                  children: [
-                    Icon(Icons.school_outlined,
-                        size: 40,
-                        color: colors.onSurface.withValues(alpha: 0.3)),
-                    const SizedBox(height: 12),
-                    Text(
-                      t.noLessonsYet,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                          color: colors.onSurface.withValues(alpha: 0.5)),
-                    ),
-                  ],
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: AppEmptyState(
+                  icon: Icons.school_outlined,
+                  title: t.noLessonsYet,
+                  message: t.text('Your scheduled lessons will appear here.'),
                 ),
               ),
             if (auth.isTutor)

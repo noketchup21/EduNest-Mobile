@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../l10n/app_strings.dart';
+import '../models/mvp_models.dart';
 import '../providers/auth_provider.dart';
 import '../screens/admin/admin_screen.dart';
 import '../screens/auth/auth_flow_type.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/verify_email_screen.dart';
+import '../screens/availability/availability_detail_screen.dart';
 import '../screens/availability/create_availability_screen.dart';
 import '../screens/booking/booking_screen.dart';
 import '../screens/chat/chat_detail_screen.dart';
 import '../screens/chat/chat_screen.dart';
+import '../screens/course/course_hub_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/homework/homework_screen.dart';
 import '../screens/homework/homework_take_screen.dart';
@@ -23,6 +26,7 @@ import '../screens/payment/payment_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/wallet/wallet_screen.dart';
 import '../screens/tutor/tutor_verification_screen.dart';
+import '../screens/tutor/teaching_preparation_guide_screen.dart';
 import '../screens/tutor/tutor_detail_screen.dart';
 import '../screens/tutor/favorite_tutors_screen.dart';
 import '../screens/admin/admin_tutor_detail_screen.dart';
@@ -82,6 +86,12 @@ class AppRouter {
         }
 
         if (loggedIn &&
+            location.startsWith('/teaching-guide') &&
+            (!auth.isTutor || auth.isAdmin)) {
+          return '/home';
+        }
+
+        if (loggedIn &&
             location == '/homework' &&
             ((!auth.isLearner && !auth.isTutor) || auth.isAdmin)) {
           return '/home';
@@ -95,6 +105,12 @@ class AppRouter {
 
         if (loggedIn &&
             location == '/materials' &&
+            ((!auth.isLearner && !auth.isTutor) || auth.isAdmin)) {
+          return '/home';
+        }
+
+        if (loggedIn &&
+            location == '/course-hub' &&
             ((!auth.isLearner && !auth.isTutor) || auth.isAdmin)) {
           return '/home';
         }
@@ -162,6 +178,10 @@ class AppRouter {
             GoRoute(
               path: '/home',
               builder: (_, __) => const HomeScreen(),
+            ),
+            GoRoute(
+              path: '/course-hub',
+              builder: (_, __) => const CourseHubScreen(),
             ),
             GoRoute(
               path: '/bookings',
@@ -248,6 +268,20 @@ class AppRouter {
           builder: (_, __) => const CreateAvailabilityScreen(),
         ),
         GoRoute(
+          path: '/availabilities/:id',
+          builder: (context, state) {
+            final availability = state.extra;
+
+            if (availability is! AvailabilityModel) {
+              return const Scaffold(
+                body: Center(child: Text('Availability data is missing')),
+              );
+            }
+
+            return AvailabilityDetailScreen(availability: availability);
+          },
+        ),
+        GoRoute(
           path: '/lessons/:id',
           builder: (context, state) {
             final id = int.tryParse(state.pathParameters['id'] ?? '');
@@ -268,6 +302,12 @@ class AppRouter {
         GoRoute(
           path: '/tutor-verification',
           builder: (_, __) => const TutorVerificationScreen(),
+        ),
+        GoRoute(
+          path: '/teaching-guide',
+          builder: (_, state) => TeachingPreparationGuideScreen(
+            initialSubjectId: state.extra is int ? state.extra as int : null,
+          ),
         ),
         GoRoute(
           path: '/tutors/:id',
@@ -424,11 +464,10 @@ class MainShell extends StatelessWidget {
         ),
       if ((auth.isLearner || auth.isTutor) && !auth.isAdmin)
         _NavItem(
-          '/course-tools',
+          '/course-hub',
           Icons.auto_stories_outlined,
           Icons.auto_stories,
           t.course,
-          opensCourseTools: true,
         ),
       _NavItem(
         '/chat',
@@ -452,54 +491,62 @@ class MainShell extends StatelessWidget {
     ];
 
     final current = items.indexWhere(
-      (e) {
-        if (e.opensCourseTools) return _isCourseLocation(location);
-        return location == e.path || location.startsWith('${e.path}/');
-      },
+      (e) => e.path == '/course-hub'
+          ? _isCourseLocation(location)
+          : location == e.path || location.startsWith('${e.path}/'),
     );
     final index = current < 0 ? 0 : current;
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_isCourseLocation(location))
-            _CourseQuickSwitchBar(location: location),
-          NavigationBar(
-            height: 66,
-            labelTextStyle: WidgetStateProperty.all(
-              const TextStyle(
-                fontSize: 10,
-                height: 1,
-                letterSpacing: 0,
-                fontWeight: FontWeight.w600,
-              ),
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.7),
             ),
-            selectedIndex: index,
-            onDestinationSelected: (i) {
-              if (items[i].opensCourseTools) {
-                _showCourseTools(context, location);
-                return;
-              }
-
-              context.go(items[i].path);
-            },
-            destinations: items.map((e) {
-              return NavigationDestination(
-                icon: Icon(e.icon),
-                selectedIcon: Icon(e.selectedIcon),
-                label: e.label,
-              );
-            }).toList(),
           ),
-        ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_isLegacyCourseLocation(location))
+              _CourseQuickSwitchBar(location: location),
+            NavigationBar(
+              selectedIndex: index,
+              onDestinationSelected: (i) {
+                context.go(items[i].path);
+              },
+              destinations: items.map((e) {
+                return NavigationDestination(
+                  icon: Icon(e.icon),
+                  selectedIcon: Icon(e.selectedIcon),
+                  label: e.label,
+                );
+              }).toList(),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 bool _isCourseLocation(String location) {
+  return location == '/course-hub' ||
+      location == '/lessons' ||
+      location.startsWith('/lessons/') ||
+      location == '/homework' ||
+      location.startsWith('/homework/') ||
+      location == '/materials' ||
+      location.startsWith('/materials/');
+}
+
+bool _isLegacyCourseLocation(String location) {
   return location == '/lessons' ||
       location.startsWith('/lessons/') ||
       location == '/homework' ||
@@ -633,7 +680,8 @@ class _QuickCourseButton extends StatelessWidget {
   }
 }
 
-Future<void> _showCourseTools(BuildContext shellContext, String location) {
+/// Kept for callers that deliberately need the legacy direct course actions.
+Future<void> showCourseTools(BuildContext shellContext, String location) {
   final theme = Theme.of(shellContext);
   final colors = theme.colorScheme;
   final t = AppStrings.of(shellContext, listen: false);
@@ -800,13 +848,10 @@ class _NavItem {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
-  final bool opensCourseTools;
-
   const _NavItem(
     this.path,
     this.icon,
     this.selectedIcon,
-    this.label, {
-    this.opensCourseTools = false,
-  });
+    this.label,
+  );
 }

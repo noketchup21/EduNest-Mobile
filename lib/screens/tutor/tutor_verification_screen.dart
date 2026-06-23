@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,6 +35,8 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   String? _cccdFrontPath;
   String? _cccdBackPath;
   final List<String> _certificatePaths = [];
+  String? _transcriptDocumentPath;
+  String? _transcriptDocumentName;
 
   bool _initializedFields = false;
   bool _handledApprovedRedirect = false;
@@ -205,13 +208,28 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             ),
             localPaths: _certificatePaths,
             existingUrls: _certificateUrlsFor(verification),
-            maxImages: 5,
+            maxImages: 3,
             onPick: _pickCertificateImages,
             onRemoveLocal: (path) {
               setState(() {
                 _certificatePaths.remove(path);
               });
             },
+          ),
+          const SizedBox(height: 12),
+          _DocumentPickerTile(
+            title: t.text('Upload your academic transcript'),
+            subtitle: t.text(
+              'Accepted formats: PDF, Word, Excel, PowerPoint, text, or CSV (max 2 MB).',
+            ),
+            fileName: _transcriptDocumentName,
+            onPick: _pickTranscriptDocument,
+            onRemove: _transcriptDocumentPath == null
+                ? null
+                : () => setState(() {
+                      _transcriptDocumentPath = null;
+                      _transcriptDocumentName = null;
+                    }),
           ),
           const SizedBox(height: 20),
           Align(
@@ -359,6 +377,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             cccdFrontPath: _cccdFrontPath!,
             cccdBackPath: _cccdBackPath!,
             certificatePaths: _certificatePaths,
+            transcriptDocumentPath: _transcriptDocumentPath,
             bankName: _bankName.text.trim(),
             bankBin: _bankBin.text.trim(),
             accountNumber: _accountNumber.text.trim(),
@@ -401,12 +420,12 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
 
   Future<void> _pickCertificateImages() async {
     final t = AppStrings.of(context, listen: false);
-    const maxImages = 5;
+    const maxImages = 3;
     final remaining = maxImages - _certificatePaths.length;
 
     if (remaining <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.text('Maximum 5 certificate images.'))),
+        SnackBar(content: Text(t.text('Maximum 3 certificate images.'))),
       );
       return;
     }
@@ -430,9 +449,48 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
 
     if (files.length > remaining && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.text('Maximum 5 certificate images.'))),
+        SnackBar(content: Text(t.text('Maximum 3 certificate images.'))),
       );
     }
+  }
+
+  Future<void> _pickTranscriptDocument() async {
+    const maxDocumentBytes = 2 * 1024 * 1024;
+    final t = AppStrings.of(context, listen: false);
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: const [
+        'pdf',
+        'doc',
+        'docx',
+        'xls',
+        'xlsx',
+        'ppt',
+        'pptx',
+        'txt',
+        'csv',
+      ],
+    );
+    final file = result?.files.single;
+
+    if (file == null || file.path == null) return;
+
+    if (file.size > maxDocumentBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text(t.text('Transcript document must be 2 MB or smaller.'))),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _transcriptDocumentPath = file.path;
+      _transcriptDocumentName = file.name;
+    });
   }
 
   List<String> _certificateUrlsFor(TutorVerificationModel? verification) {
@@ -647,6 +705,80 @@ class _ImagePickerTile extends StatelessWidget {
   }
 }
 
+class _DocumentPickerTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String? fileName;
+  final VoidCallback onPick;
+  final VoidCallback? onRemove;
+
+  const _DocumentPickerTile({
+    required this.title,
+    required this.subtitle,
+    required this.fileName,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.l10n;
+    final hasFile = fileName != null && fileName!.isNotEmpty;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.description_outlined),
+              title: Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text(subtitle),
+              trailing: FilledButton.tonalIcon(
+                onPressed: onPick,
+                icon: const Icon(Icons.attach_file_outlined),
+                label: Text(t.text(hasFile ? 'Change' : 'Pick')),
+              ),
+            ),
+            if (hasFile)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.insert_drive_file_outlined),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        fileName!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: onRemove,
+                      icon: const Icon(Icons.close),
+                      tooltip: t.text('Remove'),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _MultiImagePickerTile extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -685,7 +817,9 @@ class _MultiImagePickerTile extends StatelessWidget {
                 title,
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
-              subtitle: Text('$subtitle\n${t.text('Maximum 5 images')}'),
+              subtitle: Text(
+                '$subtitle\n${t.text('Maximum {count} images').replaceFirst('{count}', maxImages.toString())}',
+              ),
               trailing: FilledButton.tonalIcon(
                 onPressed: canAdd ? onPick : null,
                 icon: const Icon(Icons.collections_outlined),

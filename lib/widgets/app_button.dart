@@ -36,11 +36,6 @@ class AppButton extends StatelessWidget {
       width: double.infinity,
       child: FilledButton(
         onPressed: loading ? null : onPressed,
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
         child: child,
       ),
     );

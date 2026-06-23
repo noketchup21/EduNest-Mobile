@@ -7,6 +7,7 @@ import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/bank_bin_field.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/language_switcher.dart';
 
@@ -363,19 +364,7 @@ class _HeaderCard extends StatelessWidget {
     final hasAvatar = avatarUrl.isNotEmpty;
     final t = context.l10n;
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+    return AppSurfaceCard(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [

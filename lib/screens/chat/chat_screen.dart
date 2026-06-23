@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_strings.dart';
 import '../../providers/app_data_provider.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/user_avatar.dart';
 
@@ -86,47 +87,28 @@ class _ChatScreenState extends State<ChatScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
             ErrorBanner(data.error),
-            Container(
-              margin: const EdgeInsets.only(bottom: 14),
-              decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: colors.outlineVariant.withValues(alpha: 0.5),
-                  width: 0.5,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: AppSurfaceCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEAF3DE),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.person_add_alt_1_rounded,
-                        color: Color(0xFF3B6D11),
+                    AppSectionHeader(
+                      icon: Icons.person_add_alt_1_rounded,
+                      title: t.text('Start a conversation'),
+                      subtitle: t.text(
+                          'Connect safely with a tutor, learner, or parent.'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: otherUserEmail,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        labelText: t.userEmail,
+                        prefixIcon: const Icon(Icons.alternate_email_rounded),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: otherUserEmail,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          hintText: t.userEmail,
-                          isDense: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
+                    const SizedBox(height: 12),
                     FilledButton.icon(
                       onPressed: data.loading
                           ? null
@@ -151,7 +133,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       '/chat/${conversation.conversationId}');
                                 }
                               } catch (_) {
-                                // ErrorBanner will show provider error.
+                                // ErrorBanner renders the provider error.
                               }
                             },
                       icon: const Icon(Icons.send_rounded),
@@ -176,48 +158,43 @@ class _ChatScreenState extends State<ChatScreen> {
               final roleText =
                   c.otherUserRole.trim().isEmpty ? '' : ' • ${c.otherUserRole}';
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: colors.outlineVariant.withValues(alpha: 0.5),
-                    width: 0.5,
-                  ),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  leading: UserAvatar(
-                    imageUrl: c.otherUserAvatarUrl,
-                    name: displayName,
-                    radius: 24,
-                  ),
-                  title: Text(
-                    displayName,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: AppSurfaceCard(
+                  padding: EdgeInsets.zero,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 3),
-                    child: Text(
-                      '${formatter.format(c.lastMessageAt.toLocal())}$roleText',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurface.withValues(alpha: 0.5),
+                    leading: UserAvatar(
+                      imageUrl: c.otherUserAvatarUrl,
+                      name: displayName,
+                      radius: 24,
+                    ),
+                    title: Text(
+                      displayName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Text(
+                        '${formatter.format(c.lastMessageAt.toLocal())}$roleText',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.onSurface.withValues(alpha: 0.5),
+                        ),
                       ),
                     ),
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      color: colors.onSurface.withValues(alpha: 0.4),
+                    ),
+                    onTap: () => context.push('/chat/${c.conversationId}'),
                   ),
-                  trailing: Icon(
-                    Icons.chevron_right_rounded,
-                    color: colors.onSurface.withValues(alpha: 0.4),
-                  ),
-                  onTap: () => context.push('/chat/${c.conversationId}'),
                 ),
               );
             }),
@@ -228,29 +205,11 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             if (!data.loading && data.conversations.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 48),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: 48,
-                      color: colors.onSurface.withValues(alpha: 0.25),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'No conversations yet',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colors.onSurface.withValues(alpha: 0.55),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Start a conversation using a user ID above.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colors.onSurface.withValues(alpha: 0.45),
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: AppEmptyState(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  title: t.text('No conversations yet'),
+                  message: t.text('Start a conversation using an email above.'),
                 ),
               ),
           ],

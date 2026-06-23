@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -6,6 +6,7 @@ import '../../l10n/app_strings.dart';
 import '../../models/mvp_models.dart';
 import '../../providers/app_data_provider.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/app_ui.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/money_text.dart';
 
@@ -42,7 +43,6 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
 
   final Set<String> selectedDaysOfWeek = {'Monday'};
   String mode = 'Online';
-  String level = 'Beginner';
 
   @override
   void initState() {
@@ -142,17 +142,17 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             ErrorBanner(data.error),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.verified),
-                title: Text(t.text('Tutor approved')),
-                subtitle: Text(
-                  t.text('You can now create teaching availability.'),
-                ),
-                trailing: Chip(
-                  label: Text(t.status(
+            AppSurfaceCard(
+              child: AppSectionHeader(
+                icon: Icons.verified_rounded,
+                title: t.text('Tutor approved'),
+                subtitle: t.text('You can now create teaching availability.'),
+                action: AppStatusBadge(
+                  label: t.status(
                     verification?.verificationStatus ?? 'Approved',
-                  )),
+                  ),
+                  tone: AppStatusTone.success,
+                  icon: Icons.check_circle_rounded,
                 ),
               ),
             ),
@@ -161,16 +161,39 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
               key: formKey,
               child: Column(
                 children: [
+                  AppSectionHeader(
+                    icon: Icons.menu_book_rounded,
+                    title: t.text('Course basics'),
+                    subtitle: t.text('Choose the subject you want to teach.'),
+                  ),
+                  const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
                     initialValue: selectedSubjectId,
+                    isExpanded: true,
                     decoration: InputDecoration(
                       labelText: t.text('Subject'),
                       hintText: t.text('Choose a subject'),
                     ),
+                    selectedItemBuilder: (context) => data.subjects
+                        .map(
+                          (subject) => Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              subject.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
                     items: data.subjects.map((subject) {
                       return DropdownMenuItem<int>(
                         value: subject.subjectId,
-                        child: Text(subject.name),
+                        child: Text(
+                          subject.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -186,6 +209,20 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                       return null;
                     },
                   ),
+                  if (selectedSubjectId != null) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => context.push(
+                          '/teaching-guide',
+                          extra: selectedSubjectId,
+                        ),
+                        icon: const Icon(Icons.auto_awesome_outlined),
+                        label: Text(t.text('Open teaching preparation guide')),
+                      ),
+                    ),
+                  ],
                   if (data.subjects.isEmpty) ...[
                     const SizedBox(height: 8),
                     Align(
@@ -198,6 +235,12 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 24),
+                  AppSectionHeader(
+                    icon: Icons.tune_rounded,
+                    title: t.text('Teaching format'),
+                    subtitle: t.text('Set the days and delivery mode.'),
+                  ),
                   const SizedBox(height: 12),
                   FormField<Set<String>>(
                     initialValue: selectedDaysOfWeek,
@@ -300,26 +343,12 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     ),
                     const SizedBox(height: 12),
                   ],
-                  DropdownButtonFormField<String>(
-                    initialValue: level,
-                    decoration: InputDecoration(
-                      labelText: t.text('Level'),
-                    ),
-                    items: [
-                      'Beginner',
-                      'Intermediate',
-                      'Advanced',
-                    ].map((item) {
-                      return DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(t.level(item)),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        level = value ?? 'Beginner';
-                      });
-                    },
+                  const SizedBox(height: 12),
+                  AppSectionHeader(
+                    icon: Icons.calendar_month_rounded,
+                    title: t.text('Schedule and teaching time'),
+                    subtitle:
+                        t.text('Choose a repeatable schedule for this course.'),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -377,6 +406,13 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     ),
                     validator: _required,
                   ),
+                  const SizedBox(height: 24),
+                  AppSectionHeader(
+                    icon: Icons.payments_outlined,
+                    title: t.text('Pricing'),
+                    subtitle:
+                        t.text('Set the price per lesson before publishing.'),
+                  ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: price,
@@ -388,15 +424,53 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                     validator: _required,
                   ),
                   const SizedBox(height: 12),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.calculate_outlined),
-                      title: Text(t.text('Course price preview')),
-                      subtitle: Text(
-                        '${t.text('Lessons')}: $lessons\n'
-                        '${t.text('Price per lesson')}: ${price.text.trim().isEmpty ? '0' : price.text.trim()}',
-                      ),
-                      trailing: MoneyText(total),
+                  AppSurfaceCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Icon(
+                                Icons.calculate_outlined,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                t.text('Course price preview'),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '${t.text('Lessons')}: $lessons\n'
+                          '${t.text('Price per lesson')}: ${price.text.trim().isEmpty ? '0' : price.text.trim()}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: MoneyText(total),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -417,13 +491,10 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
             ),
             const SizedBox(height: 8),
             if (data.myAvailabilities.isEmpty && !data.loading)
-              Card(
-                child: ListTile(
-                  title: Text(t.text('No availability yet')),
-                  subtitle: Text(
-                    t.text('Create your first teaching schedule above.'),
-                  ),
-                ),
+              AppEmptyState(
+                icon: Icons.calendar_month_outlined,
+                title: t.text('No availability yet'),
+                message: t.text('Create your first teaching schedule above.'),
               ),
             ...data.myAvailabilities.map((availability) {
               final totalPrice = availability.totalCoursePrice > 0
@@ -440,14 +511,6 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                   ),
                   subtitle: Text(
                     _availabilitySubtitle(availability, t),
-                    /*
-                    '${availability.dayOfWeek} '
-                    '${availability.startTime}-${availability.endTime}\n'
-                    '${availability.mode} • ${availability.level}\n'
-                    '${_offlineAreaLine(availability)}'
-                    'Lessons: ${availability.slot}\n'
-                    'Price per lesson: ${availability.pricePerSlot.toStringAsFixed(0)}',
-                    */
                   ),
                   trailing: MoneyText(totalPrice),
                 ),
@@ -620,7 +683,6 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
             .toList(),
         mode: mode,
         offlineAreas: mode == 'Offline' ? offlineAreas.text.trim() : null,
-        level: level,
         startCourseTime: parsedStartDate,
         endCourseTime: parsedEndDate,
         startTime: startTime.text.trim(),
@@ -678,7 +740,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
   String _availabilitySubtitle(AvailabilityModel availability, AppStrings t) {
     return '${_daysText(availability.dayOfWeek, t)} '
         '${availability.startTime}-${availability.endTime}\n'
-        '${t.mode(availability.mode)} - ${t.level(availability.level)}\n'
+        '${t.mode(availability.mode)}\n'
         '${_offlineAreaLine(availability, t)}'
         '${t.text('Lessons')}: ${availability.slot}\n'
         '${t.text('Price per lesson')}: '
