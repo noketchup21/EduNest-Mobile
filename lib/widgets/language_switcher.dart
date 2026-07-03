@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_language_provider.dart';
@@ -17,31 +17,37 @@ class LanguageSwitcher extends StatelessWidget {
     final language = context.watch<AppLanguageProvider>();
     final strings = context.l10n;
 
-    final control = SegmentedButton<String>(
-      showSelectedIcon: false,
-      segments: [
-        ButtonSegment(
-          value: 'vi',
-          label: const _LanguageOption(flag: '🇻🇳', code: 'VI'),
-          tooltip: strings.vietnamese,
-        ),
-        ButtonSegment(
-          value: 'en',
-          label: const _LanguageOption(flag: '🇺🇸', code: 'EN'),
-          tooltip: strings.english,
-        ),
-      ],
-      selected: {language.languageCode},
-      onSelectionChanged: (selection) {
-        language.setLanguageCode(selection.first);
-      },
-      style: ButtonStyle(
-        visualDensity: VisualDensity.compact,
-        textStyle: WidgetStateProperty.all(
-          const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0,
+    final control = SizedBox(
+      width: 132,
+      child: SegmentedButton<String>(
+        showSelectedIcon: false,
+        segments: [
+          ButtonSegment(
+            value: 'vi',
+            label: const _LanguageOption(flag: '🇻🇳', code: 'VI'),
+            tooltip: strings.vietnamese,
+          ),
+          ButtonSegment(
+            value: 'en',
+            label: const _LanguageOption(flag: '🇺🇸', code: 'EN'),
+            tooltip: strings.english,
+          ),
+        ],
+        selected: {language.languageCode},
+        onSelectionChanged: (selection) {
+          language.setLanguageCode(selection.first);
+        },
+        style: ButtonStyle(
+          visualDensity: VisualDensity.compact,
+          padding: WidgetStateProperty.all(
+            const EdgeInsets.symmetric(horizontal: 6),
+          ),
+          textStyle: WidgetStateProperty.all(
+            const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0,
+            ),
           ),
         ),
       ),
@@ -64,7 +70,8 @@ class LanguageSwitcher extends StatelessWidget {
                 ),
           ),
         ),
-        control,
+        Flexible(
+            child: Align(alignment: Alignment.centerRight, child: control)),
       ],
     );
   }
@@ -84,9 +91,14 @@ class _LanguageOption extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(flag, style: const TextStyle(fontSize: 14)),
+        Text(flag, style: const TextStyle(fontSize: 12)),
         const SizedBox(width: 4),
-        Text(code),
+        Text(
+          code,
+          maxLines: 1,
+          overflow: TextOverflow.clip,
+          softWrap: false,
+        ),
       ],
     );
   }
