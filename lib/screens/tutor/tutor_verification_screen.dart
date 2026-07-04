@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -32,9 +32,9 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
 
   final _picker = ImagePicker();
 
-  String? _cccdFrontPath;
-  String? _cccdBackPath;
-  final List<String> _certificatePaths = [];
+  XFile? _cccdFrontImage;
+  XFile? _cccdBackImage;
+  final List<XFile> _certificateImages = [];
   String? _transcriptDocumentPath;
   String? _transcriptDocumentName;
 
@@ -174,14 +174,14 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
           _ImagePickerTile(
             title: t.text('CCCD front image'),
             subtitle: t.text('Upload the front side of your CCCD.'),
-            localPath: _cccdFrontPath,
+            localImage: _cccdFrontImage,
             existingUrl: verification?.cccdFrontImageUrl,
             onPick: () async {
-              final path = await _pickImage();
-              if (path == null) return;
+              final image = await _pickImage();
+              if (image == null) return;
 
               setState(() {
-                _cccdFrontPath = path;
+                _cccdFrontImage = image;
               });
             },
           ),
@@ -189,14 +189,14 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
           _ImagePickerTile(
             title: t.text('CCCD back image'),
             subtitle: t.text('Upload the back side of your CCCD.'),
-            localPath: _cccdBackPath,
+            localImage: _cccdBackImage,
             existingUrl: verification?.cccdBackImageUrl,
             onPick: () async {
-              final path = await _pickImage();
-              if (path == null) return;
+              final image = await _pickImage();
+              if (image == null) return;
 
               setState(() {
-                _cccdBackPath = path;
+                _cccdBackImage = image;
               });
             },
           ),
@@ -206,13 +206,13 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             subtitle: t.text(
               'Certificate of Enrollment or Academic Transcript',
             ),
-            localPaths: _certificatePaths,
+            localImages: _certificateImages,
             existingUrls: _certificateUrlsFor(verification),
             maxImages: 3,
             onPick: _pickCertificateImages,
-            onRemoveLocal: (path) {
+            onRemoveLocal: (image) {
               setState(() {
-                _certificatePaths.remove(path);
+                _certificateImages.remove(image);
               });
             },
           ),
@@ -340,14 +340,12 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
     context.go('/home');
   }
 
-  Future<String?> _pickImage() async {
-    final file = await _picker.pickImage(
+  Future<XFile?> _pickImage() {
+    return _picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 80,
       maxWidth: 1600,
     );
-
-    return file?.path;
   }
 
   Future<void> _submit(BuildContext context) async {
@@ -355,9 +353,9 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
 
     if (!_formKey.currentState!.validate()) return;
 
-    if (_cccdFrontPath == null ||
-        _cccdBackPath == null ||
-        _certificatePaths.isEmpty) {
+    if (_cccdFrontImage == null ||
+        _cccdBackImage == null ||
+        _certificateImages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -374,9 +372,9 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
     try {
       await context.read<AppDataProvider>().submitTutorVerification(
             nationalIdNumber: _nationalId.text.trim(),
-            cccdFrontPath: _cccdFrontPath!,
-            cccdBackPath: _cccdBackPath!,
-            certificatePaths: _certificatePaths,
+            cccdFrontImage: _cccdFrontImage!,
+            cccdBackImage: _cccdBackImage!,
+            certificateImages: _certificateImages,
             transcriptDocumentPath: _transcriptDocumentPath,
             bankName: _bankName.text.trim(),
             bankBin: _bankBin.text.trim(),
@@ -421,7 +419,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   Future<void> _pickCertificateImages() async {
     final t = AppStrings.of(context, listen: false);
     const maxImages = 3;
-    final remaining = maxImages - _certificatePaths.length;
+    final remaining = maxImages - _certificateImages.length;
 
     if (remaining <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -437,12 +435,12 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
 
     if (files.isEmpty) return;
 
-    final selectedPaths = files.map((file) => file.path).take(remaining);
+    final selectedImages = files.take(remaining);
 
     setState(() {
-      for (final path in selectedPaths) {
-        if (!_certificatePaths.contains(path)) {
-          _certificatePaths.add(path);
+      for (final image in selectedImages) {
+        if (!_certificateImages.any((item) => item.path == image.path)) {
+          _certificateImages.add(image);
         }
       }
     });
@@ -629,14 +627,14 @@ class _PendingMessage extends StatelessWidget {
 class _ImagePickerTile extends StatelessWidget {
   final String title;
   final String subtitle;
-  final String? localPath;
+  final XFile? localImage;
   final String? existingUrl;
   final VoidCallback onPick;
 
   const _ImagePickerTile({
     required this.title,
     required this.subtitle,
-    required this.localPath,
+    required this.localImage,
     required this.existingUrl,
     required this.onPick,
   });
@@ -644,7 +642,7 @@ class _ImagePickerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.l10n;
-    final hasLocal = localPath != null && localPath!.isNotEmpty;
+    final hasLocal = localImage != null;
     final hasExisting = existingUrl != null && existingUrl!.isNotEmpty;
 
     return Card(
@@ -671,8 +669,8 @@ class _ImagePickerTile extends StatelessWidget {
               const SizedBox(height: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(
-                  File(localPath!),
+                child: _PickedImagePreview(
+                  image: localImage!,
                   height: 180,
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -782,16 +780,16 @@ class _DocumentPickerTile extends StatelessWidget {
 class _MultiImagePickerTile extends StatelessWidget {
   final String title;
   final String subtitle;
-  final List<String> localPaths;
+  final List<XFile> localImages;
   final List<String> existingUrls;
   final int maxImages;
   final VoidCallback onPick;
-  final ValueChanged<String> onRemoveLocal;
+  final ValueChanged<XFile> onRemoveLocal;
 
   const _MultiImagePickerTile({
     required this.title,
     required this.subtitle,
-    required this.localPaths,
+    required this.localImages,
     required this.existingUrls,
     required this.maxImages,
     required this.onPick,
@@ -801,9 +799,9 @@ class _MultiImagePickerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.l10n;
-    final hasLocal = localPaths.isNotEmpty;
-    final count = hasLocal ? localPaths.length : existingUrls.length;
-    final canAdd = localPaths.length < maxImages;
+    final hasLocal = localImages.isNotEmpty;
+    final count = hasLocal ? localImages.length : existingUrls.length;
+    final canAdd = localImages.length < maxImages;
 
     return Card(
       child: Padding(
@@ -837,7 +835,7 @@ class _MultiImagePickerTile extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               _CertificateImageGrid(
-                localPaths: localPaths,
+                localImages: localImages,
                 existingUrls: hasLocal ? const [] : existingUrls,
                 onRemoveLocal: onRemoveLocal,
               ),
@@ -850,12 +848,12 @@ class _MultiImagePickerTile extends StatelessWidget {
 }
 
 class _CertificateImageGrid extends StatelessWidget {
-  final List<String> localPaths;
+  final List<XFile> localImages;
   final List<String> existingUrls;
-  final ValueChanged<String> onRemoveLocal;
+  final ValueChanged<XFile> onRemoveLocal;
 
   const _CertificateImageGrid({
-    required this.localPaths,
+    required this.localImages,
     required this.existingUrls,
     required this.onRemoveLocal,
   });
@@ -863,7 +861,7 @@ class _CertificateImageGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      ...localPaths.map((path) => _CertificateImageItem.local(path)),
+      ...localImages.map((image) => _CertificateImageItem.local(image)),
       ...existingUrls.map((url) => _CertificateImageItem.remote(url)),
     ];
 
@@ -886,13 +884,13 @@ class _CertificateImageGrid extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               if (item.isLocal)
-                Image.file(
-                  File(item.value),
+                _PickedImagePreview(
+                  image: item.localImage!,
                   fit: BoxFit.cover,
                 )
               else
                 Image.network(
-                  item.value,
+                  item.remoteUrl!,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) {
                     return ColoredBox(
@@ -911,7 +909,7 @@ class _CertificateImageGrid extends StatelessWidget {
                   top: 6,
                   right: 6,
                   child: IconButton.filledTonal(
-                    onPressed: () => onRemoveLocal(item.value),
+                    onPressed: () => onRemoveLocal(item.localImage!),
                     icon: const Icon(Icons.close, size: 18),
                     tooltip: context.l10n.text('Remove'),
                     style: IconButton.styleFrom(
@@ -929,19 +927,60 @@ class _CertificateImageGrid extends StatelessWidget {
 }
 
 class _CertificateImageItem {
-  final String value;
+  final XFile? localImage;
+  final String? remoteUrl;
   final bool isLocal;
 
   const _CertificateImageItem._({
-    required this.value,
+    this.localImage,
+    this.remoteUrl,
     required this.isLocal,
   });
 
-  factory _CertificateImageItem.local(String path) {
-    return _CertificateImageItem._(value: path, isLocal: true);
+  factory _CertificateImageItem.local(XFile image) {
+    return _CertificateImageItem._(localImage: image, isLocal: true);
   }
 
   factory _CertificateImageItem.remote(String url) {
-    return _CertificateImageItem._(value: url, isLocal: false);
+    return _CertificateImageItem._(remoteUrl: url, isLocal: false);
+  }
+}
+
+class _PickedImagePreview extends StatelessWidget {
+  final XFile image;
+  final double? height;
+  final double? width;
+  final BoxFit fit;
+
+  const _PickedImagePreview({
+    required this.image,
+    this.height,
+    this.width,
+    required this.fit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Uint8List>(
+      future: image.readAsBytes(),
+      builder: (context, snapshot) {
+        final bytes = snapshot.data;
+
+        if (bytes == null) {
+          return SizedBox(
+            height: height,
+            width: width,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return Image.memory(
+          bytes,
+          height: height,
+          width: width,
+          fit: fit,
+        );
+      },
+    );
   }
 }
