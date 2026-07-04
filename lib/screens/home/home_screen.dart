@@ -142,14 +142,15 @@ class _TutorCourseList extends StatelessWidget {
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.45,
+              childAspectRatio:
+                  MediaQuery.sizeOf(context).width >= 700 ? 3.2 : 1.75,
               children: [
-                AppMetricCard(
+                _TutorMetricCard(
                   icon: Icons.menu_book_rounded,
                   label: t.myCourses,
                   value: '${courses.length}',
                 ),
-                AppMetricCard(
+                _TutorMetricCard(
                   icon: Icons.check_circle_outline_rounded,
                   label: t.active,
                   value: '$activeCourses',
@@ -181,6 +182,75 @@ class _TutorCourseList extends StatelessWidget {
         ...courses.map(
             (availability) => _TutorCourseCard(availability: availability)),
       ],
+    );
+  }
+}
+
+class _TutorMetricCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final AppStatusTone tone;
+
+  const _TutorMetricCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.tone = AppStatusTone.info,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final palette = tone == AppStatusTone.success
+        ? (colors.secondaryContainer, colors.onSecondaryContainer)
+        : (colors.primaryContainer, colors.onPrimaryContainer);
+
+    return AppSurfaceCard(
+      kind: AppSurfaceCardKind.marketplace,
+      padding: const EdgeInsets.all(12),
+      color: palette.$1.withValues(alpha: 0.62),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: palette.$1,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 19, color: palette.$2),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: colors.onSurface,
+                      ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: colors.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
