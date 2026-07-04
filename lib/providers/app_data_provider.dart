@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
 
 import 'package:image_picker/image_picker.dart';
 
@@ -1182,7 +1183,7 @@ class AppDataProvider extends ChangeNotifier {
     required XFile cccdFrontImage,
     required XFile cccdBackImage,
     required List<XFile> certificateImages,
-    String? transcriptDocumentPath,
+    PlatformFile? transcriptDocument,
     required String bankName,
     required String accountNumber,
     required String accountHolderName,
@@ -1195,7 +1196,7 @@ class AppDataProvider extends ChangeNotifier {
         cccdFrontImage: cccdFrontImage,
         cccdBackImage: cccdBackImage,
         certificateImages: certificateImages,
-        transcriptDocumentPath: transcriptDocumentPath,
+        transcriptDocument: transcriptDocument,
         bankName: bankName,
         accountNumber: accountNumber,
         accountHolderName: accountHolderName,

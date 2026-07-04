@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1117,7 +1118,7 @@ class ApiService {
     required XFile cccdFrontImage,
     required XFile cccdBackImage,
     required List<XFile> certificateImages,
-    String? transcriptDocumentPath,
+    PlatformFile? transcriptDocument,
     required String bankName,
     required String accountNumber,
     required String accountHolderName,
@@ -1138,11 +1139,8 @@ class ApiService {
       'nationalIdNumber': nationalIdNumber,
       'cccdFrontImage': await _multipartImage(cccdFrontImage),
       'cccdBackImage': await _multipartImage(cccdBackImage),
-      if (transcriptDocumentPath != null &&
-          transcriptDocumentPath.trim().isNotEmpty)
-        'transcriptDocument': await MultipartFile.fromFile(
-          transcriptDocumentPath,
-        ),
+      if (transcriptDocument != null)
+        'transcriptDocument': await _multipartPlatformFile(transcriptDocument),
       if (legacyCertificateFile != null)
         'certificateImage': legacyCertificateFile,
       'bankName': bankName,
@@ -1174,6 +1172,20 @@ class ApiService {
       await image.readAsBytes(),
       filename: image.name.isEmpty ? 'image.jpg' : image.name,
     );
+  }
+
+  Future<MultipartFile> _multipartPlatformFile(PlatformFile file) async {
+    final bytes = file.bytes;
+    if (bytes != null) {
+      return MultipartFile.fromBytes(bytes, filename: file.name);
+    }
+
+    final path = file.path;
+    if (path == null || path.trim().isEmpty) {
+      throw StateError('Selected file has no readable data.');
+    }
+
+    return MultipartFile.fromFile(path, filename: file.name);
   }
 
   Future<TutorVerificationModel> adminGetTutorVerification(int tutorId) async {

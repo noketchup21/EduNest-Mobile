@@ -35,7 +35,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   XFile? _cccdFrontImage;
   XFile? _cccdBackImage;
   final List<XFile> _certificateImages = [];
-  String? _transcriptDocumentPath;
+  PlatformFile? _transcriptDocument;
   String? _transcriptDocumentName;
 
   bool _initializedFields = false;
@@ -224,10 +224,10 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             ),
             fileName: _transcriptDocumentName,
             onPick: _pickTranscriptDocument,
-            onRemove: _transcriptDocumentPath == null
+            onRemove: _transcriptDocument == null
                 ? null
                 : () => setState(() {
-                      _transcriptDocumentPath = null;
+                      _transcriptDocument = null;
                       _transcriptDocumentName = null;
                     }),
           ),
@@ -375,7 +375,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
             cccdFrontImage: _cccdFrontImage!,
             cccdBackImage: _cccdBackImage!,
             certificateImages: _certificateImages,
-            transcriptDocumentPath: _transcriptDocumentPath,
+            transcriptDocument: _transcriptDocument,
             bankName: _bankName.text.trim(),
             bankBin: _bankBin.text.trim(),
             accountNumber: _accountNumber.text.trim(),
@@ -457,6 +457,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
     final t = AppStrings.of(context, listen: false);
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: false,
+      withData: true,
       type: FileType.custom,
       allowedExtensions: const [
         'pdf',
@@ -472,7 +473,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
     );
     final file = result?.files.single;
 
-    if (file == null || file.path == null) return;
+    if (file == null) return;
 
     if (file.size > maxDocumentBytes) {
       if (mounted) {
@@ -486,7 +487,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
     }
 
     setState(() {
-      _transcriptDocumentPath = file.path;
+      _transcriptDocument = file;
       _transcriptDocumentName = file.name;
     });
   }
