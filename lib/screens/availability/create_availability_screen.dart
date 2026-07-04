@@ -38,6 +38,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
   final endTime = TextEditingController(text: '20:00:00');
   final price = TextEditingController(text: '200000');
   final offlineAreas = TextEditingController();
+  final description = TextEditingController();
 
   int? selectedSubjectId;
 
@@ -88,6 +89,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
     endTime.dispose();
     price.dispose();
     offlineAreas.dispose();
+    description.dispose();
 
     super.dispose();
   }
@@ -235,6 +237,17 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: description,
+                    decoration: InputDecoration(
+                      labelText: t.text('Description'),
+                      hintText: t.text('Tell students what they will learn'),
+                    ),
+                    minLines: 3,
+                    maxLines: 5,
+                    maxLength: 1000,
+                  ),
                   const SizedBox(height: 24),
                   AppSectionHeader(
                     icon: Icons.tune_rounded,
@@ -683,6 +696,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
             .toList(),
         mode: mode,
         offlineAreas: mode == 'Offline' ? offlineAreas.text.trim() : null,
+        description: description.text.trim(),
         startCourseTime: parsedStartDate,
         endCourseTime: parsedEndDate,
         startTime: startTime.text.trim(),

@@ -87,6 +87,7 @@ class AvailabilityModel {
   final String dayOfWeek;
   final String mode;
   final String? offlineAreas;
+  final String? description;
   final String level;
   final DateTime startCourseTime;
   final DateTime endCourseTime;
@@ -110,6 +111,7 @@ class AvailabilityModel {
     required this.dayOfWeek,
     required this.mode,
     required this.offlineAreas,
+    required this.description,
     required this.level,
     required this.startCourseTime,
     required this.endCourseTime,
@@ -140,6 +142,7 @@ class AvailabilityModel {
       ),
       mode: json['mode']?.toString() ?? '',
       offlineAreas: json['offlineAreas']?.toString(),
+      description: json['description']?.toString(),
       level: json['level']?.toString() ?? '',
       startCourseTime: _asDate(json['startCourseTime']),
       endCourseTime: _asDate(json['endCourseTime']),

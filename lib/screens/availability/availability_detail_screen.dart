@@ -47,6 +47,7 @@ class _AvailabilityDetailScreenState extends State<AvailabilityDetailScreen> {
         ? availability.subjectName!.trim()
         : subject?.name ?? data.availabilitySubjectName(availability);
     final subjectDescription = subject?.description.trim() ?? '';
+    final availabilityDescription = availability.description?.trim() ?? '';
     final total = availability.totalCoursePrice > 0
         ? availability.totalCoursePrice
         : availability.pricePerSlot * availability.slot;
@@ -83,6 +84,16 @@ class _AvailabilityDetailScreenState extends State<AvailabilityDetailScreen> {
                 ),
               ],
             ),
+            if (availabilityDescription.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              _SectionCard(
+                title: t.text('Description'),
+                icon: Icons.notes_outlined,
+                children: [
+                  Text(availabilityDescription),
+                ],
+              ),
+            ],
             const SizedBox(height: 14),
             _SectionCard(
               title: t.text('Schedule'),
