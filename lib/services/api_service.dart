@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -1113,9 +1114,9 @@ class ApiService {
 
   Future<TutorVerificationModel> submitTutorVerification({
     required String nationalIdNumber,
-    required String cccdFrontPath,
-    required String cccdBackPath,
-    required List<String> certificatePaths,
+    required XFile cccdFrontImage,
+    required XFile cccdBackImage,
+    required List<XFile> certificateImages,
     String? transcriptDocumentPath,
     required String bankName,
     required String accountNumber,
@@ -1125,18 +1126,18 @@ class ApiService {
   }) async {
     final certificateFiles = <MultipartFile>[];
 
-    for (final path in certificatePaths) {
-      certificateFiles.add(await MultipartFile.fromFile(path));
+    for (final image in certificateImages) {
+      certificateFiles.add(await _multipartImage(image));
     }
 
-    final legacyCertificateFile = certificatePaths.isEmpty
+    final legacyCertificateFile = certificateImages.isEmpty
         ? null
-        : await MultipartFile.fromFile(certificatePaths.first);
+        : await _multipartImage(certificateImages.first);
 
     final formData = FormData.fromMap({
       'nationalIdNumber': nationalIdNumber,
-      'cccdFrontImage': await MultipartFile.fromFile(cccdFrontPath),
-      'cccdBackImage': await MultipartFile.fromFile(cccdBackPath),
+      'cccdFrontImage': await _multipartImage(cccdFrontImage),
+      'cccdBackImage': await _multipartImage(cccdBackImage),
       if (transcriptDocumentPath != null &&
           transcriptDocumentPath.trim().isNotEmpty)
         'transcriptDocument': await MultipartFile.fromFile(
@@ -1166,6 +1167,13 @@ class ApiService {
     );
 
     return TutorVerificationModel.fromJson(_asMap(res.data));
+  }
+
+  Future<MultipartFile> _multipartImage(XFile image) async {
+    return MultipartFile.fromBytes(
+      await image.readAsBytes(),
+      filename: image.name.isEmpty ? 'image.jpg' : image.name,
+    );
   }
 
   Future<TutorVerificationModel> adminGetTutorVerification(int tutorId) async {

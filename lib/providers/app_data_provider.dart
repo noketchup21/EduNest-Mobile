@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:image_picker/image_picker.dart';
+
 import '../models/mvp_models.dart';
 import '../services/api_service.dart';
 
@@ -1177,9 +1179,9 @@ class AppDataProvider extends ChangeNotifier {
 
   Future<void> submitTutorVerification({
     required String nationalIdNumber,
-    required String cccdFrontPath,
-    required String cccdBackPath,
-    required List<String> certificatePaths,
+    required XFile cccdFrontImage,
+    required XFile cccdBackImage,
+    required List<XFile> certificateImages,
     String? transcriptDocumentPath,
     required String bankName,
     required String accountNumber,
@@ -1190,9 +1192,9 @@ class AppDataProvider extends ChangeNotifier {
     await _guard(() async {
       tutorVerification = await api.submitTutorVerification(
         nationalIdNumber: nationalIdNumber,
-        cccdFrontPath: cccdFrontPath,
-        cccdBackPath: cccdBackPath,
-        certificatePaths: certificatePaths,
+        cccdFrontImage: cccdFrontImage,
+        cccdBackImage: cccdBackImage,
+        certificateImages: certificateImages,
         transcriptDocumentPath: transcriptDocumentPath,
         bankName: bankName,
         accountNumber: accountNumber,
