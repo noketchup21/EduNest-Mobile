@@ -1080,9 +1080,9 @@ class ApiService {
     return SupportReportModel.fromJson(_asMap(res.data));
   }
 
-  Future<String?> uploadAvatar(String imagePath) async {
+  Future<String?> uploadAvatar(XFile image) async {
     final formData = FormData.fromMap({
-      'avatar': await MultipartFile.fromFile(imagePath),
+      'avatar': await _multipartImage(image),
     });
 
     final res = await dio.put(
