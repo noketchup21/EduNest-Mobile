@@ -1464,9 +1464,9 @@ class AppDataProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> uploadAvatar(String imagePath) async {
+  Future<void> uploadAvatar(XFile image) async {
     await _guard(() async {
-      await api.uploadAvatar(imagePath);
+      await api.uploadAvatar(image);
       profile = await api.getProfile();
     });
   }

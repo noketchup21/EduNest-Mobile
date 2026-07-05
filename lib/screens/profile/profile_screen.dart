@@ -240,7 +240,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         maxWidth: 900,
       );
       if (picked == null) return;
-      await data.uploadAvatar(picked.path);
+      await data.uploadAvatar(picked);
       if (!mounted) return;
       final t = AppStrings.of(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
