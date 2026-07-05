@@ -550,9 +550,8 @@ class ApiService {
     required String title,
     String? description,
     String? linkUrl,
-    String? filePath,
+    PlatformFile? file,
   }) async {
-    final hasFile = filePath != null && filePath.trim().isNotEmpty;
     Future<FormData> data() async => FormData.fromMap({
           'availabilityId': availabilityId,
           'sectionId': sectionId,
@@ -563,7 +562,7 @@ class ApiService {
             'fileUrl': linkUrl.trim(),
           if (linkUrl != null && linkUrl.trim().isNotEmpty)
             'linkUrl': linkUrl.trim(),
-          if (hasFile) 'file': await MultipartFile.fromFile(filePath.trim()),
+          if (file != null) 'file': await _multipartPlatformFile(file),
         });
 
     final res = await _tryRequests([
@@ -597,10 +596,9 @@ class ApiService {
     required String title,
     String? description,
     String? linkUrl,
-    String? filePath,
+    PlatformFile? file,
     int? sectionId,
   }) async {
-    final hasFile = filePath != null && filePath.trim().isNotEmpty;
     Future<FormData> data() async => FormData.fromMap({
           'title': title.trim(),
           if (sectionId != null) 'sectionId': sectionId,
@@ -610,7 +608,7 @@ class ApiService {
             'fileUrl': linkUrl.trim(),
           if (linkUrl != null && linkUrl.trim().isNotEmpty)
             'linkUrl': linkUrl.trim(),
-          if (hasFile) 'file': await MultipartFile.fromFile(filePath.trim()),
+          if (file != null) 'file': await _multipartPlatformFile(file),
         });
 
     final res = await _tryRequests([

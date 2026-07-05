@@ -285,7 +285,7 @@ class _CourseHubScreenState extends State<CourseHubScreen> {
             title: payload.title,
             description: payload.description,
             linkUrl: payload.linkUrl,
-            filePath: payload.filePath,
+            file: payload.file,
           );
       if (!mounted) return;
       _showSnack(t.text('Material added'));
@@ -314,7 +314,7 @@ class _CourseHubScreenState extends State<CourseHubScreen> {
         title: payload.title,
         description: payload.description,
         linkUrl: payload.linkUrl,
-        filePath: payload.filePath,
+        file: payload.file,
         sectionId: payload.sectionId,
       );
       if (!mounted) return;

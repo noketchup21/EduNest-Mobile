@@ -398,7 +398,7 @@ class AppDataProvider extends ChangeNotifier {
     required String title,
     String? description,
     String? linkUrl,
-    String? filePath,
+    PlatformFile? file,
   }) async {
     await _guard(() async {
       await api.createMaterialItem(
@@ -407,7 +407,7 @@ class AppDataProvider extends ChangeNotifier {
         title: title,
         description: description,
         linkUrl: linkUrl,
-        filePath: filePath,
+        file: file,
       );
       courseMaterials[availabilityId] =
           await api.getCourseMaterials(availabilityId);
@@ -421,20 +421,22 @@ class AppDataProvider extends ChangeNotifier {
     required String title,
     String? description,
     String? linkUrl,
-    String? filePath,
+    PlatformFile? file,
     int? sectionId,
   }) async {
     await _guard(() async {
-      await api.updateMaterialItem(
+      final updated = await api.updateMaterialItem(
         materialId: materialId,
         title: title,
         description: description,
         linkUrl: linkUrl,
-        filePath: filePath,
+        file: file,
         sectionId: sectionId,
       );
+      _replaceMaterialItem(availabilityId, updated);
       courseMaterials[availabilityId] =
           await api.getCourseMaterials(availabilityId);
+      _replaceMaterialItem(availabilityId, updated);
       _courseMaterialsLoadedAt[availabilityId] = DateTime.now();
     });
   }
@@ -449,6 +451,30 @@ class AppDataProvider extends ChangeNotifier {
           await api.getCourseMaterials(availabilityId);
       _courseMaterialsLoadedAt[availabilityId] = DateTime.now();
     });
+  }
+
+  void _replaceMaterialItem(
+    int availabilityId,
+    CourseMaterialItemModel updated,
+  ) {
+    final sections = courseMaterials[availabilityId];
+    if (sections == null) return;
+
+    courseMaterials[availabilityId] = sections.map((section) {
+      final items = section.items.map((item) {
+        return item.materialId == updated.materialId ? updated : item;
+      }).toList();
+
+      return CourseMaterialSectionModel(
+        sectionId: section.sectionId,
+        availabilityId: section.availabilityId,
+        title: section.title,
+        description: section.description,
+        displayOrder: section.displayOrder,
+        createdAt: section.createdAt,
+        items: items,
+      );
+    }).toList();
   }
 
   Future<void> markAttendance(int lessonId) async {
