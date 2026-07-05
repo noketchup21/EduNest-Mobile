@@ -175,7 +175,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
         title: payload.title,
         description: payload.description,
         linkUrl: payload.linkUrl,
-        filePath: payload.filePath,
+        file: payload.file,
       );
       _showSnack(successMessage);
     } catch (_) {}
@@ -201,7 +201,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> {
         title: payload.title,
         description: payload.description,
         linkUrl: payload.linkUrl,
-        filePath: payload.filePath,
+        file: payload.file,
         sectionId: payload.sectionId,
       );
       _showSnack(successMessage);
@@ -913,7 +913,7 @@ Future<MaterialEditorResult?> showMaterialEditor(
   final title = TextEditingController(text: item?.title ?? '');
   final description = TextEditingController(text: item?.description ?? '');
   final link = TextEditingController(text: item?.fileUrl ?? '');
-  String? filePath;
+  PlatformFile? file;
   String? fileName;
   final editableSections =
       sections.where((section) => section.sectionId > 0).toList();
@@ -991,11 +991,12 @@ Future<MaterialEditorResult?> showMaterialEditor(
                     onPressed: () async {
                       final result = await FilePicker.platform.pickFiles(
                         allowMultiple: false,
+                        withData: true,
                         type: FileType.any,
                       );
-                      final file = result?.files.single;
-                      if (file == null || file.path == null) return;
-                      if (file.size > _maxMaterialUploadBytes) {
+                      final pickedFile = result?.files.single;
+                      if (pickedFile == null) return;
+                      if (pickedFile.size > _maxMaterialUploadBytes) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1014,8 +1015,8 @@ Future<MaterialEditorResult?> showMaterialEditor(
                         return;
                       }
                       setDialogState(() {
-                        filePath = file.path;
-                        fileName = file.name;
+                        file = pickedFile;
+                        fileName = pickedFile.name;
                       });
                     },
                     icon: const Icon(Icons.attach_file_rounded, size: 18),
@@ -1031,7 +1032,7 @@ Future<MaterialEditorResult?> showMaterialEditor(
               ),
               FilledButton(
                 onPressed: () {
-                  final hasFile = filePath?.trim().isNotEmpty == true;
+                  final hasFile = file != null;
                   final hasLink = link.text.trim().isNotEmpty;
                   if (title.text.trim().isEmpty) return;
                   if (item == null && !hasFile && !hasLink) return;
@@ -1042,7 +1043,7 @@ Future<MaterialEditorResult?> showMaterialEditor(
                       title: title.text.trim(),
                       description: _optionalText(description.text),
                       linkUrl: _optionalText(link.text),
-                      filePath: filePath,
+                      file: file,
                       sectionId: item == null ? null : selectedSectionId,
                     ),
                   );
@@ -1083,14 +1084,14 @@ class MaterialEditorResult {
   final String title;
   final String? description;
   final String? linkUrl;
-  final String? filePath;
+  final PlatformFile? file;
   final int? sectionId;
 
   const MaterialEditorResult({
     required this.title,
     required this.description,
     required this.linkUrl,
-    required this.filePath,
+    required this.file,
     required this.sectionId,
   });
 }
