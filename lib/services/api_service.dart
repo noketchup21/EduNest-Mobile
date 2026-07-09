@@ -848,6 +848,20 @@ class ApiService {
     }
   }
 
+  Future<void> trackSiteVisit() async {
+    try {
+      await dio.post(
+        '/api/admin/site/visit',
+        data: {
+          'platform': 'web',
+          'appVersion': appVersion,
+        },
+      );
+    } catch (_) {
+      // Ignore tracking error.
+    }
+  }
+
   Future<AdminDashboardModel> adminGetDashboard() async {
     final res = await dio.get('/api/admin/dashboard');
     return AdminDashboardModel.fromJson(_asMap(res.data));

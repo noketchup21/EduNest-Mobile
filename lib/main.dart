@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +30,9 @@ Future<void> main() async {
   // Track app install once.
   // Use unawaited so app startup is not blocked if Render backend is sleeping.
   unawaited(api.trackInstall());
+  if (kIsWeb) {
+    unawaited(api.trackSiteVisit());
+  }
 
   runApp(
     EduNestApp(
