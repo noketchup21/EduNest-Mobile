@@ -849,14 +849,26 @@ class ApiService {
   }
 
   Future<void> trackSiteVisit() async {
+    var deviceId = prefs.getString('site_visit_device_id');
+    if (deviceId == null || deviceId.isEmpty) {
+      deviceId = 'web-${DateTime.now().microsecondsSinceEpoch}';
+      await prefs.setString('site_visit_device_id', deviceId);
+    }
+
+    final alreadyTracked = prefs.getBool('site_visit_tracked') ?? false;
+    if (alreadyTracked) return;
+
     try {
       await dio.post(
         '/api/admin/site/visit',
         data: {
+          'deviceId': deviceId,
           'platform': 'web',
           'appVersion': appVersion,
         },
       );
+
+      await prefs.setBool('site_visit_tracked', true);
     } catch (_) {
       // Ignore tracking error.
     }
