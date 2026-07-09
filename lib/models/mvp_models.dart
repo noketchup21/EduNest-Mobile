@@ -1202,6 +1202,8 @@ class CourseMaterialItemModel {
 class AdminDashboardModel {
   final int totalDownloads;
   final int totalInstalls;
+  final int totalSiteVisits;
+  final List<DailySiteVisitModel> siteVisitsLast30Days;
   final int totalSubjects;
   final int totalTutors;
   final int pendingTutors;
@@ -1216,6 +1218,8 @@ class AdminDashboardModel {
   AdminDashboardModel({
     required this.totalDownloads,
     required this.totalInstalls,
+    required this.totalSiteVisits,
+    required this.siteVisitsLast30Days,
     required this.totalSubjects,
     required this.totalTutors,
     required this.pendingTutors,
@@ -1232,6 +1236,10 @@ class AdminDashboardModel {
     return AdminDashboardModel(
       totalDownloads: _asInt(json['totalDownloads']),
       totalInstalls: _asInt(json['totalInstalls']),
+      totalSiteVisits: _asInt(json['totalSiteVisits']),
+      siteVisitsLast30Days: _asObjectList(json['siteVisitsLast30Days'])
+          .map((e) => DailySiteVisitModel.fromJson(e))
+          .toList(),
       totalSubjects: _asInt(json['totalSubjects']),
       totalTutors: _asInt(json['totalTutors']),
       pendingTutors: _asInt(json['pendingTutors']),
@@ -1242,6 +1250,23 @@ class AdminDashboardModel {
       grossLessonRevenue: _asDouble(json['grossLessonRevenue']),
       platformRevenue: _asDouble(json['platformRevenue']),
       tutorRevenue: _asDouble(json['tutorRevenue']),
+    );
+  }
+}
+
+class DailySiteVisitModel {
+  final DateTime date;
+  final int count;
+
+  DailySiteVisitModel({
+    required this.date,
+    required this.count,
+  });
+
+  factory DailySiteVisitModel.fromJson(Map<String, dynamic> json) {
+    return DailySiteVisitModel(
+      date: _asDate(json['date']),
+      count: _asInt(json['count']),
     );
   }
 }

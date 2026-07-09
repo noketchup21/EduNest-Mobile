@@ -156,6 +156,13 @@ class _AdminScreenState extends State<AdminScreen> {
                             value: dashboard.totalInstalls.toString(),
                           ),
                           _MetricCard(
+                            icon: Icons.visibility_outlined,
+                            iconColor: colors.primary,
+                            iconBg: colors.primaryContainer,
+                            label: t.text('Site visits'),
+                            value: dashboard.totalSiteVisits.toString(),
+                          ),
+                          _MetricCard(
                             icon: Icons.pending_actions_outlined,
                             iconColor: const Color(0xFF854F0B),
                             iconBg: const Color(0xFFFAEEDA),
@@ -199,6 +206,17 @@ class _AdminScreenState extends State<AdminScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
+
+                    _DashCard(
+                      title: t.text('Site visit trend'),
+                      subtitle: t.text('Last 30 days'),
+                      child: SizedBox(
+                        height: 180,
+                        child: _SiteVisitTrendChart(
+                          visits: dashboard.siteVisitsLast30Days,
+                        ),
+                      ),
+                    ),
 
                     // Revenue breakdown
                     _DashCard(
@@ -2578,6 +2596,97 @@ class _RevenueBarChart extends StatelessWidget {
           ),
         ],
       );
+}
+
+class _SiteVisitTrendChart extends StatelessWidget {
+  final List<DailySiteVisitModel> visits;
+
+  const _SiteVisitTrendChart({required this.visits});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final data = visits.isEmpty
+        ? [
+            DailySiteVisitModel(date: DateTime.now(), count: 0),
+          ]
+        : visits;
+    final maxCount = data
+        .map((x) => x.count)
+        .fold<int>(0, (max, count) => count > max ? count : max);
+    final maxY = (maxCount * 1.25).ceilToDouble().clamp(1, double.infinity);
+    final interval = (maxY / 4).ceilToDouble().clamp(1, double.infinity);
+
+    return LineChart(
+      LineChartData(
+        minY: 0,
+        maxY: maxY.toDouble(),
+        lineBarsData: [
+          LineChartBarData(
+            spots: [
+              for (var i = 0; i < data.length; i++)
+                FlSpot(i.toDouble(), data[i].count.toDouble()),
+            ],
+            isCurved: true,
+            barWidth: 3,
+            color: colors.primary,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: colors.secondary.withOpacity(0.14),
+            ),
+          ),
+        ],
+        titlesData: FlTitlesData(
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, _) {
+                final index = value.toInt();
+                if (index < 0 ||
+                    index >= data.length ||
+                    index % 14 != 0 && index != data.length - 1) {
+                  return const SizedBox.shrink();
+                }
+                final date = data[index].date.toLocal();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '${date.day}/${date.month}',
+                    style:
+                        TextStyle(fontSize: 9, color: colors.onSurfaceVariant),
+                  ),
+                );
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 34,
+              interval: interval.toDouble(),
+              getTitlesWidget: (value, _) => Text(
+                value.toInt().toString(),
+                style: TextStyle(fontSize: 9, color: colors.onSurfaceVariant),
+              ),
+            ),
+          ),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
+        gridData: FlGridData(
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) => FlLine(
+            color: colors.outlineVariant,
+            strokeWidth: 0.5,
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+      ),
+    );
+  }
 }
 
 class _TutorDonutChart extends StatelessWidget {
