@@ -540,7 +540,7 @@ class _BookingCard extends StatelessWidget {
     final t = context.l10n;
 
     final status = booking.status.toLowerCase();
-    final canPay = status == 'pending';
+    final canPay = status == 'pending' && booking.priceAtBooking > 0;
     final canCancel = status == 'pending';
     final canReport = _canReportBooking(booking);
     final canReview = _canReviewBooking(booking);
@@ -688,7 +688,7 @@ class _BookingCard extends StatelessWidget {
                     Expanded(
                       child: _ActionButton(
                         icon: Icons.credit_card_rounded,
-                        label: _payButtonText(context, status),
+                        label: _payButtonLabel(context, booking),
                         enabled: canPay && !data.loading,
                         variant: _ButtonVariant.filled,
                         onPressed: () => _pay(context, booking.bookingId),
@@ -781,6 +781,14 @@ class _BookingCard extends StatelessWidget {
       default:
         return t.unavailable;
     }
+  }
+
+  String _payButtonLabel(BuildContext context, BookingModel booking) {
+    if (booking.priceAtBooking <= 0) {
+      return AppStrings.of(context, listen: false).text('Free course');
+    }
+
+    return _payButtonText(context, booking.status);
   }
 
   String _displayTutorName(BuildContext context, BookingModel booking) {

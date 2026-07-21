@@ -683,7 +683,7 @@ class _CreateAvailabilityScreenState extends State<CreateAvailabilityScreen> {
 
     final parsedPrice = double.tryParse(price.text.trim());
 
-    if (parsedPrice == null || parsedPrice <= 0) {
+    if (parsedPrice == null || parsedPrice < 0) {
       _showMessage(t.text('Invalid price per lesson'));
       return;
     }
