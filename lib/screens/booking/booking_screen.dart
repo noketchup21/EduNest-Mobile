@@ -540,7 +540,7 @@ class _BookingCard extends StatelessWidget {
     final t = context.l10n;
 
     final status = booking.status.toLowerCase();
-    final canPay = status == 'pending' && booking.priceAtBooking > 0;
+    final canPay = _canPayBooking(booking);
     final canCancel = status == 'pending';
     final canReport = _canReportBooking(booking);
     final canReview = _canReviewBooking(booking);
@@ -761,6 +761,19 @@ class _BookingCard extends StatelessWidget {
         status == 'success';
   }
 
+  bool _canPayBooking(BookingModel booking) {
+    if (booking.priceAtBooking <= 0) return false;
+
+    final status = booking.status.toLowerCase();
+    return status != 'paid' &&
+        status != 'confirmed' &&
+        status != 'completed' &&
+        status != 'cancelled' &&
+        status != 'expired' &&
+        status != 'failed' &&
+        status != 'success';
+  }
+
   String _payButtonText(BuildContext context, String status) {
     final t = AppStrings.of(context, listen: false);
     switch (status) {
@@ -786,6 +799,10 @@ class _BookingCard extends StatelessWidget {
   String _payButtonLabel(BuildContext context, BookingModel booking) {
     if (booking.priceAtBooking <= 0) {
       return AppStrings.of(context, listen: false).text('Free course');
+    }
+
+    if (_canPayBooking(booking)) {
+      return AppStrings.of(context, listen: false).payNow;
     }
 
     return _payButtonText(context, booking.status);
